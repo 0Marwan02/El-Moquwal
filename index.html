@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>المقاول</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/variables.css" />
+  <link rel="stylesheet" href="assets/css/base.css" />
+  <link rel="stylesheet" href="assets/css/components.css" />
+  <link rel="stylesheet" href="assets/css/layout.css" />
+  <link rel="stylesheet" href="assets/css/utilities.css" />
+
+  <style>
+    /* =============================================
+       styles خاصة بصفحة اللاندينج بس
+       ============================================= */
+
+    /* Hero Section */
+    .hero {
+      min-height: 100vh;
+      padding-top: var(--navbar-height);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(150deg, var(--color-navy-dark) 0%, var(--color-navy) 55%, #243659 100%);
+      z-index: 0;
+    }
+
+    .hero-orb-1 {
+      position: absolute;
+      width: 600px; height: 600px;
+      top: -150px; right: -100px;
+      background: rgba(244,166,35,0.06);
+      border-radius: 50%;
+      filter: blur(100px);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .hero-orb-2 {
+      position: absolute;
+      width: 400px; height: 400px;
+      bottom: -80px; left: 30%;
+      background: rgba(26,43,74,0.5);
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .hero .container {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-16);
+      align-items: center;
+      padding-top: var(--space-12);
+      padding-bottom: var(--space-16);
+    }
+
+    /* نص الـ hero */
+    .hero-live-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      background: rgba(244,166,35,0.1);
+      border: 1px solid rgba(244,166,35,0.22);
+      color: var(--color-gold-light);
+      padding: 7px 16px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: var(--space-5);
+    }
+
+    .hero-live-dot {
+      width: 7px; height: 7px;
+      background: var(--color-gold);
+      border-radius: 50%;
+      animation: pulseDot 1.8s ease-in-out infinite;
+    }
+
+    .hero-title {
+      color: var(--text-on-dark);
+      margin-bottom: var(--space-5);
+    }
+
+    .hero-title .highlight { color: var(--color-gold); }
+
+    .hero-subtitle {
+      color: var(--text-on-dark-muted);
+      font-size: var(--font-size-md);
+      line-height: 1.9;
+      margin-bottom: var(--space-8);
+      max-width: 460px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-10);
+    }
+
+    /* الـ stats تحت الازرار */
+    .hero-stats {
+      display: flex;
+      gap: var(--space-8);
+      padding-top: var(--space-8);
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .hero-stat-val {
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--text-on-dark);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .hero-stat-val span { color: var(--color-gold); }
+    .hero-stat-lbl { font-size: 12px; color: var(--text-on-dark-muted); }
+
+    /* الـ visual card في الـ hero */
+    .hero-visual {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .hero-mockup-card {
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.3);
+    }
+
+    .mockup-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-5);
+    }
+    .mockup-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.4); letter-spacing: 1px; text-transform: uppercase; }
+
+    .mockup-project-title {
+      font-size: 17px; font-weight: 800; color: var(--text-on-dark);
+      margin-bottom: var(--space-2);
+    }
+    .mockup-meta {
+      display: flex; gap: var(--space-4);
+      font-size: 12px; color: rgba(255,255,255,0.45);
+      margin-bottom: var(--space-5);
+    }
+
+    .mockup-progress-track {
+      height: 6px;
+      background: rgba(255,255,255,0.08);
+      border-radius: var(--radius-full);
+      margin-bottom: var(--space-2);
+      overflow: hidden;
+    }
+    .mockup-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--color-gold), var(--color-gold-light));
+      border-radius: var(--radius-full);
+      width: 68%;
+      animation: growBar 1.5s ease forwards;
+    }
+    @keyframes growBar { from { width: 0; } to { width: 68%; } }
+
+    .mockup-progress-labels {
+      display: flex; justify-content: space-between;
+      font-size: 11px; color: rgba(255,255,255,0.35);
+      margin-bottom: var(--space-5);
+    }
+    .mockup-pct { color: var(--color-gold); font-weight: 700; }
+
+    .mockup-bids-title {
+      font-size: 11px; font-weight: 700;
+      color: rgba(255,255,255,0.35);
+      text-transform: uppercase; letter-spacing: 0.8px;
+      margin-bottom: var(--space-3);
+    }
+
+    .mockup-bid {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.04);
+      border-radius: var(--radius-sm);
+      margin-bottom: var(--space-2);
+      transition: background var(--transition-base);
+    }
+    .mockup-bid:hover { background: rgba(255,255,255,0.08); }
+
+    .mockup-bid-info { display: flex; align-items: center; gap: 10px; }
+    .mockup-bid-name { font-size: 13px; font-weight: 600; color: var(--text-on-dark); }
+    .mockup-bid-spec { font-size: 11px; color: rgba(255,255,255,0.4); }
+    .mockup-bid-price { font-size: 14px; font-weight: 800; color: var(--color-gold); }
+
+    /* الـ floating card */
+    .hero-float {
+      position: absolute;
+      bottom: -12px;
+      left: -16px;
+      background: var(--bg-surface);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      animation: floatY 4s ease-in-out infinite;
+    }
+    @keyframes floatY { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
+
+    .hero-float-icon {
+      width: 40px; height: 40px;
+      background: var(--color-gold-subtle);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .hero-float-icon svg { width: 22px; height: 22px; fill: var(--color-gold-dark); }
+    .hero-float-num { font-size: 20px; font-weight: 900; color: var(--color-navy); line-height: 1; }
+    .hero-float-lbl { font-size: 11px; color: var(--text-muted); }
+
+    /* Stats Strip */
+    .stats-strip {
+      background: var(--color-navy);
+      padding: var(--space-8) 0;
+    }
+    .stats-strip .container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .strip-item {
+      display: flex; align-items: center; justify-content: center;
+      gap: var(--space-4);
+      padding: var(--space-3) var(--space-6);
+      border-left: 1px solid rgba(255,255,255,0.07);
+    }
+    .strip-item:last-child { border-left: none; }
+    .strip-icon {
+      width: 44px; height: 44px;
+      background: rgba(244,166,35,0.1);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .strip-icon svg { width: 22px; height: 22px; fill: var(--color-gold); }
+    .strip-val { font-size: 26px; font-weight: 900; color: var(--text-on-dark); line-height: 1; }
+    .strip-lbl { font-size: 12px; color: var(--text-on-dark-muted); }
+
+    /* How It Works */
+    .how-section { padding: var(--space-24) 0; }
+    .how-steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      position: relative;
+      margin-top: var(--space-16);
+    }
+    .how-steps::before {
+      content: '';
+      position: absolute;
+      top: 44px;
+      right: 12.5%; left: 12.5%;
+      height: 2px;
+      background: linear-gradient(90deg, var(--color-gold), rgba(244,166,35,0.15));
+      z-index: 0;
+    }
+    .how-step {
+      display: flex; flex-direction: column;
+      align-items: center; text-align: center;
+      padding: 0 var(--space-6);
+      position: relative; z-index: 1;
+    }
+    .how-step-circle {
+      width: 88px; height: 88px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: var(--space-5); flex-shrink: 0;
+    }
+    .how-step:first-child .how-step-circle { background: var(--color-navy); }
+    .how-step:not(:first-child) .how-step-circle { background: rgba(26,43,74,0.08); }
+    .how-step:first-child .how-step-circle svg { fill: var(--color-gold); }
+    .how-step:not(:first-child) .how-step-circle svg { fill: var(--color-navy); }
+    .how-step-circle svg { width: 34px; height: 34px; }
+    .how-step h4 { color: var(--color-navy); margin-bottom: var(--space-2); }
+    .how-step p { font-size: var(--font-size-sm); }
+
+    /* Professionals Grid */
+    .pros-section { padding: var(--space-24) 0; background: var(--bg-surface); }
+    .pros-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-6);
+      margin-top: var(--space-12);
+    }
+
+    .pro-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: var(--space-6);
+      transition: all var(--transition-base);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .pro-card::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 64px; height: 64px;
+      background: var(--color-gold-subtle);
+      border-radius: 0 var(--radius-md) 0 64px;
+      transition: all var(--transition-slow);
+    }
+    .pro-card:hover {
+      border-color: var(--border-gold);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-4px);
+    }
+    .pro-card-head {
+      display: flex; gap: var(--space-3);
+      align-items: flex-start;
+      margin-bottom: var(--space-5);
+      position: relative; z-index: 1;
+    }
+    .pro-name { font-size: 16px; font-weight: 800; color: var(--color-navy); margin-bottom: 3px; }
+    .pro-title-txt { font-size: 12px; color: var(--text-muted); }
+    .pro-stats-row {
+      display: flex; gap: var(--space-5);
+      padding: var(--space-4);
+      background: var(--bg-app);
+      border-radius: var(--radius-sm);
+      margin-bottom: var(--space-4);
+    }
+    .pro-stat-val { font-size: 17px; font-weight: 800; color: var(--color-navy); line-height: 1; }
+    .pro-stat-lbl { font-size: 10px; color: var(--text-muted); }
+    .pro-rating-row {
+      display: flex; align-items: center; gap: var(--space-2);
+      margin-bottom: var(--space-4);
+    }
+    .pro-rating-val { font-size: 14px; font-weight: 800; color: var(--color-navy); }
+    .pro-rating-count { font-size: 12px; color: var(--text-muted); }
+    .pro-chips {
+      display: flex; flex-wrap: wrap; gap: var(--space-2);
+      margin-bottom: var(--space-5);
+    }
+    .chip {
+      padding: 4px 10px;
+      background: rgba(26,43,74,0.06);
+      border-radius: var(--radius-full);
+      font-size: 11px; font-weight: 600; color: var(--color-navy);
+    }
+
+    /* CTA Section */
+    .cta-section {
+      padding: var(--space-24) 0;
+      background: var(--color-navy);
+      position: relative; overflow: hidden;
+    }
+    .cta-section .container { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: var(--space-16); }
+    .cta-title { font-size: clamp(28px, 3vw, 42px); font-weight: 900; color: var(--text-on-dark); line-height: 1.25; margin-bottom: var(--space-4); }
+    .cta-title span { color: var(--color-gold); }
+    .cta-sub { font-size: var(--font-size-md); color: var(--text-on-dark-muted); line-height: 1.8; max-width: 480px; }
+    .cta-note { font-size: 12px; color: rgba(255,255,255,0.3); margin-top: var(--space-3); }
+
+    /* Testimonials */
+    .testimonials-section { padding: var(--space-24) 0; }
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-6);
+      margin-top: var(--space-12);
+    }
+    .testimonial-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: var(--space-8);
+      transition: all var(--transition-base);
+      position: relative;
+    }
+    .testimonial-card:hover { box-shadow: var(--shadow-md); transform: translateY(-4px); }
+    .quote-icon {
+      position: absolute; top: var(--space-6); left: var(--space-6);
+      width: 38px; height: 38px;
+      background: var(--color-gold-subtle); border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .quote-icon svg { width: 20px; height: 20px; fill: var(--color-gold-dark); }
+    .testimonial-text {
+      font-size: var(--font-size-sm); color: var(--text-muted);
+      line-height: 1.9; margin: var(--space-4) 0 var(--space-6);
+    }
+    .testimonial-author {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding-top: var(--space-5);
+      border-top: 1px solid var(--bg-app);
+    }
+    .author-name { font-size: 14px; font-weight: 800; color: var(--color-navy); }
+    .author-role { font-size: 12px; color: var(--text-muted); }
+
+    /* SVG stars shorthand */
+    .star-svg { width:14px; height:14px; fill: var(--color-gold); }
+  </style>
+</head>
+
+<body>
+
+  <!-- ======================================================
+       NAVBAR — الـ nav bar الثابتة في الاعلى
+       ====================================================== -->
+  <nav class="navbar">
+    <div class="navbar-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      </div>
+      <span class="logo-text">المقاول</span>
+    </div>
+
+    <ul class="navbar-nav">
+      <li><a href="#how">كيف يعمل؟</a></li>
+      <li><a href="#pros">المحترفون</a></li>
+      <li><a href="#about">عن المنصة</a></li>
+    </ul>
+
+    <div class="navbar-actions">
+      <a href="auth/login.html" class="navbar-login">سجل دخول</a>
+      <a href="auth/role-select.html" class="btn btn-primary btn-sm">ابدأ مجاناً</a>
+    </div>
+  </nav>
+
+
+  <!-- ======================================================
+       HERO — القسم الرئيسي اول ما تفتح الصفحة
+       ====================================================== -->
+  <section class="hero" id="home">
+    <div class="hero-bg"></div>
+    <div class="grid-overlay"></div>
+    <div class="hero-orb-1"></div>
+    <div class="hero-orb-2"></div>
+
+    <div class="container">
+
+      <!-- الجانب الايسر — النص -->
+      <div class="hero-content">
+        <div class="hero-live-tag">
+          <span class="hero-live-dot"></span>
+          المنصة الأولى للمقاولات في مصر
+        </div>
+
+        <h1 class="hero-title">
+          ابني مشروعك مع<br>
+          <span class="highlight">أفضل المُقاولين</span><br>
+          في مصر
+        </h1>
+
+        <p class="hero-subtitle">
+          من التصميم المعماري إلى التشطيب النهائي — نجمع لك خبرة المهندسين والمقاولين في مكان واحد لضمان جودة لا تُضاهى.
+        </p>
+
+        <div class="hero-actions">
+          <a href="auth/role-select.html" class="btn btn-primary btn-lg">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            انشر مشروعك
+          </a>
+          <a href="#pros" class="btn btn-ghost-light btn-lg">ابحث عن محترف</a>
+        </div>
+
+        <div class="hero-stats">
+          <div>
+            <div class="hero-stat-val"><span>+</span>١٥٬٠٠٠</div>
+            <div class="hero-stat-lbl">مشروع مكتمل</div>
+          </div>
+          <div>
+            <div class="hero-stat-val"><span>+</span>٥٬٠٠٠</div>
+            <div class="hero-stat-lbl">محترف معتمد</div>
+          </div>
+          <div>
+            <div class="hero-stat-val">٩٨<span>٪</span></div>
+            <div class="hero-stat-lbl">رضا العملاء</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- الجانب الايمن — الـ mockup card -->
+      <div class="hero-visual">
+        <div class="hero-mockup-card">
+          <div class="mockup-topbar">
+            <span class="mockup-label">مشروع نشط</span>
+            <span class="badge badge-success badge-live">قيد التنفيذ</span>
+          </div>
+
+          <div class="mockup-project-title">فيلا سكنية — التجمع الخامس</div>
+          <div class="mockup-meta">
+            <span>📍 القاهرة</span>
+            <span>📐 ٤٥٠ م²</span>
+          </div>
+
+          <div class="mockup-progress-track">
+            <div class="mockup-progress-fill"></div>
+          </div>
+          <div class="mockup-progress-labels">
+            <span>تقدم الإنجاز</span>
+            <span class="mockup-pct">٦٨٪</span>
+          </div>
+
+          <div class="mockup-bids-title">العروض المقدمة</div>
+
+          <div class="mockup-bid">
+            <div class="mockup-bid-info">
+              <div class="avatar avatar-sm av-navy">أ.م</div>
+              <div>
+                <div class="mockup-bid-name">م. أحمد محمود</div>
+                <div class="mockup-bid-spec">مقاول عام · ⭐ ٤.٩</div>
+              </div>
+            </div>
+            <div class="mockup-bid-price">٢٨٠,٠٠٠ ج</div>
+          </div>
+
+          <div class="mockup-bid">
+            <div class="mockup-bid-info">
+              <div class="avatar avatar-sm av-blue">م.ع</div>
+              <div>
+                <div class="mockup-bid-name">م. محمد عمر</div>
+                <div class="mockup-bid-spec">مهندس مدني · ⭐ ٤.٧</div>
+              </div>
+            </div>
+            <div class="mockup-bid-price">٣١٥,٠٠٠ ج</div>
+          </div>
+        </div>
+
+        <!-- الكارد الصغير الـ floating -->
+        <div class="hero-float">
+          <div class="hero-float-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          </div>
+          <div>
+            <div class="hero-float-num">+١٢</div>
+            <div class="hero-float-lbl">عرض جديد اليوم</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ======================================================
+       STATS STRIP — الشريط الاحصائي تحت الـ hero
+       ====================================================== -->
+  <section class="stats-strip">
+    <div class="container">
+      <div class="strip-item reveal">
+        <div class="strip-icon"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div>
+        <div><div class="strip-val">+١٥,٠٠٠</div><div class="strip-lbl">عميل مسجل</div></div>
+      </div>
+      <div class="strip-item reveal reveal-delay-1">
+        <div class="strip-icon"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
+        <div><div class="strip-val">٥,٢٠٠+</div><div class="strip-lbl">محترف معتمد</div></div>
+      </div>
+      <div class="strip-item reveal reveal-delay-2">
+        <div class="strip-icon"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg></div>
+        <div><div class="strip-val">١٢,٨٠٠+</div><div class="strip-lbl">مشروع مكتمل</div></div>
+      </div>
+      <div class="strip-item reveal reveal-delay-3">
+        <div class="strip-icon"><svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L12 15.45 7.77 18l1.12-4.81-3.73-3.23 4.92-.42L12 5l1.92 4.53 4.92.42-3.73 3.23L16.23 18z"/></svg></div>
+        <div><div class="strip-val">٩٨٪</div><div class="strip-lbl">رضا العملاء</div></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ======================================================
+       HOW IT WORKS — قسم "كيف يعمل المقاول"
+       ====================================================== -->
+  <section class="how-section" id="how">
+    <div class="container">
+      <div class="section-header-center reveal">
+        <span class="section-label">كيف يعمل؟</span>
+        <h2 class="section-title">أربع خطوات وابدأ</h2>
+        <p class="section-sub">عملية بسيطة وشفافة من بداية المشروع لحد التسليم النهائي</p>
+      </div>
+
+      <div class="how-steps">
+        <div class="how-step reveal reveal-delay-1">
+          <div class="how-step-circle">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          </div>
+          <h4>انشر مشروعك</h4>
+          <p>أضف تفاصيل مشروعك، الموقع، المساحة، وصور توضيحية</p>
+        </div>
+        <div class="how-step reveal reveal-delay-2">
+          <div class="how-step-circle">
+            <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+          </div>
+          <h4>استقبل العروض</h4>
+          <p>المحترفون يقدموا عروضهم التنافسية مع السعر والمدة</p>
+        </div>
+        <div class="how-step reveal reveal-delay-3">
+          <div class="how-step-circle">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          </div>
+          <h4>اختر الأنسب</h4>
+          <p>راجع التقييمات والملفات واختار المحترف المناسب</p>
+        </div>
+        <div class="how-step reveal reveal-delay-4">
+          <div class="how-step-circle">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+          </div>
+          <h4>ابدأ التنفيذ</h4>
+          <p>وقّع العقد وتابع التنفيذ مع نظام أقساط آمن ومضمون</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ======================================================
+       PROFESSIONALS — قسم "أبرز المحترفين"
+       ====================================================== -->
+  <section class="pros-section" id="pros">
+    <div class="container">
+      <div class="flex-between reveal">
+        <div>
+          <span class="section-label">نخبة المحترفين</span>
+          <h2 class="section-title">اختار من أفضل الكفاءات</h2>
+          <p class="section-sub">من بين آلاف المهندسين والمقاولين الموثقين والمقيّمين</p>
+        </div>
+        <a href="#" class="btn btn-navy">مشاهدة الكل</a>
+      </div>
+
+      <div class="pros-grid">
+
+        <!-- كارد محترف ١ -->
+        <div class="pro-card reveal reveal-delay-1">
+          <div class="pro-card-head">
+            <div class="avatar avatar-lg av-navy">أ.م</div>
+            <div>
+              <div class="pro-name">م. أحمد محمود</div>
+              <div class="pro-title-txt">مهندس مدني — القاهرة</div>
+            </div>
+            <span class="badge badge-success" style="margin-right:auto">✓ موثق</span>
+          </div>
+          <div class="pro-stats-row">
+            <div><div class="pro-stat-val">٨٧</div><div class="pro-stat-lbl">مشروع</div></div>
+            <div><div class="pro-stat-val">١٢</div><div class="pro-stat-lbl">سنة خبرة</div></div>
+            <div><div class="pro-stat-val">٩٥٪</div><div class="pro-stat-lbl">إنجاز</div></div>
+          </div>
+          <div class="pro-rating-row">
+            <div class="stars">
+              <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </div>
+            <span class="pro-rating-val">٤.٩</span>
+            <span class="pro-rating-count">(١٢٤ تقييم)</span>
+          </div>
+          <div class="pro-chips">
+            <span class="chip">إنشاءات</span>
+            <span class="chip">فيلات</span>
+            <span class="chip">عمارات</span>
+          </div>
+          <button class="btn btn-outline btn-full">عرض الملف الشخصي</button>
+        </div>
+
+        <!-- كارد محترف ٢ -->
+        <div class="pro-card reveal reveal-delay-2">
+          <div class="pro-card-head">
+            <div class="avatar avatar-lg av-blue">س.أ</div>
+            <div>
+              <div class="pro-name">م. سارة أحمد</div>
+              <div class="pro-title-txt">مهندسة معمارية — الجيزة</div>
+            </div>
+            <span class="badge badge-success" style="margin-right:auto">✓ موثق</span>
+          </div>
+          <div class="pro-stats-row">
+            <div><div class="pro-stat-val">٦٤</div><div class="pro-stat-lbl">مشروع</div></div>
+            <div><div class="pro-stat-val">٩</div><div class="pro-stat-lbl">سنة خبرة</div></div>
+            <div><div class="pro-stat-val">٩٨٪</div><div class="pro-stat-lbl">إنجاز</div></div>
+          </div>
+          <div class="pro-rating-row">
+            <div class="stars">
+              <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </div>
+            <span class="pro-rating-val">٤.٨</span>
+            <span class="pro-rating-count">(٨٩ تقييم)</span>
+          </div>
+          <div class="pro-chips">
+            <span class="chip">تصميم معماري</span>
+            <span class="chip">ديكور</span>
+            <span class="chip">تشطيبات</span>
+          </div>
+          <button class="btn btn-outline btn-full">عرض الملف الشخصي</button>
+        </div>
+
+        <!-- كارد محترف ٣ -->
+        <div class="pro-card reveal reveal-delay-3">
+          <div class="pro-card-head">
+            <div class="avatar avatar-lg av-green">خ.ح</div>
+            <div>
+              <div class="pro-name">م. خالد حسين</div>
+              <div class="pro-title-txt">مقاول عام — الإسكندرية</div>
+            </div>
+            <span class="badge badge-success" style="margin-right:auto">✓ موثق</span>
+          </div>
+          <div class="pro-stats-row">
+            <div><div class="pro-stat-val">١١٢</div><div class="pro-stat-lbl">مشروع</div></div>
+            <div><div class="pro-stat-val">١٦</div><div class="pro-stat-lbl">سنة خبرة</div></div>
+            <div><div class="pro-stat-val">٩٢٪</div><div class="pro-stat-lbl">إنجاز</div></div>
+          </div>
+          <div class="pro-rating-row">
+            <div class="stars">
+              <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              <svg class="star-svg" style="opacity:0.3" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </div>
+            <span class="pro-rating-val">٤.٧</span>
+            <span class="pro-rating-count">(٢٠٣ تقييم)</span>
+          </div>
+          <div class="pro-chips">
+            <span class="chip">بناء كامل</span>
+            <span class="chip">خرسانة</span>
+            <span class="chip">مشاريع تجارية</span>
+          </div>
+          <button class="btn btn-outline btn-full">عرض الملف الشخصي</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ======================================================
+       CTA SECTION — قسم الـ call to action الكبير
+       ====================================================== -->
+  <section class="cta-section">
+    <div class="grid-overlay"></div>
+    <div class="container">
+      <div class="reveal">
+        <h2 class="cta-title">جاهز تبدأ مشروعك؟<br><span>سجّل دلوقتي مجاناً</span></h2>
+        <p class="cta-sub">انضم لأكثر من ١٥,٠٠٠ عميل يثقون في المقاول لإدارة مشاريعهم الإنشائية في مصر.</p>
+      </div>
+      <div class="reveal reveal-delay-2" style="display:flex;flex-direction:column;align-items:flex-start;gap:12px;flex-shrink:0">
+        <a href="auth/role-select.html" class="btn btn-primary btn-xl">
+          ابدأ مجاناً
+          <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M8 5v14l11-7z"/></svg>
+        </a>
+         <!-- <span class="cta-note">لا يحتاج بطاقة ائتمانية · مجاني للأبد</span> -->
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ======================================================
+       TESTIMONIALS — آراء وتقييمات العملاء
+       ====================================================== -->
+  <section class="testimonials-section" id="about">
+    <div class="container">
+      <div class="section-header-center reveal">
+        <span class="section-label">ماذا يقولون؟</span>
+        <h2 class="section-title">عملاؤنا يتكلموا</h2>
+        <p class="section-sub">آراء حقيقية من عملاء استخدموا المنصة وأتموا مشاريعهم بنجاح</p>
+      </div>
+
+      <div class="testimonials-grid">
+        <div class="testimonial-card reveal reveal-delay-1">
+          <div class="quote-icon"><svg viewBox="0 0 24 24"><path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z"/></svg></div>
+          <div class="stars mt-4">
+            <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          </div>
+          <p class="testimonial-text">"المنصة وفرت عليّ وقت وجهد كتير. قدرت ألاقي مقاول محترف خلال يومين بس وبدأنا الشغل فوراً. جودة التنفيذ كانت فوق توقعاتي."</p>
+          <div class="testimonial-author">
+            <div class="avatar avatar-md av-navy avatar-circle">ك.م</div>
+            <div>
+              <div class="author-name">كريم محمد</div>
+              <div class="author-role">صاحب فيلا — التجمع الخامس</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card reveal reveal-delay-2">
+          <div class="quote-icon"><svg viewBox="0 0 24 24"><path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z"/></svg></div>
+          <div class="stars mt-4">
+            <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          </div>
+          <p class="testimonial-text">"كمهندسة، المنصة ساعدتني أوصل لعملاء جدد بسرعة كبيرة. نظام العقود والأقساط واضح ومضمون، وده زاد ثقتي في التعامل."</p>
+          <div class="testimonial-author">
+            <div class="avatar avatar-md av-blue avatar-circle">ن.ي</div>
+            <div>
+              <div class="author-name">نور يوسف</div>
+              <div class="author-role">مهندسة معمارية — الجيزة</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card reveal reveal-delay-3">
+          <div class="quote-icon"><svg viewBox="0 0 24 24"><path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z"/></svg></div>
+          <div class="stars mt-4">
+            <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          </div>
+          <p class="testimonial-text">"وجدت المقاول المناسب لمشروع التجديد بتاعي في وقت قياسي. الأسعار شفافة ومفيش مفاجآت. ده اللي كنت محتاجه بالظبط."</p>
+          <div class="testimonial-author">
+            <div class="avatar avatar-md av-green avatar-circle">إ.س</div>
+            <div>
+              <div class="author-name">إبراهيم سعيد</div>
+              <div class="author-role">صاحب شقة — الإسكندرية</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ======================================================
+       FOOTER — الفوتر الكامل في اخر الصفحة
+       ====================================================== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+
+        <!-- الكولم الاول — البراند -->
+        <div>
+          <div class="navbar-logo footer-logo-wrap" style="margin-bottom:16px">
+            <div class="sidebar-logo-mark">
+              <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            </div>
+            <span class="logo-text" style="color:#fff">المقاول</span>
+          </div>
+          <p class="footer-brand-desc">المنصة المتكاملة لإدارة المشاريع الإنشائية في مصر. نربطك بأفضل المقاولين والمهندسين لضمان جودة استثنائية وشفافية تامة.</p>
+          <div class="footer-socials">
+            <div class="social-btn"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></div>
+            <div class="social-btn"><svg viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.53A4.48 4.48 0 0016 2.5a4.48 4.48 0 00-4.44 5.28A12.76 12.76 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/></svg></div>
+            <div class="social-btn"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg></div>
+            <div class="social-btn"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37zm1.5-4.87h.01"/></svg></div>
+          </div>
+        </div>
+
+        <!-- كولم ٢ -->
+        <div>
+          <div class="footer-col-title">روابط سريعة</div>
+          <ul class="footer-links">
+            <li><a href="#">الرئيسية</a></li>
+            <li><a href="#how">كيف يعمل؟</a></li>
+            <li><a href="#pros">المحترفون</a></li>
+            <li><a href="#">الأسئلة الشائعة</a></li>
+          </ul>
+        </div>
+
+        <!-- كولم ٣ -->
+        <div>
+          <div class="footer-col-title">خدماتنا</div>
+          <ul class="footer-links">
+            <li><a href="#">نشر المشاريع</a></li>
+            <li><a href="#">نظام العروض</a></li>
+            <li><a href="#">العقود الرقمية</a></li>
+            <li><a href="#">نظام الدفع</a></li>
+            <li><a href="#">التقييمات</a></li>
+          </ul>
+        </div>
+
+        <!-- كولم ٤ -->
+        <div>
+          <div class="footer-col-title">تواصل معنا</div>
+          <ul class="footer-links">
+            <li><a href="mailto:info@elmoquwal.com">info@elmoquwal.com</a></li>
+            <li><a href="tel:+20100000000">+20 100 000 0000</a></li>
+            <li><a href="#">القاهرة، مصر</a></li>
+          </ul>
+        </div>
+
+      </div>
+
+
+
+      <div class="footer-bottom-bar">
+        <div class="footer-copy">© ٢٠٢٥ منصة المقاول. جميع الحقوق محفوظة.</div>
+        <div class="footer-legal-links">
+          <a href="#">سياسة الخصوصية</a>
+          <a href="#">شروط الاستخدام</a>
+          <a href="#">الدعم الفني</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Motion One — mktba el animation el khafeefa (~4KB) -->
+  <script src="https://cdn.jsdelivr.net/npm/motion@10.18.0/dist/motion.min.js"></script>
+  <script src="assets/js/main.js"></script>
+  <!-- el guest identity + el scroll-prompt modal 3ashan el user el mesh mosajel -->
+  <script src="assets/js/guest.js"></script>
+</body>
+</html>

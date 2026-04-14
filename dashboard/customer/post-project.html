@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>المقاول | أضف مشروع جديد</title>
+
+  <!-- خط عربي -->
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- CSS العام -->
+  <link rel="stylesheet" href="../../assets/css/variables.css">
+  <link rel="stylesheet" href="../../assets/css/base.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/layout.css">
+  <link rel="stylesheet" href="../../assets/css/utilities.css">
+  <style>
+    /* ============================================================
+       STYLES FOR POST-PROJECT PAGE
+       ============================================================ */
+    
+    /* ====== Stepper Visuals ====== */
+    .steps-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-bottom: var(--space-8);
+      background: var(--bg-surface);
+      padding: var(--space-5) var(--space-6);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-default);
+      box-shadow: var(--shadow-sm);
+    }
+    .step-node {
+      display: flex; align-items: center; gap: var(--space-3); flex: 1; min-width: 0;
+    }
+    .step-circle {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--bg-surface-2); color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: var(--font-size-sm); flex-shrink: 0;
+      transition: all var(--transition-base); border: 2px solid transparent;
+    }
+    .step-node.active .step-circle { background: var(--color-gold); color: var(--color-navy-dark); box-shadow: var(--shadow-gold); }
+    .step-node.done .step-circle { background: var(--color-success); color: #fff; }
+    .step-label { font-size: 11px; font-weight: 700; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .step-node.active .step-label { color: var(--color-navy); }
+    .step-line { flex: 1; height: 2px; background: var(--border-default); border-radius: 2px; }
+    .step-line.done { background: var(--color-success); }
+
+    .step-panel {
+      background: var(--bg-surface); border-radius: var(--radius-md);
+      padding: var(--space-8); border: 1px solid var(--border-default);
+      box-shadow: var(--shadow-sm); display: none;
+    }
+    .step-panel.active { display: block; animation: slideFade .3s ease; }
+    @keyframes slideFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .step-title { font-size: var(--font-size-lg); font-weight: 800; color: var(--color-navy); margin-bottom: var(--space-2); }
+    .step-sub { color: var(--text-muted); font-size: var(--font-size-sm); margin-bottom: var(--space-6); }
+
+    /* ====== Project Type Selection ====== */
+    .type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--space-4); }
+    .type-card {
+      position: relative; cursor: pointer; padding: var(--space-5);
+      border-radius: var(--radius-md); border: 2px solid var(--border-default);
+      background: var(--bg-surface); transition: all var(--transition-base);
+      display: flex; flex-direction: column; gap: var(--space-2);
+    }
+    .type-card:hover { border-color: var(--color-gold); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .type-card input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
+    .type-card .t-icon { width: 44px; height: 44px; border-radius: var(--radius-sm); background: var(--color-gold-subtle); display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: var(--space-2); }
+    .type-card .t-title { font-weight: 800; color: var(--color-navy); font-size: var(--font-size-base); }
+    .type-card .t-desc { font-size: 11px; color: var(--text-muted); line-height: 1.6; }
+    .type-card.selected { border-color: var(--color-gold); background: var(--color-gold-subtle); box-shadow: var(--shadow-gold); }
+
+    /* Forms */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); margin-bottom: var(--space-5); }
+    .form-field { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-5); }
+    .form-field label { font-size: var(--font-size-sm); font-weight: 700; color: var(--color-navy); }
+    .form-field input, .form-field select, .form-field textarea {
+      width: 100%; padding: 12px 14px; background: var(--bg-surface-2);
+      border: 1.5px solid transparent; border-radius: var(--radius-sm);
+      font-family: var(--font-main); font-size: var(--font-size-base);
+    }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus {
+      background: var(--bg-surface); border-color: var(--color-gold); box-shadow: 0 0 0 3px var(--color-gold-subtle);
+    }
+
+    /* Review & File */
+    .drop-zone { border: 2px dashed var(--border-strong); border-radius: var(--radius-md); padding: var(--space-10) var(--space-6); text-align: center; background: var(--bg-surface-2); cursor: pointer; }
+    .drop-zone:hover { border-color: var(--color-gold); background: var(--color-gold-subtle); }
+    
+    .nav-buttons { display: flex; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-6); }
+
+    @media (max-width: 768px) {
+      .form-row { grid-template-columns: 1fr; }
+      .steps-bar { overflow-x: auto; padding: 12px; }
+      .step-label { display: none; }
+    }
+  </style>
+</head>
+<body class="dashboard-page">
+<div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true" style="position:fixed;top:18px;left:18px;z-index:2000;display:flex;flex-direction:column;gap:10px;pointer-events:none;"></div>
+  <div class="dashboard-wrapper">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo-mark" style="display:flex;align-items:center;justify-content:center;">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
+        </div>
+        <div class="sidebar-logo-text">المقاول</div>
+      </div>
+
+      <div class="sidebar-user">
+        <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--color-gold),var(--color-gold-dark));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:var(--color-navy-dark);" id="sidebarAvatar">م</div>
+        <div class="sidebar-user-info">
+          <div class="name" id="sidebarUserName">جاري التحميل...</div>
+          <div class="role">عميل</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-section-label">الرئيسية</div>
+        <a href="index.html" class="sidebar-item">
+          <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+          لوحة التحكم
+        </a>
+        <a href="browse-projects.html" class="sidebar-item">
+          <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          تصفح المشاريع
+        </a>
+        <div class="sidebar-section-label">مشاريعي</div>
+        <a href="post-project.html" class="sidebar-item active">
+          <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          إضافة مشروع جديد
+        </a>
+        <a href="proposals.html" class="sidebar-item">
+          <svg viewBox="0 0 24 24"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>
+          عروض الأسعار
+        </a>
+        <a href="contract.html" class="sidebar-item">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+          اتفاقياتي
+        </a>
+      </nav>
+
+      <div class="sidebar-cta">
+        <button class="btn btn-ghost-light btn-full" id="logoutBtnMain">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+          تسجيل الخروج
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="dashboard-main">
+      <div class="dashboard-topbar">
+        <div class="topbar-page-title">إضافة مشروع جديد</div>
+        <div class="topbar-actions">
+          <div class="topbar-user">
+            <div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--color-gold),var(--color-gold-dark));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--color-navy-dark);" id="topbarAvatar">م</div>
+            <div class="topbar-user-name" id="topbarUserName">جاري...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-content">
+        <div class="post-wrap" style="max-width: 900px; margin: 0 auto;">
+          <div class="page-head" style="margin-bottom: var(--space-8);">
+            <h2 class="section-title">نشر تفاصيل مشروعك</h2>
+            <p style="color:var(--text-muted); font-size:var(--font-size-sm);">اتبع الخطوات لوصف مشروعك بوضوح والحصول على أفضل عروض الأسعار.</p>
+          </div>
+
+          <!-- Progress Steps -->
+          <div class="steps-bar" id="stepsBar">
+            <div class="step-node active" data-step="1">
+              <div class="step-circle">1</div>
+              <div class="step-label">نوع المشروع</div>
+            </div>
+            <div class="step-line"></div>
+            <div class="step-node" data-step="2">
+              <div class="step-circle">2</div>
+              <div class="step-label">بيانات العقار</div>
+            </div>
+            <div class="step-line"></div>
+            <div class="step-node" data-step="3">
+              <div class="step-circle">3</div>
+              <div class="step-label">المتطلبات</div>
+            </div>
+            <div class="step-line"></div>
+            <div class="step-node" data-step="4">
+              <div class="step-circle">4</div>
+              <div class="step-label">الميزانية والجدول</div>
+            </div>
+            <div class="step-line"></div>
+            <div class="step-node" data-step="5">
+              <div class="step-circle">5</div>
+              <div class="step-label">الصور والمراجعة</div>
+            </div>
+          </div>
+
+
+      <!-- ============ Form ============ -->
+      <form id="projectForm" novalidate>
+
+        <!-- ========== STEP 1 — نوع المشروع ========== -->
+        <section class="step-panel active" data-panel="1">
+          <h2 class="step-title">اختر نوع المشروع</h2>
+          <p class="step-sub">اختار أقرب تصنيف لشغلك علشان نعرض لك المتطلبات المناسبة</p>
+
+          <div class="type-grid" id="typeGrid">
+            <!-- كل نوع مشروع -->
+            <label class="type-card" data-type="new_construction">
+              <input type="radio" name="projectType" value="new_construction">
+              <div class="t-body">
+                <div class="t-icon">🏗️</div>
+                <div class="t-title">بناء جديد</div>
+                <div class="t-desc">تنفيذ مشروع بناء من الصفر — أساسات وأعمدة وسقف</div>
+              </div>
+            </label>
+            <label class="type-card" data-type="renovation">
+              <input type="radio" name="projectType" value="renovation">
+              <div class="t-body">
+                <div class="t-icon">🛠️</div>
+                <div class="t-title">تجديد</div>
+                <div class="t-desc">إعادة تجديد عقار قائم وتحديث تصميمه الداخلي</div>
+              </div>
+            </label>
+            <label class="type-card" data-type="finishing">
+              <input type="radio" name="projectType" value="finishing">
+              <div class="t-body">
+                <div class="t-icon">🎨</div>
+                <div class="t-title">تشطيبات</div>
+                <div class="t-desc">دهان، بلاط، جبس، أبواب ونوافذ وتشطيب نهائي</div>
+              </div>
+            </label>
+            <label class="type-card" data-type="electrical">
+              <input type="radio" name="projectType" value="electrical">
+              <div class="t-body">
+                <div class="t-icon">⚡</div>
+                <div class="t-title">كهرباء</div>
+                <div class="t-desc">توصيلات ولوحات كهرباء وإضاءة وطاقة شمسية</div>
+              </div>
+            </label>
+            <label class="type-card" data-type="plumbing">
+              <input type="radio" name="projectType" value="plumbing">
+              <div class="t-body">
+                <div class="t-icon">🚿</div>
+                <div class="t-title">سباكة</div>
+                <div class="t-desc">تمديدات مياه وصرف وسخانات وتركيب قطع صحية</div>
+              </div>
+            </label>
+            <label class="type-card" data-type="other">
+              <input type="radio" name="projectType" value="other">
+              <div class="t-body">
+                <div class="t-icon">📦</div>
+                <div class="t-title">أخرى</div>
+                <div class="t-desc">أي نوع خدمات إنشائية أخرى مش موجودة في القائمة</div>
+              </div>
+            </label>
+          </div>
+          <div class="err-msg" id="err-type">برجاء اختيار نوع المشروع</div>
+        </section>
+
+        <!-- ========== STEP 2 — بيانات العقار ========== -->
+        <section class="step-panel" data-panel="2">
+          <h2 class="step-title">بيانات العقار</h2>
+          <p class="step-sub">أدخل بيانات العقار الرئيسية</p>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label for="governorate">المحافظة</label>
+              <select id="governorate" name="governorate">
+                <option value="">-- اختر المحافظة --</option>
+                <option>القاهرة</option><option>الجيزة</option><option>الإسكندرية</option>
+                <option>القليوبية</option><option>الدقهلية</option><option>الشرقية</option>
+                <option>الغربية</option><option>كفر الشيخ</option><option>المنوفية</option>
+                <option>البحيرة</option><option>دمياط</option><option>بورسعيد</option>
+                <option>الإسماعيلية</option><option>السويس</option><option>شمال سيناء</option>
+                <option>جنوب سيناء</option><option>البحر الأحمر</option><option>الفيوم</option>
+                <option>بني سويف</option><option>المنيا</option><option>أسيوط</option>
+                <option>سوهاج</option><option>قنا</option><option>الأقصر</option>
+                <option>أسوان</option><option>الوادي الجديد</option><option>مطروح</option>
+              </select>
+              <div class="err-msg">اختر المحافظة من فضلك</div>
+            </div>
+
+            <div class="form-field">
+              <label for="area">المساحة (متر مربع)</label>
+              <input type="number" id="area" name="area" min="20" max="10000" placeholder="مثال: 150">
+              <div class="hint">من 20 إلى 10,000 متر</div>
+              <div class="err-msg">أدخل مساحة صحيحة بين 20 و 10,000</div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label for="floors">عدد الأدوار</label>
+              <input type="number" id="floors" name="floors" min="1" max="20" placeholder="مثال: 2">
+              <div class="err-msg">أدخل عدد الأدوار من 1 إلى 20</div>
+            </div>
+
+            <div class="form-field">
+              <label for="addressDesc">وصف العنوان / المنطقة</label>
+              <input type="text" id="addressDesc" name="addressDesc" placeholder="مثال: التجمع الخامس — الحي التامن">
+              <div class="err-msg">اكتب وصف للعنوان</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========== STEP 3 — المتطلبات ========== -->
+        <section class="step-panel" data-panel="3">
+          <h2 class="step-title">متطلبات المشروع</h2>
+          <p class="step-sub">حدد العناصر المطلوبة — هتظهر حسب نوع المشروع اللي اخترته</p>
+
+          <div id="requirementsContainer">
+            <div class="check-grid" id="checkGrid"></div>
+          </div>
+
+          <div class="form-field">
+            <label for="extraNotes">ملاحظات إضافية</label>
+            <textarea id="extraNotes" name="extraNotes" placeholder="أي تفاصيل إضافية تحب المقاول يعرفها..."></textarea>
+          </div>
+
+          <div class="form-field">
+            <label for="requiredEngineers">عدد المهندسين المطلوبين</label>
+            <input type="number" id="requiredEngineers" name="requiredEngineers" min="1" max="50" value="1">
+            <div class="hint">الافتراضي مهندس واحد — حتى 50</div>
+            <div class="err-msg" id="err-engineers" style="display:none;">أدخل عدداً بين 1 و 50</div>
+          </div>
+        </section>
+
+        <!-- ========== STEP 4 — الميزانية والجدول الزمني ========== -->
+        <section class="step-panel" data-panel="4">
+          <h2 class="step-title">الميزانية والجدول الزمني</h2>
+          <p class="step-sub">اختار نطاق الميزانية والمدة المتوقعة لإنجاز المشروع</p>
+
+          <div class="form-field">
+            <label>نطاق الميزانية (بالجنيه المصري)</label>
+            <div class="pill-grid" id="budgetGrid">
+              <label class="pill-card"><input type="radio" name="budget" value="under_50k">أقل من 50,000</label>
+              <label class="pill-card"><input type="radio" name="budget" value="50k_200k">50,000 - 200,000</label>
+              <label class="pill-card"><input type="radio" name="budget" value="200k_500k">200,000 - 500,000</label>
+              <label class="pill-card"><input type="radio" name="budget" value="500k_1m">500,000 - 1 مليون</label>
+              <label class="pill-card"><input type="radio" name="budget" value="above_1m">أكثر من 1 مليون</label>
+            </div>
+            <div class="err-msg" id="err-budget">اختر نطاق الميزانية</div>
+          </div>
+
+          <div class="form-field">
+            <label>الجدول الزمني المتوقع</label>
+            <div class="pill-grid" id="timelineGrid">
+              <label class="pill-card"><input type="radio" name="timeline" value="within_week">خلال أسبوع</label>
+              <label class="pill-card"><input type="radio" name="timeline" value="within_month">خلال شهر</label>
+              <label class="pill-card"><input type="radio" name="timeline" value="1_3_months">1 - 3 أشهر</label>
+              <label class="pill-card"><input type="radio" name="timeline" value="3_6_months">3 - 6 أشهر</label>
+              <label class="pill-card"><input type="radio" name="timeline" value="flexible">مرن</label>
+            </div>
+            <div class="err-msg" id="err-timeline">اختر الجدول الزمني</div>
+          </div>
+
+          <!-- ====== AI Price Estimate Box ====== -->
+          <div class="ai-estimate-box">
+            <div class="ai-title">✨ تقدير السعر بواسطة الذكاء الاصطناعي</div>
+            <div class="ai-desc">
+              احصل على تقدير مبدئي لسعر مشروعك بناءً على البيانات اللي أدخلتها
+            </div>
+            <button type="button" class="btn btn-primary" id="aiEstimateBtn" style="align-self: flex-start;">
+              طلب تقدير ذكي الآن
+            </button>
+            <div class="ai-result" id="aiResult"></div>
+          </div>
+        </section>
+
+        <!-- ========== STEP 5 — الصور والمراجعة ========== -->
+        <section class="step-panel" data-panel="5">
+          <h2 class="step-title">الصور والمراجعة النهائية</h2>
+          <p class="step-sub">ارفق صور للعقار (اختياري) وراجع البيانات قبل الإرسال</p>
+
+          <!-- Drop Zone -->
+          <div class="drop-zone" id="dropZone">
+            <div class="dz-icon">📷</div>
+            <div class="dz-title">اسحب الصور هنا أو اضغط للاختيار</div>
+            <div class="dz-sub">حتى 10 صور - الحد الأقصى 5 ميجا لكل صورة</div>
+            <input type="file" id="photoInput" accept="image/*" multiple>
+          </div>
+
+          <div class="preview-grid" id="previewGrid"></div>
+
+          <!-- Review Summary -->
+          <div class="review-box">
+            <h4>ملخص المشروع</h4>
+            <div id="reviewContent"></div>
+          </div>
+        </section>
+
+        <!-- ============ Navigation Buttons ============ -->
+        <div class="nav-buttons">
+          <button type="button" class="btn btn-outline" id="prevBtn" disabled>السابق</button>
+          <button type="button" class="btn btn-primary" id="nextBtn">التالي</button>
+          <button type="submit" class="btn btn-primary" id="submitBtn" style="display:none;">نشر المشروع</button>
+        </div>
+
+      </form>
+
+    </div>
+  </main>
+</div>
+
+<script src="../../assets/js/api.js"></script>
+<script>
+/* ============================================================
+   post-project.js (inline) — الـ multi-step form logic
+   ============================================================ */
+
+(() => {
+  function showToast(message, type = 'success') {
+    const stack = document.getElementById('toastStack');
+    if (!stack) return;
+    const toast = document.createElement('div');
+    toast.textContent = message;
+    toast.style.pointerEvents = 'auto';
+    toast.style.minWidth = '260px';
+    toast.style.maxWidth = '360px';
+    toast.style.padding = '12px 14px';
+    toast.style.borderRadius = '12px';
+    toast.style.border = type === 'error' ? '1px solid rgba(239,68,68,0.35)' : '1px solid rgba(16,185,129,0.35)';
+    toast.style.background = type === 'error' ? 'rgba(239,68,68,0.08)' : 'var(--color-success-bg)';
+    toast.style.color = type === 'error' ? '#991b1b' : '#065f46';
+    toast.style.boxShadow = 'var(--shadow-md)';
+    toast.style.fontSize = 'var(--font-size-sm)';
+    toast.style.fontWeight = '700';
+    stack.appendChild(toast);
+    setTimeout(() => toast.remove(), 3200);
+  }
+
+  if (!localStorage.getItem('elm_user') || !localStorage.getItem('elm_accessToken')) {
+    window.location.href = '../../auth/login.html';
+    return;
+  }
+
+  const TOTAL_STEPS = 5;
+  let currentStep = 1;
+  let uploadedFiles = [];
+
+  // ====== Sidebar & Topbar Populating ======
+  document.addEventListener('DOMContentLoaded', () => {
+    const user = JSON.parse(localStorage.getItem('elm_user') || '{}');
+    if (user.name) {
+      const firstName = user.name.split(' ')[0];
+      const initial = firstName.charAt(0) || 'م';
+      
+      const elements = {
+        'sidebarUserName': user.name,
+        'topbarUserName': user.name,
+        'sidebarAvatar': initial,
+        'topbarAvatar': initial
+      };
+      
+      for (const [id, val] of Object.entries(elements)) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+      }
+    }
+    
+    const logoutBtn = document.getElementById('logoutBtnMain');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', async () => {
+        try { await window.api.fetch('/auth/logout', { method: 'POST' }); } catch (_) {}
+        localStorage.removeItem('elm_accessToken');
+        localStorage.removeItem('elm_user');
+        window.location.href = '../../index.html';
+      });
+    }
+  });
+
+  // Dynamic Requirements lookup بناء على نوع المشروع
+  const REQUIREMENTS = {
+    new_construction:  ['أعمدة خرسانية', 'طوب', 'عوازل', 'أسقف', 'أساسات', 'خرسانة مسلحة'],
+    renovation: ['هدم جزئي', 'إعادة دهان', 'تغيير أرضيات', 'تعديل كهرباء', 'تعديل سباكة'],
+    finishing:  ['بلاط', 'دهان', 'جبس', 'أبواب', 'نوافذ', 'مطبخ', 'حمامات', 'باركيه'],
+    electrical: ['لوحة كهرباء', 'أسلاك', 'إضاءة', 'تكييف', 'طاقة شمسية', 'أنظمة ذكية'],
+    plumbing:   ['خطوط مياه', 'خطوط صرف', 'سخان', 'قطع صحية', 'فلاتر مياه'],
+    other:      ['استشارة', 'تصميم', 'إشراف', 'خدمة أخرى']
+  };
+
+  // Labels مقروءة للـ review
+  const TYPE_LABELS = {
+    new_construction: 'بناء جديد', renovation: 'تجديد', finishing: 'تشطيبات',
+    electrical: 'كهرباء',  plumbing: 'سباكة',   other: 'أخرى'
+  };
+  const BUDGET_LABELS = {
+    under_50k:'أقل من 50,000', '50k_200k':'50,000 - 200,000',
+    '200k_500k':'200,000 - 500,000', '500k_1m':'500,000 - 1 مليون',
+    above_1m:'أكثر من 1 مليون'
+  };
+  const TIMELINE_LABELS = {
+    within_week:'خلال أسبوع', within_month:'خلال شهر',
+    '1_3_months':'1 - 3 أشهر', '3_6_months':'3 - 6 أشهر', flexible:'مرن'
+  };
+
+  // ===== Selectors =====
+  const panels   = document.querySelectorAll('.step-panel');
+  const stepNodes= document.querySelectorAll('.step-node');
+  const stepLines= document.querySelectorAll('.step-line');
+  const prevBtn  = document.getElementById('prevBtn');
+  const nextBtn  = document.getElementById('nextBtn');
+  const submitBtn= document.getElementById('submitBtn');
+
+  // ===== Type cards — visual selection =====
+  document.querySelectorAll('.type-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      card.querySelector('input').checked = true;
+      document.getElementById('err-type').style.display = 'none';
+    });
+  });
+
+  // ===== Pill cards (budget / timeline) =====
+  document.querySelectorAll('.pill-grid').forEach(grid => {
+    grid.addEventListener('click', e => {
+      const pill = e.target.closest('.pill-card');
+      if (!pill) return;
+      grid.querySelectorAll('.pill-card').forEach(p => p.classList.remove('selected'));
+      pill.classList.add('selected');
+      pill.querySelector('input').checked = true;
+    });
+  });
+
+  // ===== Build checklist dynamically when entering Step 3 =====
+  function buildRequirements() {
+    const selectedType = document.querySelector('input[name="projectType"]:checked');
+    const grid = document.getElementById('checkGrid');
+    grid.innerHTML = '';
+    if (!selectedType) {
+      grid.innerHTML = '<p class="hint" style="grid-column:1/-1;">اختر نوع المشروع أولاً في الخطوة الأولى</p>';
+      return;
+    }
+    const items = REQUIREMENTS[selectedType.value] || [];
+    items.forEach((label, i) => {
+      const wrap = document.createElement('label');
+      wrap.className = 'check-item';
+      wrap.innerHTML = `<input type="checkbox" value="${label}" name="req"><span>${label}</span>`;
+      wrap.addEventListener('change', e => {
+        wrap.classList.toggle('checked', e.target.checked);
+      });
+      grid.appendChild(wrap);
+    });
+  }
+
+  // ===== Step visibility =====
+  function showStep(n) {
+    panels.forEach(p => p.classList.toggle('active', +p.dataset.panel === n));
+    stepNodes.forEach(node => {
+      const s = +node.dataset.step;
+      node.classList.toggle('active', s === n);
+      node.classList.toggle('done', s < n);
+    });
+    stepLines.forEach((line, i) => line.classList.toggle('done', i + 1 < n));
+
+    prevBtn.disabled = n === 1;
+    nextBtn.style.display   = n === TOTAL_STEPS ? 'none' : 'inline-flex';
+    submitBtn.style.display = n === TOTAL_STEPS ? 'inline-flex' : 'none';
+
+    // Hooks
+    if (n === 3) buildRequirements();
+    if (n === 5) buildReview();
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ===== Validation =====
+  function validateStep(n) {
+    let ok = true;
+    if (n === 1) {
+      const type = document.querySelector('input[name="projectType"]:checked');
+      if (!type) {
+        document.getElementById('err-type').style.display = 'block';
+        ok = false;
+      }
+    }
+    if (n === 2) {
+      const fields = [
+        { id: 'governorate', check: v => v.trim() !== '' },
+        { id: 'area',        check: v => v && +v >= 20 && +v <= 10000 },
+        { id: 'floors',      check: v => v && +v >= 1 && +v <= 20 },
+        { id: 'addressDesc', check: v => v.trim().length >= 3 }
+      ];
+      fields.forEach(f => {
+        const el = document.getElementById(f.id);
+        const wrap = el.closest('.form-field');
+        if (!f.check(el.value)) {
+          wrap.classList.add('has-error'); ok = false;
+        } else wrap.classList.remove('has-error');
+      });
+    }
+    if (n === 3) {
+      const eng = document.getElementById('requiredEngineers');
+      const wrap = eng.closest('.form-field');
+      const nEng = eng.value === '' ? NaN : +eng.value;
+      const engOk = Number.isFinite(nEng) && nEng >= 1 && nEng <= 50;
+      document.getElementById('err-engineers').style.display = engOk ? 'none' : 'block';
+      if (!engOk) { wrap.classList.add('has-error'); ok = false; }
+      else wrap.classList.remove('has-error');
+    }
+    if (n === 4) {
+      const b = document.querySelector('input[name="budget"]:checked');
+      const t = document.querySelector('input[name="timeline"]:checked');
+      document.getElementById('err-budget').style.display   = b ? 'none' : 'block';
+      document.getElementById('err-timeline').style.display = t ? 'none' : 'block';
+      if (!b || !t) ok = false;
+    }
+    return ok;
+  }
+
+  // ===== Prev / Next =====
+  nextBtn.addEventListener('click', () => {
+    if (!validateStep(currentStep)) return;
+    if (currentStep < TOTAL_STEPS) {
+      currentStep++;
+      showStep(currentStep);
+    }
+  });
+  prevBtn.addEventListener('click', () => {
+    if (currentStep > 1) {
+      currentStep--;
+      showStep(currentStep);
+    }
+  });
+
+  // ===== Drop zone & file upload =====
+  const dropZone    = document.getElementById('dropZone');
+  const photoInput  = document.getElementById('photoInput');
+  const previewGrid = document.getElementById('previewGrid');
+
+  dropZone.addEventListener('click', () => photoInput.click());
+  ['dragenter','dragover'].forEach(ev =>
+    dropZone.addEventListener(ev, e => { e.preventDefault(); dropZone.classList.add('drag-over'); }));
+  ['dragleave','drop'].forEach(ev =>
+    dropZone.addEventListener(ev, e => { e.preventDefault(); dropZone.classList.remove('drag-over'); }));
+
+  dropZone.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
+  photoInput.addEventListener('change', e => handleFiles(e.target.files));
+
+  function handleFiles(files) {
+    [...files].forEach(f => {
+      if (uploadedFiles.length >= 10) { showToast('الحد الأقصى 10 صور', 'error'); return; }
+      if (f.size > 5 * 1024 * 1024)   { showToast(`الملف ${f.name} أكبر من 5 ميجا`, 'error'); return; }
+      if (!f.type.startsWith('image/')) return;
+      uploadedFiles.push(f);
+    });
+    renderPreviews();
+  }
+
+  function renderPreviews() {
+    previewGrid.innerHTML = '';
+    uploadedFiles.forEach((f, idx) => {
+      const item = document.createElement('div');
+      item.className = 'preview-item';
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(f);
+      const rm = document.createElement('button');
+      rm.className = 'rm'; rm.type = 'button'; rm.textContent = '×';
+      rm.addEventListener('click', () => {
+        uploadedFiles.splice(idx, 1);
+        renderPreviews();
+      });
+      item.append(img, rm);
+      previewGrid.appendChild(item);
+    });
+  }
+
+  // ===== Review summary =====
+  function buildReview() {
+    const type     = document.querySelector('input[name="projectType"]:checked')?.value;
+    const gov      = document.getElementById('governorate').value;
+    const area     = document.getElementById('area').value;
+    const floors   = document.getElementById('floors').value;
+    const addrDesc = document.getElementById('addressDesc').value;
+    const reqs     = [...document.querySelectorAll('input[name="req"]:checked')].map(i => i.value);
+    const notes    = document.getElementById('extraNotes').value;
+    const engineers = document.getElementById('requiredEngineers').value;
+    const budget   = document.querySelector('input[name="budget"]:checked')?.value;
+    const timeline = document.querySelector('input[name="timeline"]:checked')?.value;
+
+    const rows = [
+      ['نوع المشروع', TYPE_LABELS[type] || '—'],
+      ['المحافظة', gov || '—'],
+      ['المساحة', area ? area + ' م²' : '—'],
+      ['عدد الأدوار', floors || '—'],
+      ['العنوان', addrDesc || '—'],
+      ['المتطلبات', reqs.length ? reqs.join('، ') : '—'],
+      ['عدد المهندسين المطلوبين', engineers || '1'],
+      ['الملاحظات', notes || '—'],
+      ['الميزانية', BUDGET_LABELS[budget] || '—'],
+      ['الجدول الزمني', TIMELINE_LABELS[timeline] || '—'],
+      ['عدد الصور', uploadedFiles.length]
+    ];
+
+    document.getElementById('reviewContent').innerHTML = rows.map(([k, v]) =>
+      `<div class="review-item"><span class="rv-key">${k}</span><span class="rv-val">${v}</span></div>`
+    ).join('');
+  }
+
+  // ===== AI Estimate button calls backend ======
+  document.getElementById('aiEstimateBtn').addEventListener('click', async () => {
+    const result = document.getElementById('aiResult');
+    result.textContent = '⏳ جاري تقدير السعر...';
+    result.classList.add('visible');
+    
+    try {
+      const type = document.querySelector('input[name="projectType"]:checked')?.value || 'other';
+      const bodyParams = {
+        projectType: type,
+        propertyDetails: {
+          governorate: document.getElementById('governorate').value || 'غير محدد',
+          area: +document.getElementById('area').value || 100,
+          floors: +document.getElementById('floors').value || 1
+        },
+        requirements: {
+          'متطلبات': [...document.querySelectorAll('input[name="req"]:checked')].map(i => i.value).join(', ')
+        },
+        budgetRange: document.querySelector('input[name="budget"]:checked')?.value || 'flexible',
+        timeline: document.querySelector('input[name="timeline"]:checked')?.value || 'flexible'
+      };
+      
+      const response = await window.api.fetch('/projects/ai-estimate', {
+        method: 'POST',
+        body: JSON.stringify(bodyParams)
+      });
+      
+      const { minEstimate, maxEstimate } = response.aiEstimatedPrice;
+      result.textContent = `💰 التقدير المبدئي: ${minEstimate.toLocaleString('ar-EG')} — ${maxEstimate.toLocaleString('ar-EG')} جنيه`;
+    } catch (err) {
+      result.textContent = '❌ ' + (err.message || 'حدث خطأ في جلب التقدير.');
+    }
+  });
+
+  // ===== Submit =====
+  document.getElementById('projectForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!validateStep(currentStep)) return;
+    
+    // Build payload
+    const type = document.querySelector('input[name="projectType"]:checked')?.value;
+    const bodyParams = {
+      title: 'مشروع ' + (TYPE_LABELS[type] || 'جديد'),
+      description: document.getElementById('extraNotes').value,
+      projectType: type,
+      propertyDetails: {
+        governorate: document.getElementById('governorate').value,
+        district: document.getElementById('addressDesc').value,
+        area: +document.getElementById('area').value,
+        floors: +document.getElementById('floors').value || 1
+      },
+      requirements: {
+         'عناصر': [...document.querySelectorAll('input[name="req"]:checked')].map(i => i.value).join(', ')
+      },
+      budgetRange: document.querySelector('input[name="budget"]:checked')?.value,
+      timeline: document.querySelector('input[name="timeline"]:checked')?.value,
+      requiredEngineers: Math.min(50, Math.max(1, parseInt(document.getElementById('requiredEngineers').value, 10) || 1)),
+    };
+
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'جاري النشر...';
+
+    try {
+      // Step 1 — upload photos first (if any)
+      if (uploadedFiles.length > 0) {
+        submitBtn.textContent = 'جاري رفع الصور...';
+        const formData = new FormData();
+        uploadedFiles.forEach(f => formData.append('photos', f));
+
+        const uploadData = await window.api.upload('/uploads/project-photos', formData);
+        bodyParams.photos = uploadData.photos;
+        submitBtn.textContent = 'جاري نشر المشروع...';
+      }
+
+      // Step 2 — create the project
+      await window.api.fetch('/projects', {
+        method: 'POST',
+        body: JSON.stringify(bodyParams)
+      });
+      showToast('تم نشر مشروعك بنجاح، جاري التحويل لصفحة العروض', 'success');
+      window.location.href = 'proposals.html';
+    } catch (err) {
+      showToast(err.message || 'تعذر نشر المشروع', 'error');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'نشر المشروع';
+    }
+  });
+
+  // Init
+  showStep(1);
+})();
+</script>
+</body>
+</html>

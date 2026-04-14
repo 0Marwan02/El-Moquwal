@@ -1,0 +1,547 @@
+/* ============================================================
+   layout.css — Navbar, Sidebar, Dashboard Layout, Footer
+   ============================================================ */
+
+
+/* ===========================================
+   SHARED CONTAINER
+   =========================================== */
+
+.container {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 0 var(--content-padding);
+}
+
+
+/* ===========================================
+   NAVBAR — اللاندينج بيدج والـ auth pages
+   =========================================== */
+
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: var(--z-navbar);
+  height: var(--navbar-height);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--content-padding);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(26, 43, 74, 0.06);
+  transition: box-shadow var(--transition-base);
+}
+
+.navbar.scrolled {
+  box-shadow: var(--shadow-sm);
+}
+
+/* اللوجو */
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-left: auto;
+}
+
+.logo-mark {
+  width: 38px;
+  height: 38px;
+  background: var(--color-navy);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.logo-mark svg { width: 22px; height: 22px; fill: var(--color-gold); }
+
+.logo-text {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--color-navy);
+  letter-spacing: -0.5px;
+}
+
+/* لينكات الـ nav */
+.navbar-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin: 0 auto;
+}
+
+.navbar-nav a {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  position: relative;
+  padding-bottom: 2px;
+}
+.navbar-nav a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  right: 0;
+  width: 0;
+  height: 2px;
+  background: var(--color-gold);
+  border-radius: 2px;
+  transition: width var(--transition-base);
+}
+.navbar-nav a:hover, .navbar-nav a.active { color: var(--color-navy); }
+.navbar-nav a:hover::after, .navbar-nav a.active::after { width: 100%; }
+
+/* الازرار في الـ navbar */
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-right: auto;
+}
+
+.navbar-login {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-navy);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-base);
+}
+.navbar-login:hover { background: var(--bg-surface-2); }
+
+
+/* ===========================================
+   DASHBOARD LAYOUT — الـ layout بتاعة الـ dashboard
+   =========================================== */
+
+/* الـ body لما نكون في dashboard */
+body.dashboard-page {
+  background: var(--bg-app);
+}
+
+/* الـ wrapper الرئيسي */
+.dashboard-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ===========================================
+   SIDEBAR — الـ navigation الجانبية
+   =========================================== */
+
+.sidebar {
+  width: var(--sidebar-width);
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  right: 0;
+  background: var(--color-navy-dark);
+  display: flex;
+  flex-direction: column;
+  z-index: var(--z-sticky);
+  overflow: hidden;
+  transition: width var(--transition-base);
+}
+
+/* الـ subtle grid pattern على الـ sidebar */
+.sidebar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+}
+
+/* هيدر الـ sidebar — اللوجو */
+.sidebar-header {
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  position: relative;
+  z-index: 1;
+}
+
+.sidebar-logo-mark {
+  width: 36px;
+  height: 36px;
+  background: var(--color-gold);
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.sidebar-logo-mark svg { width: 20px; height: 20px; fill: var(--color-navy-dark); }
+
+.sidebar-logo-text {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--text-on-dark);
+}
+
+/* بيانات الـ user في الـ sidebar */
+.sidebar-user {
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  position: relative;
+  z-index: 1;
+}
+
+.sidebar-user-info .name {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--text-on-dark);
+  margin-bottom: 2px;
+}
+
+.sidebar-user-info .role {
+  font-size: var(--font-size-xs);
+  color: var(--text-on-dark-muted);
+  background: rgba(244, 166, 35, 0.12);
+  border: 1px solid rgba(244, 166, 35, 0.2);
+  color: var(--color-gold-light);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  display: inline-block;
+}
+
+/* الـ nav items */
+.sidebar-nav {
+  flex: 1;
+  padding: var(--space-4) var(--space-3);
+  overflow-y: auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* عنوان الـ section داخل الـ sidebar */
+.sidebar-section-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+  padding: var(--space-4) var(--space-3) var(--space-2);
+}
+
+/* الـ nav item الواحد */
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 11px var(--space-4);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  color: var(--text-on-dark-muted);
+  margin-bottom: 2px;
+  position: relative;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.sidebar-item svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+.sidebar-item:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--text-on-dark);
+}
+
+/* الـ active state */
+.sidebar-item.active {
+  background: rgba(244, 166, 35, 0.1);
+  color: var(--color-gold-light);
+  border: 1px solid rgba(244, 166, 35, 0.15);
+}
+.sidebar-item.active svg { fill: var(--color-gold); }
+
+/* الـ badge عدد الإشعارات */
+.sidebar-badge {
+  margin-right: auto;
+  background: var(--color-gold);
+  color: var(--color-navy-dark);
+  border-radius: var(--radius-full);
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 800;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* زر النشر في اخر الـ sidebar */
+.sidebar-cta {
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  position: relative;
+  z-index: 1;
+}
+
+/* ===========================================
+   MAIN CONTENT AREA
+   =========================================== */
+
+.dashboard-main {
+  margin-right: var(--sidebar-width);
+  flex: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* الـ topbar بتاعة الـ dashboard */
+.dashboard-topbar {
+  height: var(--navbar-height);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-8);
+  gap: var(--space-5);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+}
+
+.topbar-page-title {
+  font-size: var(--font-size-lg);
+  font-weight: 800;
+  color: var(--color-navy);
+}
+
+/* الـ search bar */
+.topbar-search {
+  flex: 1;
+  max-width: 400px;
+  position: relative;
+}
+.topbar-search input {
+  width: 100%;
+  padding: 9px 40px 9px 16px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-full);
+  font-family: var(--font-main);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  transition: all var(--transition-base);
+}
+.topbar-search input:focus {
+  background: var(--bg-surface);
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 3px var(--color-gold-subtle);
+}
+.topbar-search-icon {
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+}
+.topbar-search-icon svg { width: 16px; height: 16px; fill: var(--text-muted); }
+
+/* الـ topbar actions */
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-right: auto;
+}
+
+/* زر الإشعارات */
+.topbar-icon-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: all var(--transition-base);
+  position: relative;
+}
+.topbar-icon-btn:hover {
+  background: var(--bg-surface-2);
+  color: var(--color-navy);
+  border-color: var(--border-strong);
+}
+.topbar-icon-btn svg { width: 18px; height: 18px; fill: currentColor; }
+
+.topbar-icon-btn .notif-dot {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 7px;
+  height: 7px;
+  background: var(--color-gold);
+  border-radius: 50%;
+  border: 2px solid var(--bg-surface);
+}
+
+/* الـ user menu في الـ topbar */
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  cursor: pointer;
+  padding: 6px 12px 6px 6px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-default);
+  transition: all var(--transition-base);
+}
+.topbar-user:hover {
+  background: var(--bg-surface-2);
+  border-color: var(--border-strong);
+}
+
+.topbar-user-name {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+/* الـ content area */
+.dashboard-content {
+  flex: 1;
+  padding: var(--space-8);
+  max-width: 100%;
+}
+
+/* ===========================================
+   PAGE HEADER — هيدر الصفحة داخل الـ dashboard
+   =========================================== */
+
+.page-header {
+  margin-bottom: var(--space-6);
+}
+
+.page-header h1 {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  color: var(--color-navy);
+  letter-spacing: -0.5px;
+  margin-bottom: var(--space-1);
+}
+
+.page-header p {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.page-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+
+/* ===========================================
+   FOOTER — فوتر اللاندينج بيدج
+   =========================================== */
+
+.footer {
+  background: var(--color-navy-dark);
+  padding: var(--space-16) 0 0;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.4fr repeat(3, 1fr);
+  gap: var(--space-16);
+  padding-bottom: var(--space-12);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+.footer-brand-desc {
+  font-size: var(--font-size-sm);
+  color: var(--text-on-dark-muted);
+  line-height: 1.9;
+  margin: var(--space-4) 0 var(--space-6);
+}
+
+.footer-col-title {
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  color: var(--text-on-dark);
+  margin-bottom: var(--space-5);
+}
+
+.footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.footer-links a {
+  font-size: var(--font-size-sm);
+  color: var(--text-on-dark-muted);
+  transition: color var(--transition-base);
+}
+.footer-links a:hover { color: var(--color-gold); }
+
+.footer-socials {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.social-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+.social-btn:hover {
+  background: var(--color-gold-subtle);
+  border-color: rgba(244, 166, 35, 0.3);
+}
+.social-btn svg { width: 16px; height: 16px; fill: rgba(255,255,255,0.55); }
+
+.footer-bottom-bar {
+  padding: var(--space-5) 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footer-copy {
+  font-size: var(--font-size-xs);
+  color: rgba(255,255,255,0.25);
+}
+
+.footer-legal-links {
+  display: flex;
+  gap: var(--space-6);
+}
+
+.footer-legal-links a {
+  font-size: var(--font-size-xs);
+  color: rgba(255,255,255,0.25);
+  transition: color var(--transition-base);
+}
+.footer-legal-links a:hover { color: rgba(255,255,255,0.55); }

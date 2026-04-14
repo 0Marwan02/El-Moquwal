@@ -1,0 +1,1598 @@
+/* ============================================================
+   auth.css — el styles el 5asa bel auth pages (login/register/role-select)
+   ============================================================ */
+
+
+/* ===========================================
+   AUTH LAYOUT — el split layout bta3 el auth
+   =========================================== */
+
+/* el wrapper el re2eesy — split screen */
+.auth-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg-app);
+}
+
+
+/* ===========================================
+   DECORATIVE SIDE — el ganb el navy el gameel
+   =========================================== */
+
+/* el panel el dark elly feh el branding */
+.auth-brand-side {
+  width: 48%;
+  background: linear-gradient(150deg, var(--color-navy-dark) 0%, var(--color-navy) 50%, var(--color-navy-mid) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: var(--space-16);
+  position: relative;
+  overflow: hidden;
+}
+
+/* el grid pattern fo2 el background */
+.auth-brand-side::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+}
+
+/* el glow effect el dahaby ta7t */
+.auth-brand-side::after {
+  content: '';
+  position: absolute;
+  bottom: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(244, 166, 35, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* el content gowa el brand side */
+.auth-brand-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 420px;
+}
+
+/* el logo icon el kbeer */
+.auth-brand-icon {
+  width: 80px;
+  height: 80px;
+  background: rgba(244, 166, 35, 0.12);
+  border: 1px solid rgba(244, 166, 35, 0.2);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--space-6);
+  font-size: 42px;
+  color: var(--color-gold);
+}
+
+/* esm el app */
+.auth-brand-title {
+  font-size: var(--font-size-3xl);
+  font-weight: 900;
+  color: var(--text-on-dark);
+  letter-spacing: -1px;
+  margin-bottom: var(--space-3);
+}
+
+/* el tagline ta7t el esm */
+.auth-brand-tagline {
+  font-size: var(--font-size-md);
+  color: var(--text-on-dark-muted);
+  line-height: 1.9;
+}
+
+/* el quotes el floating */
+.auth-floating-quotes {
+  margin-top: var(--space-12);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* el quote el wa7da */
+.auth-float-q {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius-sm);
+  padding: 10px 18px;
+  font-size: var(--font-size-sm);
+  color: var(--text-on-dark-muted);
+  animation: authFloatUp 8s ease-in-out infinite;
+}
+
+.auth-float-q:nth-child(2) { animation-delay: 2.5s; }
+.auth-float-q:nth-child(3) { animation-delay: 5s; }
+
+@keyframes authFloatUp {
+  0%, 100% { transform: translateY(0); opacity: 0.6; }
+  50%      { transform: translateY(-6px); opacity: 1; }
+}
+
+
+/* ===========================================
+   FORM SIDE — el ganb el abyad bta3 el form
+   =========================================== */
+
+/* el container bta3 el form */
+.auth-form-side {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-10);
+}
+
+/* el box el gowwany */
+.auth-form-box {
+  width: 100%;
+  max-width: 440px;
+}
+
+/* el logo el soghayar lel mobile */
+.auth-mobile-logo {
+  display: none;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-8);
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--color-navy);
+}
+
+.auth-mobile-logo-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--color-navy);
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-gold);
+  font-size: 20px;
+}
+
+/* el header bta3 el form */
+.auth-form-header {
+  margin-bottom: var(--space-8);
+}
+
+.auth-form-header h2 {
+  font-size: var(--font-size-2xl);
+  font-weight: 900;
+  color: var(--color-navy);
+  margin-bottom: var(--space-2);
+}
+
+.auth-form-header p {
+  font-size: var(--font-size-base);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+
+/* ===========================================
+   FORM ELEMENTS — el inputs wel buttons
+   =========================================== */
+
+/* el form nafsaha */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* el input group (label + input) */
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* el label */
+.auth-label {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+/* row bta3 el label w link ganbo */
+.auth-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* link neseet el password */
+.auth-forgot-link {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-gold-dark);
+  transition: color var(--transition-base);
+}
+.auth-forgot-link:hover {
+  color: var(--color-gold);
+}
+
+/* el input wrapper */
+.auth-input-wrap {
+  position: relative;
+}
+
+/* makes sure the input itself is always the top clickable layer in the
+   wrap, even if a sibling decoration is added later */
+.auth-input-wrap .input {
+  position: relative;
+  z-index: 1;
+}
+
+/* el icon gowa el input */
+.auth-input-wrap .auth-input-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: var(--text-light);
+  pointer-events: none;
+}
+
+/* el input nafsoh */
+.auth-input-wrap .input {
+  padding-right: 44px;
+}
+
+/* el toggle btn lel password */
+.auth-pass-toggle {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-light);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  /* pointer-events: auto ensures the button itself is always clickable */
+  pointer-events: auto;
+  transition: color var(--transition-base);
+  z-index: 2;
+}
+/* padding-left directly on .input inside .auth-input-wrap — no :has() needed */
+.auth-input-wrap .input {
+  padding-left: 40px;
+}
+/* but inputs WITHOUT a toggle (e.g. confirm password) should not have extra left padding */
+.auth-input-wrap:not(:has(.auth-pass-toggle)) .input {
+  padding-left: 16px;
+}
+/* hide the browser's own password reveal button — conflicts with our custom toggle */
+.auth-input-wrap input[type="password"]::-ms-reveal,
+.auth-input-wrap input[type="password"]::-ms-clear {
+  display: none;
+}
+.auth-input-wrap input[type="password"]::-webkit-credentials-auto-fill-button,
+.auth-input-wrap input[type="password"]::-webkit-textfield-decoration-container {
+  display: none !important;
+}
+.auth-pass-toggle:hover { color: var(--color-navy); }
+.auth-pass-toggle svg { width: 18px; height: 18px; pointer-events: none; }
+
+/* el password strength bar */
+.auth-strength-bar {
+  height: 3px;
+  background: var(--bg-surface-2);
+  border-radius: var(--radius-full);
+  margin-top: var(--space-2);
+  overflow: hidden;
+}
+
+.auth-strength-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease, background 0.3s ease;
+  width: 0%;
+}
+
+.auth-strength-fill.weak   { width: 33%; background: var(--color-error); }
+.auth-strength-fill.medium { width: 66%; background: var(--color-warning); }
+.auth-strength-fill.strong { width: 100%; background: var(--color-success); }
+
+/* el strength label */
+.auth-strength-label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  margin-top: 4px;
+  transition: color 0.3s ease;
+}
+.auth-strength-label.weak   { color: var(--color-error); }
+.auth-strength-label.medium { color: var(--color-warning); }
+.auth-strength-label.strong { color: var(--color-success); }
+
+/* el checkbox row */
+.auth-check-row {
+  display: flex;
+  align-items: center;
+}
+
+/* el submit button */
+.auth-submit {
+  margin-top: var(--space-2);
+}
+
+/* el dots loader gowa el button */
+.auth-btn-dots {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.auth-btn-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-navy-dark);
+  animation: authDotBounce 1.2s ease-in-out infinite;
+}
+.auth-btn-dots span:nth-child(2) { animation-delay: 0.15s; }
+.auth-btn-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes authDotBounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+
+/* ===========================================
+   SOCIAL LOGIN — el google btn
+   =========================================== */
+
+.auth-social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: 13px;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: var(--font-main);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-navy);
+  transition: all var(--transition-base);
+}
+.auth-social-btn:hover {
+  background: var(--bg-surface-2);
+  border-color: var(--color-navy);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+.auth-social-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+
+/* ===========================================
+   AUTH FOOTER — el link ta7t
+   =========================================== */
+
+.auth-footer-text {
+  text-align: center;
+  margin-top: var(--space-8);
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}
+
+.auth-footer-text a {
+  color: var(--color-gold-dark);
+  font-weight: 700;
+  transition: color var(--transition-base);
+}
+.auth-footer-text a:hover { color: var(--color-gold); }
+
+
+/* ===========================================
+   ROLE BADGE — el badge fo2 el register form
+   =========================================== */
+
+.auth-role-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+
+/* ===========================================
+   ROLE SELECT PAGE — sa7fet e5tyar el door
+   =========================================== */
+
+/* el page layout */
+.auth-role-page {
+  min-height: 100vh;
+  background: var(--bg-app);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-10);
+}
+
+/* el header */
+.auth-role-header {
+  text-align: center;
+  margin-bottom: var(--space-10);
+}
+
+.auth-role-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-8);
+}
+
+.auth-role-logo-mark {
+  width: 44px;
+  height: 44px;
+  background: var(--color-navy);
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-gold);
+  font-size: 24px;
+}
+
+.auth-role-logo-text {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--color-navy);
+}
+
+.auth-role-header h2 {
+  font-size: var(--font-size-2xl);
+  font-weight: 900;
+  color: var(--color-navy);
+  margin-bottom: var(--space-2);
+}
+
+.auth-role-header p {
+  font-size: var(--font-size-base);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* el grid bta3 el 3 cards */
+.auth-role-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+  max-width: 820px;
+  width: 100%;
+}
+
+/* el card el wa7da */
+.auth-role-card {
+  background: var(--bg-surface);
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-8) var(--space-6);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-role-card:hover {
+  border-color: var(--border-gold);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
+}
+
+/* lama el card yetselect */
+.auth-role-card.selected {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 3px var(--color-gold-subtle), var(--shadow-md);
+}
+
+/* el checkmark lama yetselect */
+.auth-role-card.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 26px;
+  height: 26px;
+  background: var(--color-gold);
+  color: var(--color-navy-dark);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+/* el icon bta3 el role */
+.auth-role-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--space-5);
+}
+.auth-role-icon svg { width: 32px; height: 32px; }
+
+.auth-role-icon.icon-customer {
+  background: rgba(52, 152, 219, 0.1);
+  color: #2980b9;
+}
+.auth-role-icon.icon-professional {
+  background: var(--color-gold-subtle);
+  color: var(--color-gold-dark);
+}
+.auth-role-icon.icon-manager {
+  background: rgba(46, 204, 113, 0.1);
+  color: #27ae60;
+}
+
+/* el role name */
+.auth-role-name {
+  font-size: var(--font-size-lg);
+  font-weight: 800;
+  color: var(--color-navy);
+  margin-bottom: var(--space-2);
+}
+
+/* el role description */
+.auth-role-desc {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* el features list */
+.auth-role-features {
+  margin-top: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  text-align: right;
+}
+
+.auth-role-features li {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.auth-role-features li::before {
+  content: '✦';
+  color: var(--color-gold);
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+/* el continue btn ta7t */
+.auth-role-actions {
+  margin-top: var(--space-8);
+  text-align: center;
+}
+
+/* el back link */
+.auth-role-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  font-weight: 600;
+  transition: color var(--transition-base);
+}
+.auth-role-back:hover { color: var(--color-navy); }
+
+
+/* ===========================================
+   ALERT BOX — lel errors wel success
+   =========================================== */
+
+.auth-alert {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  display: none;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.auth-alert.show { display: flex; }
+
+.auth-alert.alert-error {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  border: 1px solid rgba(231, 76, 60, 0.2);
+}
+
+.auth-alert.alert-success {
+  background: var(--color-success-bg);
+  color: #1a7a45;
+  border: 1px solid rgba(46, 204, 113, 0.2);
+}
+
+
+/* ===========================================
+   ANIMATIONS — entrance animations
+   =========================================== */
+
+.auth-animate-in {
+  animation: authSlideIn 0.5s ease forwards;
+}
+
+@keyframes authSlideIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* stagger lel form fields */
+.auth-form .auth-field:nth-child(1) { animation-delay: 0.05s; }
+.auth-form .auth-field:nth-child(2) { animation-delay: 0.1s; }
+.auth-form .auth-field:nth-child(3) { animation-delay: 0.15s; }
+.auth-form .auth-field:nth-child(4) { animation-delay: 0.2s; }
+
+/* stagger lel role cards */
+.auth-role-card:nth-child(1) { animation-delay: 0.1s; }
+.auth-role-card:nth-child(2) { animation-delay: 0.2s; }
+.auth-role-card:nth-child(3) { animation-delay: 0.3s; }
+
+
+/* ===========================================
+   RESPONSIVE — mobile w tablet
+   =========================================== */
+
+@media (max-width: 1024px) {
+  .auth-brand-side { display: none; }
+  .auth-mobile-logo { display: flex; }
+  .auth-form-side { padding: var(--space-6); }
+}
+
+@media (max-width: 768px) {
+  .auth-role-grid {
+    grid-template-columns: 1fr;
+    max-width: 360px;
+  }
+  .auth-role-page { padding: var(--space-6); }
+  .auth-role-header h2 { font-size: var(--font-size-xl); }
+}
+
+@media (max-width: 480px) {
+  .auth-form-side { padding: var(--space-5) var(--space-4); }
+  .auth-form-header h2 { font-size: var(--font-size-xl); }
+}
+
+
+/* ===========================================
+   ROLE GRID 2 COLUMNS — ba3d ma shelna el admin
+   =========================================== */
+
+/* el grid el gdid bas 2 cards — customer + contractor */
+.auth-role-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-6);
+  max-width: 720px;
+  width: 100%;
+}
+
+/* el contractor icon (navy/gold vibe) */
+.auth-role-icon.icon-contractor {
+  background: rgba(11, 31, 58, 0.08);
+  color: var(--color-navy);
+}
+
+/* el note el soghayara ta7t el contractor card */
+.auth-role-verify-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--space-4);
+  padding: 6px 12px;
+  background: var(--color-gold-subtle);
+  border: 1px solid rgba(244, 166, 35, 0.25);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-gold-dark);
+}
+
+.auth-role-verify-note svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+
+/* ===========================================
+   FORM BOX WIDE — lel contractor register el kbeer
+   =========================================== */
+
+/* version awsa3 mn el auth-form-box 3ashan el contractor fih fields kteer */
+.auth-form-box-wide {
+  width: 100%;
+  max-width: 560px;
+}
+
+
+/* ===========================================
+   NID PREVIEW CARD — el card elly bteban lama el raqam qawmy sa7
+   =========================================== */
+
+/* el container bta3 el preview (hidden by default, fel JS by-show) */
+.nid-preview {
+  display: none;
+  margin-top: var(--space-3);
+  background: linear-gradient(135deg, var(--color-gold-subtle) 0%, rgba(244, 166, 35, 0.04) 100%);
+  border: 1.5px solid rgba(244, 166, 35, 0.3);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  opacity: 0;
+}
+
+/* lama el preview ye2ool visible (JS bey7ot el class dy) */
+.nid-preview.visible {
+  display: block;
+  opacity: 1;
+}
+
+/* el header bta3 el preview fih icon + text */
+.nid-preview-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  color: var(--color-gold-dark);
+}
+
+.nid-preview-header svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* el grid bta3 el data (3 items: dob, gender, governorate) */
+.nid-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+
+/* el item el wa7ed (label + value) */
+.nid-preview-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-2) var(--space-3);
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: var(--radius-sm);
+}
+
+.nid-preview-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.nid-preview-value {
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  color: var(--color-navy);
+}
+
+
+/* ===========================================
+   FILE UPLOAD ZONE — lel contractor (certificate + card)
+   =========================================== */
+
+/* el dropzone el 3ad el user byrfa3 3aleh el file */
+.auth-upload-zone {
+  position: relative;
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: var(--space-6) var(--space-4);
+  background: var(--bg-surface-2);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  text-align: center;
+}
+
+.auth-upload-zone:hover {
+  border-color: var(--color-gold);
+  background: var(--color-gold-subtle);
+}
+
+/* lama el user bey-drag 3al zone */
+.auth-upload-zone.dragging {
+  border-color: var(--color-gold);
+  background: var(--color-gold-subtle);
+  transform: scale(1.01);
+}
+
+/* lama yekoon fih file mar-fou3 */
+.auth-upload-zone.has-file {
+  border-style: solid;
+  border-color: var(--color-success);
+  background: var(--color-success-bg);
+}
+
+/* el input el mkhabbi — ma yzharsh bas byshtaghal */
+.auth-upload-zone input[type="file"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* el placeholder (byban lama ma fihsh file) */
+.auth-upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  pointer-events: none;
+}
+
+.auth-upload-placeholder svg {
+  width: 32px;
+  height: 32px;
+  color: var(--text-light);
+}
+
+.auth-upload-placeholder-title {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.auth-upload-placeholder-sub {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+/* el filled state — byban lama yekoon fih file */
+.auth-upload-filled {
+  display: none;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: right;
+  pointer-events: none;
+}
+
+.auth-upload-zone.has-file .auth-upload-placeholder { display: none; }
+.auth-upload-zone.has-file .auth-upload-filled { display: flex; }
+
+/* el icon bta3 el file */
+.auth-upload-filled-icon {
+  width: 40px;
+  height: 40px;
+  background: rgba(46, 204, 113, 0.15);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-success);
+  flex-shrink: 0;
+}
+
+.auth-upload-filled-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* el text bta3 el file (name + size) */
+.auth-upload-filled-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.auth-upload-name {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-navy);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.auth-upload-size {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* zorar el e7zaaf (byrg3 el placeholder) */
+.auth-upload-remove {
+  background: none;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-error);
+  cursor: pointer;
+  flex-shrink: 0;
+  pointer-events: auto;
+  position: relative;
+  z-index: 2;
+  transition: background var(--transition-base);
+}
+.auth-upload-remove:hover { background: var(--color-error-bg); }
+.auth-upload-remove svg { width: 16px; height: 16px; }
+
+
+/* ===========================================
+   STEPPER — lel contractor register (2 steps)
+   =========================================== */
+
+/* el stepper container fo2 el form */
+.auth-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-8);
+}
+
+/* el step el wa7ed (da2ra + label) */
+.auth-step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  opacity: 0.5;
+  transition: opacity var(--transition-base);
+}
+
+.auth-step.active { opacity: 1; }
+
+/* el da2ra el feha el ra2am */
+.auth-step-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-surface-2);
+  border: 2px solid var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  color: var(--text-muted);
+  transition: all var(--transition-base);
+}
+
+.auth-step.active .auth-step-num {
+  background: var(--color-gold);
+  border-color: var(--color-gold);
+  color: var(--color-navy-dark);
+}
+
+.auth-step.done .auth-step-num {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: #fff;
+}
+
+/* el label bta3 el step */
+.auth-step-label {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+/* el khat bein el steps */
+.auth-step-line {
+  width: 60px;
+  height: 2px;
+  background: var(--border-default);
+  transition: background var(--transition-base);
+}
+
+.auth-step-line.active { background: var(--color-gold); }
+
+/* el content bta3 kol step (hidden by default, JS by-show el active) */
+.auth-step-content {
+  display: none;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.auth-step-content.active { display: flex; }
+
+/* el actions row (back + next) */
+.auth-step-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.auth-step-actions .btn { flex: 1; }
+
+
+/* ===========================================
+   PENDING APPROVAL PAGE — ba3d ma el contractor yshgel register
+   =========================================== */
+
+/* el body bta3 el page — centered */
+.pending-page {
+  min-height: 100vh;
+  background: var(--bg-app);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+}
+
+/* el card el re2eesy */
+.pending-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-12) var(--space-10);
+  max-width: 560px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+}
+
+/* el glow fel khalfeya */
+.pending-card::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, var(--color-gold-subtle) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.pending-card > * { position: relative; z-index: 1; }
+
+/* el icon wrapper el feh el pulse */
+.pending-icon {
+  width: 96px;
+  height: 96px;
+  margin: 0 auto var(--space-6);
+  background: var(--color-gold-subtle);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-gold-dark);
+  position: relative;
+}
+
+.pending-icon svg {
+  width: 44px;
+  height: 44px;
+  position: relative;
+  z-index: 1;
+}
+
+/* el pulse ring — animation bta3a bet-expand */
+.pending-icon-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--color-gold);
+  opacity: 0.3;
+  animation: pendingPulse 2s ease-out infinite;
+}
+
+@keyframes pendingPulse {
+  0%   { transform: scale(1);   opacity: 0.3; }
+  100% { transform: scale(1.4); opacity: 0;   }
+}
+
+/* el title */
+.pending-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 900;
+  color: var(--color-navy);
+  margin-bottom: var(--space-3);
+}
+
+/* el paragraph ta7t el title */
+.pending-sub {
+  font-size: var(--font-size-base);
+  color: var(--text-muted);
+  line-height: 1.8;
+  margin-bottom: var(--space-8);
+}
+
+/* el steps list — 3 steps (submit, review, approve) */
+.pending-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+  text-align: right;
+}
+
+.pending-step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-surface-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+}
+
+.pending-step.done {
+  background: var(--color-success-bg);
+  border-color: rgba(46, 204, 113, 0.2);
+}
+
+.pending-step.active {
+  background: var(--color-gold-subtle);
+  border-color: rgba(244, 166, 35, 0.3);
+}
+
+/* el dot (bygar3 aw bey-check) */
+.pending-step-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--border-default);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.pending-step.done .pending-step-dot {
+  background: var(--color-success);
+  color: #fff;
+}
+
+.pending-step.active .pending-step-dot {
+  background: var(--color-gold);
+  color: var(--color-navy-dark);
+}
+
+/* el spinner lel active step */
+.pending-step-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: pendingSpin 0.9s linear infinite;
+}
+
+@keyframes pendingSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* el text bta3 el step */
+.pending-step-text {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+/* el info box ta7t */
+.pending-info {
+  background: rgba(11, 31, 58, 0.04);
+  border-right: 3px solid var(--color-navy);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-6);
+  text-align: right;
+  line-height: 1.8;
+}
+
+/* el actions (zoraarin — homepage + logout) */
+.pending-actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.pending-actions .btn { flex: 1; }
+
+
+/* ===========================================
+   ADMIN LOGIN — layout mokhtalef w dark
+   =========================================== */
+
+/* el body bta3 el admin login (class 3ala el body nafsoh) */
+.admin-login-body {
+  background: #050a16;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  overflow-x: hidden;
+}
+
+/* el background effects wrapper */
+.admin-login-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* grid pattern fel khalfeya */
+.admin-login-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(244, 166, 35, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(244, 166, 35, 0.04) 1px, transparent 1px);
+  background-size: 50px 50px;
+  mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
+}
+
+/* glow ahma-gold fel nos */
+.admin-login-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(circle, rgba(244, 166, 35, 0.08) 0%, transparent 60%);
+  animation: adminGlowPulse 6s ease-in-out infinite;
+}
+
+@keyframes adminGlowPulse {
+  0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+  50%      { opacity: 1;   transform: translate(-50%, -50%) scale(1.05); }
+}
+
+/* el wrapper bta3 el card */
+.admin-login-wrap {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 440px;
+}
+
+/* el card nafsoh — dark glass */
+.admin-login-card {
+  background: rgba(11, 31, 58, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(244, 166, 35, 0.15);
+  border-radius: var(--radius-lg);
+  padding: var(--space-10) var(--space-8);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+}
+
+/* el shield icon fo2 */
+.admin-login-shield {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto var(--space-6);
+  background: rgba(244, 166, 35, 0.1);
+  border: 1px solid rgba(244, 166, 35, 0.25);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-gold);
+}
+
+.admin-login-shield svg { width: 36px; height: 36px; }
+
+/* el header area */
+.admin-login-header {
+  text-align: center;
+  margin-bottom: var(--space-8);
+}
+
+/* el tag "منطقة محظورة" */
+.admin-login-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(231, 76, 60, 0.12);
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  border-radius: var(--radius-full);
+  color: #ff6b5b;
+  font-size: var(--font-size-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--space-3);
+}
+
+.admin-login-header h1 {
+  font-size: var(--font-size-xl);
+  font-weight: 900;
+  color: var(--text-on-dark);
+  margin-bottom: var(--space-2);
+}
+
+.admin-login-header p {
+  font-size: var(--font-size-sm);
+  color: var(--text-on-dark-muted);
+  margin: 0;
+  line-height: 1.7;
+}
+
+/* overrides lel form gowa el dark card */
+.admin-login-form .auth-label {
+  color: var(--text-on-dark);
+}
+
+.admin-login-form .input {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-on-dark);
+}
+
+.admin-login-form .input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.admin-login-form .input:focus {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--color-gold);
+}
+
+.admin-login-form .auth-input-wrap .auth-input-icon,
+.admin-login-form .auth-pass-toggle {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.admin-login-form .auth-pass-toggle:hover {
+  color: var(--color-gold);
+}
+
+/* el footer bta3 el card (TLS badge) */
+.admin-login-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: var(--font-size-xs);
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.admin-login-footer svg { color: var(--color-success); }
+
+
+/* ===========================================
+   GUEST SCROLL PROMPT — modal bey-show lel guest
+   =========================================== */
+
+/* el overlay kolo (fixed 3al page kollaha) */
+.auth-scroll-prompt {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 10, 22, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+/* lama ye2ool visible (JS by7ot el class) */
+.auth-scroll-prompt.visible {
+  display: flex;
+  opacity: 1;
+}
+
+/* el card el gowwany */
+.auth-scroll-prompt-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-10) var(--space-8);
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-default);
+}
+
+/* el zoraar el close fel zaweya */
+.auth-scroll-prompt-close {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-surface-2);
+  border: none;
+  color: var(--text-muted);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-base);
+}
+
+.auth-scroll-prompt-close:hover {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+/* el icon fo2 */
+.auth-scroll-prompt-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto var(--space-5);
+  background: var(--color-gold-subtle);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-gold-dark);
+}
+
+.auth-scroll-prompt-icon svg { width: 36px; height: 36px; }
+
+.auth-scroll-prompt-card h3 {
+  font-size: var(--font-size-xl);
+  font-weight: 900;
+  color: var(--color-navy);
+  margin-bottom: var(--space-3);
+}
+
+.auth-scroll-prompt-card p {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  line-height: 1.8;
+  margin-bottom: var(--space-6);
+}
+
+/* el actions — zorarin (register + login) */
+.auth-scroll-prompt-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+/* zoraar "akmel el tasafo7 dlwa2ty" ta7t */
+.auth-scroll-prompt-later {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  padding: var(--space-2);
+  transition: color var(--transition-base);
+}
+
+.auth-scroll-prompt-later:hover {
+  color: var(--color-navy);
+  text-decoration: underline;
+}
+
+
+/* ===========================================
+   RESPONSIVE — mobile tweaks lel components el gdeeda
+   =========================================== */
+
+@media (max-width: 768px) {
+  /* role grid 2 — yeb2a column wa7ed 3al mobile */
+  .auth-role-grid-2 {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+  }
+
+  /* nid preview — el grid yeb2a column wa7ed */
+  .nid-preview-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
+
+  /* stepper — el labels yet5baw, el da2ar bas elly teban */
+  .auth-step-label { display: none; }
+  .auth-step-line { width: 40px; }
+
+  /* pending card padding a2al */
+  .pending-card {
+    padding: var(--space-8) var(--space-5);
+  }
+
+  .pending-title { font-size: var(--font-size-xl); }
+
+  .pending-actions {
+    flex-direction: column;
+  }
+
+  /* admin login card padding a2al */
+  .admin-login-card {
+    padding: var(--space-8) var(--space-5);
+  }
+
+  /* scroll prompt card padding a2al */
+  .auth-scroll-prompt-card {
+    padding: var(--space-8) var(--space-5);
+  }
+}
+
+@media (max-width: 480px) {
+  /* upload zone padding a2al */
+  .auth-upload-zone {
+    padding: var(--space-4) var(--space-3);
+  }
+
+  /* pending card more compact */
+  .pending-icon {
+    width: 80px;
+    height: 80px;
+  }
+  .pending-icon svg { width: 36px; height: 36px; }
+
+  /* step actions yeb2ou column */
+  .auth-step-actions {
+    flex-direction: column-reverse;
+  }
+}

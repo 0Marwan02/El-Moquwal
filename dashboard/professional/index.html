@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة المقاول | المقاول</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/variables.css">
+  <link rel="stylesheet" href="../../assets/css/base.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/layout.css">
+  <style>
+    /* Welcome Hero */
+    .welcome-hero {
+      position: relative;
+      background: linear-gradient(135deg, #020617 0%, var(--color-navy) 50%, #1a2e4a 100%);
+      border-radius: var(--radius-lg);
+      padding: var(--space-10) var(--space-8);
+      margin-bottom: var(--space-8);
+      overflow: hidden;
+    }
+    .welcome-hero::before {
+      content: '';
+      position: absolute;
+      width: 380px; height: 380px;
+      top: -100px; left: -80px;
+      background: rgba(244, 166, 35, 0.07);
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+    }
+    .welcome-hero::after {
+      content: '';
+      position: absolute;
+      width: 220px; height: 220px;
+      bottom: -40px; right: 20%;
+      background: rgba(16, 185, 129, 0.05);
+      border-radius: 50%;
+      filter: blur(60px);
+      pointer-events: none;
+    }
+    .welcome-hero-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-6);
+    }
+    .welcome-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      background: rgba(244, 166, 35, 0.12);
+      border: 1px solid rgba(244, 166, 35, 0.25);
+      color: var(--color-gold-light);
+      padding: 5px 14px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: var(--space-3);
+    }
+    .welcome-tag-dot {
+      width: 6px; height: 6px;
+      background: var(--color-gold);
+      border-radius: 50%;
+      animation: pulseDot 2s ease-in-out infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.7); }
+    }
+    .welcome-title {
+      font-size: clamp(24px, 3vw, 36px);
+      font-weight: 900;
+      color: var(--text-on-dark);
+      letter-spacing: -0.5px;
+      margin-bottom: var(--space-2);
+    }
+    .welcome-title .gold { color: var(--color-gold); }
+    .welcome-subtitle {
+      font-size: var(--font-size-sm);
+      color: var(--text-on-dark-muted);
+      line-height: 1.7;
+    }
+    .welcome-actions {
+      display: flex;
+      gap: var(--space-3);
+      margin-top: var(--space-5);
+      flex-wrap: wrap;
+    }
+    .welcome-visual {
+      flex-shrink: 0;
+      display: flex;
+      gap: var(--space-3);
+    }
+    .welcome-badge {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-md);
+      padding: var(--space-4) var(--space-5);
+      text-align: center;
+      backdrop-filter: blur(12px);
+      min-width: 100px;
+    }
+    .welcome-badge-num {
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--color-gold);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .welcome-badge-lbl {
+      font-size: 11px;
+      color: var(--text-on-dark-muted);
+    }
+
+    /* Status pill */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: var(--space-4);
+    }
+    .status-pill.pending {
+      background: rgba(244, 166, 35, 0.12);
+      border: 1px solid rgba(244, 166, 35, 0.25);
+      color: var(--color-gold-light);
+    }
+    .status-pill.approved {
+      background: var(--color-success-bg);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: var(--color-success);
+    }
+    .status-pill-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* Stat Grid */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-5);
+      margin-bottom: var(--space-8);
+    }
+    .stat-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: var(--space-6);
+      box-shadow: var(--shadow-sm);
+      transition: all var(--transition-base);
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 100%; height: 3px;
+      background: linear-gradient(90deg, transparent, var(--card-accent, var(--color-gold)));
+      opacity: 0.7;
+    }
+    .stat-card.accent-gold { --card-accent: var(--color-gold); }
+    .stat-card.accent-blue { --card-accent: var(--color-accent); }
+    .stat-card.accent-success { --card-accent: var(--color-success); }
+
+    .stat-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-4);
+    }
+    .stat-card-icon {
+      width: 44px; height: 44px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .stat-card-icon.gold-bg   { background: var(--color-gold-subtle); }
+    .stat-card-icon.blue-bg   { background: rgba(59, 130, 246, 0.12); }
+    .stat-card-icon.success-bg { background: var(--color-success-bg); }
+    .stat-card-icon.gold-bg svg    { fill: var(--color-gold-dark); }
+    .stat-card-icon.blue-bg svg    { fill: var(--color-accent); }
+    .stat-card-icon.success-bg svg { fill: var(--color-success); }
+    .stat-card-icon svg { width: 22px; height: 22px; }
+    .stat-card-label {
+      font-size: var(--font-size-xs);
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    .stat-card-value {
+      font-size: 42px;
+      font-weight: 900;
+      color: var(--color-navy);
+      line-height: 1;
+      letter-spacing: -1px;
+      margin-bottom: var(--space-2);
+    }
+    .stat-card.accent-gold .stat-card-value    { color: var(--color-gold-dark); }
+    .stat-card.accent-success .stat-card-value { color: var(--color-success); }
+    .stat-card.accent-blue .stat-card-value    { color: var(--color-accent); }
+    .stat-card-desc { font-size: var(--font-size-xs); color: var(--text-light); }
+
+    /* Quick Actions */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-4);
+      margin-bottom: var(--space-8);
+    }
+    .quick-action-card {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: var(--space-5);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all var(--transition-base);
+    }
+    .quick-action-card:hover {
+      border-color: var(--color-gold);
+      box-shadow: 0 0 0 3px var(--color-gold-subtle), var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .quick-action-icon {
+      width: 48px; height: 48px;
+      border-radius: var(--radius-sm);
+      background: var(--color-navy-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .quick-action-icon svg { width: 24px; height: 24px; fill: var(--color-gold); }
+    .quick-action-title {
+      font-size: var(--font-size-base);
+      font-weight: 800;
+      color: var(--color-navy);
+      margin-bottom: 3px;
+    }
+    .quick-action-desc { font-size: var(--font-size-xs); color: var(--text-muted); }
+    .quick-action-arrow {
+      margin-right: auto;
+      width: 32px; height: 32px;
+      border-radius: var(--radius-full);
+      background: var(--bg-surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all var(--transition-base);
+    }
+    .quick-action-card:hover .quick-action-arrow { background: var(--color-gold); }
+    .quick-action-arrow svg { width: 16px; height: 16px; fill: var(--color-navy); }
+
+    .section-title {
+      font-size: var(--font-size-lg);
+      font-weight: 800;
+      color: var(--color-navy);
+      margin-bottom: var(--space-5);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-default);
+    }
+
+    /* Pending approval notice */
+    .approval-notice {
+      background: linear-gradient(135deg, rgba(244,166,35,0.08), rgba(244,166,35,0.03));
+      border: 1px solid rgba(244, 166, 35, 0.25);
+      border-right: 4px solid var(--color-gold);
+      border-radius: var(--radius-md);
+      padding: var(--space-5) var(--space-6);
+      margin-bottom: var(--space-8);
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-4);
+    }
+    .approval-notice-icon {
+      width: 40px; height: 40px;
+      border-radius: var(--radius-sm);
+      background: var(--color-gold-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .approval-notice-icon svg { width: 20px; height: 20px; fill: var(--color-gold-dark); }
+    .approval-notice-title { font-size: var(--font-size-base); font-weight: 800; color: var(--color-navy); margin-bottom: 4px; }
+    .approval-notice-text { font-size: var(--font-size-sm); color: var(--text-secondary); line-height: 1.6; }
+
+    @media (max-width: 768px) {
+      .stat-grid { grid-template-columns: 1fr; }
+      .quick-actions { grid-template-columns: 1fr; }
+      .welcome-hero-inner { flex-direction: column; }
+      .welcome-visual { display: none; }
+    }
+  </style>
+</head>
+<body class="dashboard-page">
+  <div class="dashboard-wrapper">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo-mark" style="display:flex;align-items:center;justify-content:center;">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
+        </div>
+        <div class="sidebar-logo-text">المقاول</div>
+      </div>
+
+      <div class="sidebar-user">
+        <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--color-gold),var(--color-gold-dark));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:var(--color-navy-dark);" id="sidebarAvatar">م</div>
+        <div class="sidebar-user-info">
+          <div class="name" id="sidebarUserName">جاري التحميل...</div>
+          <div class="role">مقاول</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-section-label">الرئيسية</div>
+        <a href="index.html" class="sidebar-item active">
+          <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+          لوحة التحكم
+        </a>
+        <div class="sidebar-section-label">المشاريع</div>
+        <a href="browse-projects.html" class="sidebar-item">
+          <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          تصفح المشاريع
+        </a>
+        <a href="profile.html" class="sidebar-item">
+          <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          ملفي الشخصي
+        </a>
+      </nav>
+
+      <div class="sidebar-cta">
+        <button class="btn btn-ghost-light btn-full" id="logoutBtn">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+          تسجيل الخروج
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="dashboard-main">
+      <div class="dashboard-topbar">
+        <div class="topbar-page-title">لوحة التحكم</div>
+        <div class="topbar-actions">
+          <a href="browse-projects.html" class="btn btn-primary btn-sm">
+            <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:currentColor;"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            تصفح المشاريع
+          </a>
+          <div class="topbar-user">
+            <div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--color-gold),var(--color-gold-dark));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--color-navy-dark);" id="topbarAvatar">م</div>
+            <div class="topbar-user-name" id="topbarUserName">جاري...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-content">
+
+        <!-- Welcome Hero -->
+        <div class="welcome-hero">
+          <div class="welcome-hero-inner">
+            <div>
+              <div class="welcome-tag">
+                <div class="welcome-tag-dot"></div>
+                منصة المقاولين المحترفين
+              </div>
+              <h1 class="welcome-title">أهلاً، <span class="gold" id="heroUserName">...</span> 🔧</h1>
+              <p class="welcome-subtitle">تصفح المشاريع المتاحة وقدم عروض أسعارك للعملاء في كل مصر.</p>
+              <div id="approvalStatus" style="display:none;" class="status-pill pending">
+                <span class="status-pill-dot"></span>
+                <span id="approvalText">في انتظار الموافقة</span>
+              </div>
+              <div class="welcome-actions">
+                <a href="browse-projects.html" class="btn btn-primary">
+                  <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                  تصفح المشاريع المتاحة
+                </a>
+                <a href="profile.html" class="btn btn-ghost-light">ملفي الشخصي</a>
+              </div>
+            </div>
+            <div class="welcome-visual">
+              <div class="welcome-badge">
+                <div class="welcome-badge-num" id="heroBidsCount">—</div>
+                <div class="welcome-badge-lbl">عرض قدمته</div>
+              </div>
+              <div class="welcome-badge">
+                <div class="welcome-badge-num" id="heroOpenProjects">—</div>
+                <div class="welcome-badge-lbl">مشروع مفتوح</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending Approval Notice (shown if not approved) -->
+        <div id="pendingNotice" class="approval-notice" hidden>
+          <div class="approval-notice-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          </div>
+          <div>
+            <div class="approval-notice-title">حسابك قيد المراجعة</div>
+            <div class="approval-notice-text">فريقنا يراجع وثائقك. ستتمكن من تقديم عروض الأسعار بمجرد الموافقة على حسابك. يستغرق ذلك عادة 24-48 ساعة.</div>
+          </div>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="stat-grid">
+          <div class="stat-card accent-gold">
+            <div class="stat-card-header">
+              <div class="stat-card-label">عروضي المقدمة</div>
+              <div class="stat-card-icon gold-bg">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+              </div>
+            </div>
+            <div class="stat-card-value" id="statMyBids">—</div>
+            <div class="stat-card-desc">إجمالي العروض التي قدمتها</div>
+          </div>
+
+          <div class="stat-card accent-blue">
+            <div class="stat-card-header">
+              <div class="stat-card-label">مشاريع مفتوحة الآن</div>
+              <div class="stat-card-icon blue-bg">
+                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+              </div>
+            </div>
+            <div class="stat-card-value" id="statOpenProjects">—</div>
+            <div class="stat-card-desc">فرص متاحة لتقديم عروض</div>
+          </div>
+
+          <div class="stat-card accent-success">
+            <div class="stat-card-header">
+              <div class="stat-card-label">عروض مقبولة</div>
+              <div class="stat-card-icon success-bg">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+              </div>
+            </div>
+            <div class="stat-card-value" id="statAccepted">—</div>
+            <div class="stat-card-desc">مشاريع فزت بها</div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <h2 class="section-title">إجراءات سريعة</h2>
+        <div class="quick-actions">
+          <a href="browse-projects.html" class="quick-action-card">
+            <div class="quick-action-icon">
+              <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            </div>
+            <div>
+              <div class="quick-action-title">تصفح المشاريع المتاحة</div>
+              <div class="quick-action-desc">اعثر على مشاريع تناسب تخصصك وقدم عرضك</div>
+            </div>
+            <div class="quick-action-arrow">
+              <svg viewBox="0 0 24 24"><path d="M19 11H7.83l4.88-4.88c.39-.39.39-1.03 0-1.42-.39-.39-1.02-.39-1.41 0l-6.59 6.59c-.39.39-.39 1.02 0 1.41l6.59 6.59c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L7.83 13H19c.55 0 1-.45 1-1s-.45-1-1-1z"/></svg>
+            </div>
+          </a>
+
+          <a href="profile.html" class="quick-action-card">
+            <div class="quick-action-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </div>
+            <div>
+              <div class="quick-action-title">ملفي الشخصي</div>
+              <div class="quick-action-desc">أكمل بياناتك لزيادة فرص الفوز بالمشاريع</div>
+            </div>
+            <div class="quick-action-arrow">
+              <svg viewBox="0 0 24 24"><path d="M19 11H7.83l4.88-4.88c.39-.39.39-1.03 0-1.42-.39-.39-1.02-.39-1.41 0l-6.59 6.59c-.39.39-.39 1.02 0 1.41l6.59 6.59c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L7.83 13H19c.55 0 1-.45 1-1s-.45-1-1-1z"/></svg>
+            </div>
+          </a>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="../../assets/js/api.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const userJSON = localStorage.getItem('elm_user');
+      if (!userJSON) {
+        window.location.href = '../../auth/login.html';
+        return;
+      }
+
+      const user = JSON.parse(userJSON);
+      const firstName = (user.name || '').split(' ')[0];
+      const initial = firstName.charAt(0) || 'م';
+
+      ['sidebarUserName', 'topbarUserName'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = user.name;
+      });
+      document.getElementById('heroUserName').textContent = firstName;
+      ['sidebarAvatar', 'topbarAvatar'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = initial;
+      });
+
+      // show approval status
+      if (user.approvalStatus && user.approvalStatus !== 'approved') {
+        const notice = document.getElementById('pendingNotice');
+        const pill   = document.getElementById('approvalStatus');
+        const text   = document.getElementById('approvalText');
+        if (notice) notice.hidden = false;
+        if (pill)   pill.style.display = 'inline-flex';
+        if (text)   text.textContent = user.approvalStatus === 'rejected' ? 'تم رفض الطلب' : 'في انتظار الموافقة';
+        if (pill && user.approvalStatus === 'rejected') {
+          pill.classList.remove('pending');
+          pill.classList.add('rejected');
+          pill.style.background = 'rgba(239,68,68,0.12)';
+          pill.style.borderColor = 'rgba(239,68,68,0.25)';
+          pill.style.color = 'var(--color-error)';
+        }
+      }
+
+      try {
+        const data = await window.api.fetch('/projects?status=open&limit=100');
+        const openCount = (data.projects || []).length;
+        document.getElementById('statOpenProjects').textContent = openCount;
+        document.getElementById('heroOpenProjects').textContent = openCount;
+      } catch (e) { /* silent */ }
+
+      // placeholder stats (no dedicated endpoint for "my bids" count)
+      document.getElementById('statMyBids').textContent    = '—';
+      document.getElementById('statAccepted').textContent  = '—';
+      document.getElementById('heroBidsCount').textContent = '—';
+
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        localStorage.removeItem('elm_accessToken');
+        localStorage.removeItem('elm_user');
+        window.location.href = '../../index.html';
+      });
+    });
+  </script>
+</body>
+</html>

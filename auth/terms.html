@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>المقاول | الشروط والأحكام</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/variables.css">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <style>
+    body {
+      background-color: var(--bg-app);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Alexandria', sans-serif;
+    }
+    .terms-box {
+      background: var(--bg-surface);
+      border-radius: var(--radius-lg);
+      padding: var(--space-10);
+      max-width: 600px;
+      text-align: center;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border-default);
+      animation: fadeInZoom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    @keyframes fadeInZoom {
+      0% { opacity: 0; transform: scale(0.9); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .terms-icon {
+      font-size: 48px;
+      margin-bottom: var(--space-4);
+      animation: floatIcon 3s ease-in-out infinite;
+    }
+    @keyframes floatIcon {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    h1 { color: var(--color-navy); margin-bottom: var(--space-4); }
+    p { color: var(--text-muted); line-height: 1.6; margin-bottom: var(--space-6); }
+    .btn-back {
+      display: inline-block;
+      padding: var(--space-3) var(--space-6);
+      border-radius: var(--radius-md);
+      background: var(--color-gold);
+      color: var(--color-navy);
+      font-weight: 700;
+      text-decoration: none;
+      transition: all var(--transition-fast);
+    }
+    .btn-back:hover {
+      background: var(--color-gold-dark);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <div class="terms-box">
+    <div class="terms-icon">📄</div>
+    <h1>الشروط والأحكام</h1>
+    <p>هذه الصفحة قيد الإنشاء. سيتم إضافة البنود القانونية وتفاصيل الاستخدام لاحقاً بناءً على اللوائح الرسمية لضمان حقوق كل من أصحاب العقارات والمقاولين في منصة <strong>المقاول</strong>.</p>
+    <a href="javascript:history.back()" class="btn-back">عودة للخلف</a>
+  </div>
+</body>
+</html>

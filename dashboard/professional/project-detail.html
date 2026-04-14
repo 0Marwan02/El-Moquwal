@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>المقاول | تفاصيل المشروع</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="../../assets/css/variables.css">
+  <link rel="stylesheet" href="../../assets/css/base.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/layout.css">
+  <link rel="stylesheet" href="../../assets/css/utilities.css">
+
+  <style>
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: var(--font-size-sm);
+      font-weight: 700;
+      text-decoration: none;
+      margin-bottom: var(--space-6);
+      transition: color var(--transition-base);
+    }
+    .back-btn:hover { color: var(--color-navy); }
+    .back-btn svg { width: 18px; height: 18px; fill: currentColor; }
+
+    .detail-layout {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: var(--space-6);
+      align-items: start;
+    }
+
+    .detail-main {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: var(--space-8);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .detail-tag {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--color-gold-dark);
+      background: rgba(244, 166, 35, 0.12);
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      margin-bottom: var(--space-3);
+    }
+
+    .detail-title {
+      font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+      font-weight: 900;
+      color: var(--color-navy);
+      margin-bottom: var(--space-4);
+      line-height: 1.35;
+    }
+
+    .detail-desc {
+      color: var(--text-secondary);
+      font-size: var(--font-size-sm);
+      line-height: 1.85;
+      margin-bottom: var(--space-6);
+      white-space: pre-wrap;
+    }
+
+    .detail-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+
+    .stat-cell {
+      background: var(--bg-surface-2);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      padding: var(--space-4);
+    }
+    .stat-cell .lbl {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .stat-cell .val {
+      font-size: var(--font-size-sm);
+      font-weight: 800;
+      color: var(--color-navy);
+    }
+
+    .req-box {
+      background: var(--bg-surface-2);
+      border-radius: var(--radius-sm);
+      padding: var(--space-5);
+      font-size: var(--font-size-sm);
+      line-height: 1.8;
+      margin-bottom: var(--space-6);
+    }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: var(--space-3);
+    }
+    .photo-grid img {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-default);
+    }
+
+    .bid-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: var(--space-6);
+      box-shadow: var(--shadow-sm);
+      position: sticky;
+      top: 20px;
+    }
+    .bid-panel h3 {
+      font-size: var(--font-size-md);
+      font-weight: 800;
+      color: var(--color-navy);
+      margin-bottom: var(--space-4);
+    }
+    .blind-note {
+      font-size: 12px;
+      color: var(--text-muted);
+      background: var(--bg-surface-2);
+      padding: var(--space-3);
+      border-radius: var(--radius-sm);
+      margin-bottom: var(--space-4);
+      line-height: 1.6;
+    }
+    .bid-panel .form-field { margin-bottom: var(--space-4); }
+    .bid-panel label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--color-navy);
+      margin-bottom: 6px;
+    }
+    .bid-panel input, .bid-panel textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-main);
+ font-size: var(--font-size-sm);
+    }
+    .bid-panel textarea { min-height: 100px; resize: vertical; }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: var(--space-4);
+    }
+    .status-pill.pending { background: rgba(244,166,35,.12); color: var(--color-gold-dark); }
+    .status-pill.accepted { background: var(--color-success-bg); color: var(--color-success); }
+    .status-pill.rejected { background: var(--bg-surface-2); color: var(--text-muted); }
+
+    .loading-state, .error-state {
+      text-align: center;
+      padding: var(--space-16);
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 960px) {
+      .detail-layout { grid-template-columns: 1fr; }
+      .bid-panel { position: static; }
+    }
+
+    .toast-stack {
+      position: fixed;
+      top: 18px;
+      left: 18px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .toast {
+      pointer-events: auto;
+      min-width: 260px;
+      max-width: 360px;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-default);
+      background: var(--bg-surface);
+      box-shadow: var(--shadow-md);
+      font-size: var(--font-size-sm);
+      font-weight: 700;
+      color: var(--color-navy);
+    }
+    .toast.success {
+      border-color: rgba(16,185,129,0.35);
+      background: var(--color-success-bg);
+      color: #065f46;
+    }
+    .toast.error {
+      border-color: rgba(239,68,68,0.35);
+      background: rgba(239,68,68,0.08);
+      color: #991b1b;
+    }
+  </style>
+</head>
+
+<body class="dashboard-page">
+  <div class="dashboard-wrapper">
+
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo-mark" style="display:flex;align-items:center;justify-content:center;">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z" />
+          </svg>
+        </div>
+        <div class="sidebar-logo-text">المقاول</div>
+      </div>
+
+      <div class="sidebar-user">
+        <div
+          style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--color-gold),var(--color-gold-dark));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:var(--color-navy-dark);"
+          id="sidebarAvatar">م</div>
+        <div class="sidebar-user-info">
+          <div class="name" id="sidebarUserName">جاري التحميل...</div>
+          <div class="role">مقاول</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-section-label">الرئيسية</div>
+        <a href="index.html" class="sidebar-item">
+          <svg viewBox="0 0 24 24">
+            <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
+          </svg>
+          لوحة التحكم
+        </a>
+        <div class="sidebar-section-label">المشاريع</div>
+        <a href="browse-projects.html" class="sidebar-item active">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+          </svg>
+          تصفح المشاريع
+        </a>
+        <a href="my-agreements.html" class="sidebar-item">
+          <svg viewBox="0 0 24 24">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+          </svg>
+          اتفاقياتي
+        </a>
+        <a href="profile.html" class="sidebar-item">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+          </svg>
+          ملفي الشخصي
+        </a>
+      </nav>
+
+      <div class="sidebar-cta">
+        <button class="btn btn-ghost-light btn-full" id="logoutBtnMain" type="button">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;">
+            <path
+              d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
+          </svg>
+          تسجيل الخروج
+        </button>
+      </div>
+    </aside>
+
+    <main class="dashboard-main">
+      <div class="dashboard-topbar">
+        <div class="topbar-page-title">تفاصيل المشروع</div>
+        <div class="topbar-actions">
+          <div class="topbar-user">
+            <div
+              style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--color-gold),var(--color-gold-dark));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--color-navy-dark);"
+              id="topbarAvatar">م</div>
+            <div class="topbar-user-name" id="topbarUserName">جاري...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-content">
+        <a href="browse-projects.html" class="back-btn">
+          <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" /></svg>
+          العودة إلى تصفح المشاريع
+        </a>
+
+        <div id="pageRoot">
+          <div class="loading-state">جاري التحميل...</div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="../../assets/js/api.js"></script>
+  <script>
+    (() => {
+      if (!localStorage.getItem('elm_user') || !localStorage.getItem('elm_accessToken')) {
+        window.location.href = '../../auth/login.html';
+        return;
+      }
+
+      const TYPE_LABELS = {
+        new_construction: 'بناء جديد', renovation: 'تجديد', finishing: 'تشطيبات',
+        repair: 'إصلاح', extension: 'توسعة', electrical: 'كهرباء',
+        plumbing: 'سباكة', demolition: 'هدم', other: 'أخرى'
+      };
+      const BUDGET_LABELS = {
+        under_50k: 'أقل من 50,000',
+        '50k_200k': '50,000 - 200,000',
+        '200k_500k': '200,000 - 500,000',
+        '500k_1m': '500,000 - 1 مليون',
+        above_1m: 'أكثر من 1 مليون',
+        flexible: 'مرن'
+      };
+      const TIMELINE_LABELS = {
+        within_week: 'خلال أسبوع', within_month: 'خلال شهر',
+        '1_3_months': '1 - 3 أشهر', '3_6_months': '3 - 6 أشهر',
+        flexible: 'مرن'
+      };
+      const BID_STATUS = {
+        pending: { label: 'قيد مراجعة العميل', cls: 'pending' },
+        accepted: { label: 'تم قبول عرضك', cls: 'accepted' },
+        rejected: { label: 'مرفوض', cls: 'rejected' },
+      };
+
+      const params = new URLSearchParams(location.search);
+      const projectId = params.get('id');
+      const root = document.getElementById('pageRoot');
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const user = JSON.parse(localStorage.getItem('elm_user') || '{}');
+        if (user.name) {
+          const initial = user.name.charAt(0) || 'م';
+          document.getElementById('sidebarUserName').textContent = user.name;
+          document.getElementById('topbarUserName').textContent = user.name;
+          document.getElementById('sidebarAvatar').textContent = initial;
+          document.getElementById('topbarAvatar').textContent = initial;
+        }
+
+        document.getElementById('logoutBtnMain').addEventListener('click', async () => {
+          try { await window.api.fetch('/auth/logout', { method: 'POST' }); } catch (_) {}
+          localStorage.removeItem('elm_accessToken');
+          localStorage.removeItem('elm_user');
+          window.location.href = '../../index.html';
+        });
+      });
+
+      function escapeHtml(s) {
+        if (!s) return '';
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+      }
+
+      function showToast(message, type = 'success') {
+        const stack = document.getElementById('toastStack');
+        if (!stack) return;
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        stack.appendChild(toast);
+        setTimeout(() => toast.remove(), 3200);
+      }
+
+      function validateBidInput({ amount, message, duration }) {
+        if (!amount || +amount < 1000) return 'أقل قيمة عرض مسموحة هي 1000 جنيه';
+        if (+amount > 100000000) return 'قيمة العرض كبيرة بشكل غير منطقي';
+        if (message.length < 30) return 'اكتب رسالة واضحة لا تقل عن 30 حرفًا';
+        if (!duration || +duration < 7) return 'مدة التنفيذ يجب ألا تقل عن 7 أيام';
+        if (+duration > 365) return 'مدة التنفيذ يجب ألا تزيد عن 365 يومًا';
+        return '';
+      }
+
+      function formatRequirements(req) {
+        if (!req || typeof req !== 'object') return '—';
+        const parts = [];
+        for (const [k, v] of Object.entries(req)) {
+          if (v === true) parts.push(k);
+          else if (v && typeof v === 'string') parts.push(v);
+        }
+        return parts.length ? parts.join('، ') : JSON.stringify(req);
+      }
+
+      function renderProject(project, bidsPayload) {
+        const myBid = bidsPayload.myBid;
+        const bidsCount = bidsPayload.bidsCount ?? project.bidsCount ?? 0;
+        const eng = project.requiredEngineers != null ? project.requiredEngineers : 1;
+
+        const apiBase = window.api.API_URL.replace(/\/?api\/?$/, '');
+        const photos = (project.photos || []).map(ph => {
+          const url = ph.filename ? `${apiBase}/uploads/${encodeURIComponent(ph.filename)}` : '';
+          return url ? `<img src="${url}" alt="">` : '';
+        }).join('');
+
+        let bidPanelHtml = '';
+        if (project.status !== 'open') {
+          bidPanelHtml = `
+            <div class="bid-panel">
+              <h3>العروض</h3>
+              <p style="font-size:var(--font-size-sm);color:var(--text-muted);line-height:1.7;">
+                هذا المشروع لم يعد يقبل عروضاً جديدة (حالة: ${project.status}).
+              </p>
+              ${myBid ? `<a class="btn btn-primary btn-full" href="view-bid.html?projectId=${project._id}" style="margin-top:var(--space-4);">عرض عرضي على المشروع</a>` : ''}
+            </div>`;
+        } else if (myBid) {
+          const st = BID_STATUS[myBid.status] || { label: myBid.status, cls: 'pending' };
+          bidPanelHtml = `
+            <div class="bid-panel">
+              <h3>عرضك</h3>
+              <div class="status-pill ${st.cls}">${st.label}</div>
+              <div class="stat-cell" style="margin-bottom:var(--space-4);">
+                <div class="lbl">قيمة عرضك</div>
+                <div class="val">${Number(myBid.amount).toLocaleString('ar-EG')} جنيه</div>
+              </div>
+              <p class="blind-note">إجمالي العروض على المشروع: <strong>${bidsCount}</strong> (لا تظهر تفاصيل عروض الآخرين)</p>
+              <a class="btn btn-outline btn-full" href="view-bid.html?projectId=${project._id}">تفاصيل العرض</a>
+            </div>`;
+        } else {
+          bidPanelHtml = `
+            <div class="bid-panel">
+              <h3>قدّم عرضاً</h3>
+              <div class="blind-note">العروض سرية — لن ترى مبالغ المقاولين الآخرين.</div>
+              <form id="bidForm">
+                <div class="form-field">
+                  <label for="bidAmount">قيمة العرض (جنيه)</label>
+                  <input type="number" id="bidAmount" name="amount" min="1" required placeholder="مثال: 85000">
+                </div>
+                <div class="form-field">
+                  <label for="bidDuration">مدة التنفيذ المقترحة (يوم) — اختياري</label>
+                  <input type="number" id="bidDuration" name="proposedDurationDays" min="1" placeholder="مثال: 45">
+                </div>
+                <div class="form-field">
+                  <label for="bidMessage">رسالة للعميل</label>
+                  <textarea id="bidMessage" name="message" required placeholder="اشرح خبرتك وطريقة التنفيذ..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full" id="bidFormSubmit">إرسال العرض</button>
+              </form>
+            </div>`;
+        }
+
+        root.innerHTML = `
+          <div class="detail-layout">
+            <div class="detail-main">
+              <span class="detail-tag">${TYPE_LABELS[project.projectType] || '—'}</span>
+              <h1 class="detail-title">${escapeHtml(project.title || '—')}</h1>
+              ${project.description ? `<div class="detail-desc">${escapeHtml(project.description)}</div>` : ''}
+
+              <div class="detail-stats">
+                <div class="stat-cell"><div class="lbl">المحافظة</div><div class="val">${project.propertyDetails?.governorate || '—'}</div></div>
+                <div class="stat-cell"><div class="lbl">المساحة</div><div class="val">${project.propertyDetails?.area || '—'} م²</div></div>
+                <div class="stat-cell"><div class="lbl">الأدوار</div><div class="val">${project.propertyDetails?.floors ?? '—'}</div></div>
+                <div class="stat-cell"><div class="lbl">المهندسون المطلوبون</div><div class="val">${eng}</div></div>
+                <div class="stat-cell"><div class="lbl">الميزانية</div><div class="val">${BUDGET_LABELS[project.budgetRange] || '—'}</div></div>
+                <div class="stat-cell"><div class="lbl">الجدول الزمني</div><div class="val">${TIMELINE_LABELS[project.timeline] || '—'}</div></div>
+                <div class="stat-cell"><div class="lbl">عروض مقدّمة</div><div class="val">${bidsCount}</div></div>
+              </div>
+
+              <div class="req-box"><strong>المتطلبات:</strong> ${escapeHtml(formatRequirements(project.requirements))}</div>
+
+              ${photos ? `<div class="photo-grid">${photos}</div>` : ''}
+            </div>
+            ${bidPanelHtml}
+          </div>`;
+
+        const form = document.getElementById('bidForm');
+        if (form) {
+          form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const amount = document.getElementById('bidAmount').value;
+            const message = document.getElementById('bidMessage').value.trim();
+            const durRaw = document.getElementById('bidDuration').value;
+            const validationError = validateBidInput({ amount, message, duration: durRaw });
+            if (validationError) {
+              showToast(validationError, 'error');
+              return;
+            }
+
+            const body = { amount: +amount, message };
+            const dur = durRaw === '' ? null : parseInt(durRaw, 10);
+            if (dur != null && dur > 0) body.proposedDurationDays = dur;
+
+            const btn = document.getElementById('bidFormSubmit');
+            btn.disabled = true;
+            btn.textContent = 'جاري الإرسال...';
+            try {
+              await window.api.fetch(`/projects/${projectId}/bids`, {
+                method: 'POST',
+                body: JSON.stringify(body),
+              });
+              showToast('تم إرسال العرض بنجاح', 'success');
+              await load();
+            } catch (err) {
+              showToast(err.message || 'تعذر إرسال العرض', 'error');
+              btn.disabled = false;
+              btn.textContent = 'إرسال العرض';
+            }
+          });
+        }
+      }
+
+      async function load() {
+        if (!projectId) {
+          root.innerHTML = '<div class="error-state">لم يُحدد معرف المشروع في الرابط (?id=)</div>';
+          return;
+        }
+        root.innerHTML = '<div class="loading-state">جاري التحميل...</div>';
+        try {
+          const [pRes, bRes] = await Promise.all([
+            window.api.fetch(`/projects/${projectId}`),
+            window.api.fetch(`/projects/${projectId}/bids`),
+          ]);
+          renderProject(pRes.project, bRes);
+        } catch (err) {
+          root.innerHTML = `<div class="error-state">${escapeHtml(err.message)}</div>`;
+        }
+      }
+
+      load();
+    })();
+  </script>
+</body>
+
+</html>

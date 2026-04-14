@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>المُقاوٍل | في انتظار المراجعة</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/variables.css">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/utilities.css">
+  <link rel="stylesheet" href="../assets/css/auth.css">
+</head>
+<body>
+
+  <!-- el page el kamela nos el 5asha -->
+  <div class="pending-page">
+
+    <div class="pending-card auth-animate-in">
+
+      <!-- el animated icon -->
+      <div class="pending-icon">
+        <div class="pending-icon-pulse"></div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 6v6l4 2"/>
+        </svg>
+      </div>
+
+      <!-- el header -->
+      <h1 class="pending-title">طلبك في انتظار المراجعة ⏳</h1>
+      <p class="pending-sub">
+        شكراً لانضمامك لمنصة المُقوَّل. استلمنا طلبك وهنراجع وثائقك في أقرب وقت
+        وهنبعتلك رسالة على البريد الإلكتروني بنتيجة المراجعة.
+      </p>
+
+      <!-- el steps line -->
+      <div class="pending-steps">
+
+        <div class="pending-step done">
+          <div class="pending-step-dot">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+          </div>
+          <div class="pending-step-text">
+            <strong>إرسال الطلب</strong>
+            <span>تم استلام بياناتك ووثائقك بنجاح</span>
+          </div>
+        </div>
+
+        <div class="pending-step active">
+          <div class="pending-step-dot">
+            <div class="pending-step-spinner"></div>
+          </div>
+          <div class="pending-step-text">
+            <strong>مراجعة الإدارة</strong>
+            <span>فريق المُقوَّل بيراجع شهادتك وكارنيه النقابة</span>
+          </div>
+        </div>
+
+        <div class="pending-step">
+          <div class="pending-step-dot">3</div>
+          <div class="pending-step-text">
+            <strong>تفعيل الحساب</strong>
+            <span>هتستلم رسالة تأكيد وتقدر تبدأ فورًا</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- el info box -->
+      <div class="pending-info">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 16v-4M12 8h.01"/>
+        </svg>
+        <div>
+          <strong>معلومة مهمة</strong>
+          <p>المراجعة بتاخد من 24 إلى 48 ساعة في أيام العمل. لو احتجنا أي معلومات إضافية هنتواصل معاك على البريد أو الهاتف.</p>
+        </div>
+      </div>
+
+      <!-- actions -->
+      <div class="pending-actions">
+        <a href="../index.html" class="btn btn-primary btn-lg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          العودة للرئيسية
+        </a>
+        <a href="login.html" class="auth-role-back">
+          تسجيل دخول بحساب آخر
+        </a>
+      </div>
+
+    </div>
+
+  </div>
+
+</body>
+</html>

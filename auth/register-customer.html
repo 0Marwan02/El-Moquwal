@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>المُقاوٍل | تسجيل صاحب عقار</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/variables.css">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/utilities.css">
+  <link rel="stylesheet" href="../assets/css/auth.css">
+</head>
+<body>
+
+  <div class="auth-layout">
+
+    <!-- el brand side el shemal -->
+    <div class="auth-brand-side">
+      <div class="auth-brand-content">
+        <div class="auth-brand-icon">❝</div>
+        <h1 class="auth-brand-title">المقاول</h1>
+        <p class="auth-brand-tagline">
+          سجّل حسابك كصاحب عقار<br>وابدأ تستقبل عروض لمشاريعك
+        </p>
+        <div class="auth-floating-quotes">
+          <div class="auth-float-q">"التسجيل بالرقم القومي لضمان الأمان"</div>
+          <div class="auth-float-q">"بياناتك محمية ومشفرة بالكامل"</div>
+          <div class="auth-float-q">"ابدأ مشروعك في دقائق"</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- el form side -->
+    <div class="auth-form-side">
+      <div class="auth-form-box auth-animate-in">
+
+        <!-- logo lel mobile -->
+        <div class="auth-mobile-logo">
+          <div class="auth-mobile-logo-icon">❝</div>
+          <span>المُقوَّل</span>
+        </div>
+
+        <!-- el header -->
+        <div class="auth-form-header">
+          <h2>تسجيل صاحب عقار 🏠</h2>
+          <p>أدخل بياناتك لإنشاء حسابك</p>
+        </div>
+
+        <!-- role badge + link yetghayr -->
+        <div class="auth-role-badge">
+          <span class="badge badge-gold">صاحب عقار</span>
+          <a href="role-select.html" class="auth-forgot-link">تغيير النوع</a>
+        </div>
+
+        <!-- alert box lel errors -->
+        <div class="auth-alert" id="registerAlert" role="alert"></div>
+
+        <!-- el form -->
+        <form class="auth-form" id="customerRegisterForm" novalidate>
+
+          <!-- el esm el kamel -->
+          <div class="auth-field">
+            <label class="auth-label" for="regName">الاسم الكامل (كما في الرقم القومي)</label>
+            <div class="auth-input-wrap">
+              <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              <input class="input" type="text" id="regName" placeholder="محمد أحمد محمود" required autocomplete="name">
+            </div>
+          </div>
+
+          <!-- el raqam el qawmy -->
+          <div class="auth-field">
+            <label class="auth-label" for="regNID">الرقم القومي</label>
+            <div class="auth-input-wrap">
+              <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2" y="5" width="20" height="14" rx="2"/>
+                <path d="M2 10h20M6 15h4"/>
+              </svg>
+              <input
+                class="input"
+                type="text"
+                id="regNID"
+                placeholder="14 رقم"
+                maxlength="14"
+                inputmode="numeric"
+                pattern="\d{14}"
+                required
+                dir="ltr"
+                style="text-align:left;">
+            </div>
+            <!-- <div class="form-hint">هنستخرج تاريخ الميلاد ومكانه والجنس تلقائياً من الرقم</div> -->
+          </div>
+
+          <!-- el preview card — byzhar bas lma el NID ysa7 -->
+          <div class="nid-preview" id="nidPreview" hidden>
+            <div class="nid-preview-header">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M20 6L9 17l-5-5"/>
+              </svg>
+              <span>الرقم القومي صحيح</span>
+            </div>
+            <div class="nid-preview-grid">
+              <div class="nid-preview-item">
+                <span class="nid-preview-label">تاريخ الميلاد</span>
+                <span class="nid-preview-value" id="nidDob">—</span>
+              </div>
+              <div class="nid-preview-item">
+                <span class="nid-preview-label">الجنس</span>
+                <span class="nid-preview-value" id="nidGender">—</span>
+              </div>
+              <div class="nid-preview-item">
+                <span class="nid-preview-label">محل الميلاد</span>
+                <span class="nid-preview-value" id="nidGov">—</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- el email -->
+          <div class="auth-field">
+            <label class="auth-label" for="regEmail">البريد الإلكتروني</label>
+            <div class="auth-input-wrap">
+              <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
+              <input class="input" type="email" id="regEmail" placeholder="example@mail.com" required autocomplete="email">
+            </div>
+          </div>
+
+          <!-- el phone -->
+          <div class="auth-field">
+            <label class="auth-label" for="regPhone">رقم الهاتف</label>
+            <div class="auth-input-wrap">
+              <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
+              </svg>
+              <input class="input" type="tel" id="regPhone" placeholder="01xxxxxxxxx" required autocomplete="tel" dir="ltr" style="text-align:left;">
+            </div>
+          </div>
+
+          <!-- el password -->
+          <div class="auth-field">
+            <label class="auth-label" for="regPass">كلمة المرور</label>
+            <div class="auth-input-wrap">
+              <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0110 0v4"/>
+              </svg>
+              <input class="input" type="password" id="regPass" placeholder="8 حروف + رقم + رمز" required autocomplete="new-password">
+              <button type="button" class="auth-pass-toggle" data-target="regPass" aria-label="إظهار كلمة المرور">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+            <div class="auth-strength-bar"><div class="auth-strength-fill" id="strengthFill"></div></div>
+            <span class="auth-strength-label" id="strengthLabel"></span>
+          </div>
+
+          <!-- ta2keed el password -->
+          <div class="auth-field">
+            <label class="auth-label" for="regPassConfirm">تأكيد كلمة المرور</label>
+            <div class="auth-input-wrap">
+              <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+              <input class="input" type="password" id="regPassConfirm" placeholder="أعد كتابة كلمة المرور" required autocomplete="new-password">
+            </div>
+          </div>
+
+          <!-- el terms -->
+          <div class="auth-check-row">
+            <label class="checkbox-wrap">
+              <input type="checkbox" id="agreeTerms" required>
+              <span>أوافق على <a href="terms.html" style="color:var(--color-gold-dark);font-weight:700;">الشروط والأحكام</a></span>
+            </label>
+          </div>
+
+          <!-- el submit -->
+          <button type="submit" class="btn btn-primary btn-full btn-lg auth-submit" id="customerRegisterBtn">
+            <span class="btn-label">إنشاء الحساب</span>
+            <span class="auth-btn-dots" hidden><span></span><span></span><span></span></span>
+          </button>
+
+        </form>
+
+        <p class="auth-footer-text">
+          عندك حساب بالفعل؟
+          <a href="login.html">سجل دخولك</a>
+        </p>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script src="../assets/js/nid-parser.js"></script>
+  <script src="../assets/js/auth.js"></script>
+</body>
+</html>

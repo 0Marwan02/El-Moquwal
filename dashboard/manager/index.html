@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة الإدارة | المقاول</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/variables.css">
+  <link rel="stylesheet" href="../../assets/css/base.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/layout.css">
+  <style>
+    /* Welcome Hero — admin variant (deeper / more serious) */
+    .welcome-hero {
+      position: relative;
+      background: linear-gradient(135deg, #020617 0%, #0a1628 55%, #0f1f38 100%);
+      border-radius: var(--radius-lg);
+      padding: var(--space-10) var(--space-8);
+      margin-bottom: var(--space-8);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .welcome-hero::before {
+      content: '';
+      position: absolute;
+      width: 500px; height: 300px;
+      top: -100px; left: -100px;
+      background: rgba(244, 166, 35, 0.05);
+      border-radius: 50%;
+      filter: blur(100px);
+      pointer-events: none;
+    }
+    .welcome-hero::after {
+      content: '';
+      position: absolute;
+      width: 300px; height: 300px;
+      bottom: -80px; right: 10%;
+      background: rgba(59, 130, 246, 0.05);
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+    }
+    .welcome-hero-inner {
+      position: relative; z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-6);
+    }
+    .welcome-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      background: rgba(244, 166, 35, 0.1);
+      border: 1px solid rgba(244, 166, 35, 0.2);
+      color: var(--color-gold-light);
+      padding: 5px 14px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: var(--space-3);
+    }
+    .welcome-tag-dot {
+      width: 6px; height: 6px;
+      background: var(--color-gold);
+      border-radius: 50%;
+      animation: pulseDot 2s ease-in-out infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.7); }
+    }
+    .welcome-title {
+      font-size: clamp(22px, 3vw, 34px);
+      font-weight: 900;
+      color: var(--text-on-dark);
+      letter-spacing: -0.5px;
+      margin-bottom: var(--space-2);
+    }
+    .welcome-title .gold { color: var(--color-gold); }
+    .welcome-subtitle {
+      font-size: var(--font-size-sm);
+      color: var(--text-on-dark-muted);
+      line-height: 1.7;
+    }
+    .welcome-visual {
+      flex-shrink: 0;
+      display: flex;
+      gap: var(--space-3);
+    }
+    .welcome-badge {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius-md);
+      padding: var(--space-4) var(--space-5);
+      text-align: center;
+      backdrop-filter: blur(12px);
+      min-width: 100px;
+    }
+    .welcome-badge-num {
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--color-gold);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .welcome-badge-lbl { font-size: 11px; color: var(--text-on-dark-muted); }
+
+    /* Stat Grid */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-5);
+      margin-bottom: var(--space-8);
+    }
+    .stat-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: var(--space-5);
+      box-shadow: var(--shadow-sm);
+      transition: all var(--transition-base);
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 100%; height: 3px;
+      background: linear-gradient(90deg, transparent, var(--card-accent, var(--color-gold)));
+      opacity: 0.7;
+    }
+    .stat-card.accent-gold    { --card-accent: var(--color-gold); }
+    .stat-card.accent-blue    { --card-accent: var(--color-accent); }
+    .stat-card.accent-success { --card-accent: var(--color-success); }
+    .stat-card.accent-warning { --card-accent: var(--color-warning); }
+
+    .stat-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-3);
+    }
+    .stat-card-icon {
+      width: 38px; height: 38px;
+      border-radius: var(--radius-xs);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .stat-card-icon.gold-bg    { background: var(--color-gold-subtle); }
+    .stat-card-icon.blue-bg    { background: rgba(59,130,246,0.12); }
+    .stat-card-icon.success-bg { background: var(--color-success-bg); }
+    .stat-card-icon.warning-bg { background: var(--color-warning-bg); }
+    .stat-card-icon.gold-bg svg    { fill: var(--color-gold-dark); }
+    .stat-card-icon.blue-bg svg    { fill: var(--color-accent); }
+    .stat-card-icon.success-bg svg { fill: var(--color-success); }
+    .stat-card-icon.warning-bg svg { fill: var(--color-warning); }
+    .stat-card-icon svg { width: 18px; height: 18px; }
+
+    .stat-card-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    .stat-card-value {
+      font-size: 36px;
+      font-weight: 900;
+      color: var(--color-navy);
+      line-height: 1;
+      letter-spacing: -1px;
+      margin-bottom: var(--space-1);
+    }
+    .stat-card.accent-gold .stat-card-value    { color: var(--color-gold-dark); }
+    .stat-card.accent-success .stat-card-value { color: var(--color-success); }
+    .stat-card.accent-blue .stat-card-value    { color: var(--color-accent); }
+    .stat-card.accent-warning .stat-card-value { color: var(--color-warning); }
+    .stat-card-desc { font-size: 10px; color: var(--text-light); }
+
+    /* Section Title */
+    .section-title {
+      font-size: var(--font-size-md);
+      font-weight: 800;
+      color: var(--color-navy);
+      margin-bottom: var(--space-5);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-default);
+    }
+
+    /* Pending List */
+    .pending-list {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: var(--space-8);
+    }
+    .pending-list-header {
+      padding: var(--space-4) var(--space-6);
+      border-bottom: 1px solid var(--border-default);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-surface-2);
+    }
+    .pending-list-title { font-size: var(--font-size-base); font-weight: 800; color: var(--color-navy); }
+    .pending-list-count {
+      background: var(--color-warning-bg);
+      color: var(--color-warning);
+      border: 1px solid rgba(245,158,11,0.25);
+      border-radius: var(--radius-full);
+      padding: 2px 10px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .pending-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-4) var(--space-6);
+      border-bottom: 1px solid var(--border-default);
+      transition: background var(--transition-fast);
+    }
+    .pending-item:last-child { border-bottom: none; }
+    .pending-item:hover { background: var(--bg-surface-2); }
+    .pending-item-avatar {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--color-gold), var(--color-gold-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 900;
+      color: var(--color-navy-dark);
+      flex-shrink: 0;
+    }
+    .pending-item-name { font-size: var(--font-size-sm); font-weight: 700; color: var(--color-navy); margin-bottom: 2px; }
+    .pending-item-meta { font-size: var(--font-size-xs); color: var(--text-muted); }
+    .pending-item-actions { margin-right: auto; display: flex; gap: var(--space-2); }
+
+    .empty-state {
+      padding: var(--space-12) var(--space-8);
+      text-align: center;
+      color: var(--text-muted);
+    }
+    .empty-state-icon {
+      width: 56px; height: 56px;
+      background: var(--bg-surface-2);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--space-4);
+    }
+    .empty-state-icon svg { width: 26px; height: 26px; fill: var(--text-light); }
+    .empty-state-text { font-size: var(--font-size-sm); color: var(--text-muted); }
+
+    /* Dashboard 2-col layout */
+    .dashboard-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-6);
+      margin-bottom: var(--space-8);
+    }
+
+    @media (max-width: 1100px) {
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .stat-grid { grid-template-columns: 1fr; }
+      .dashboard-grid-2 { grid-template-columns: 1fr; }
+      .welcome-hero-inner { flex-direction: column; }
+      .welcome-visual { display: none; }
+    }
+
+    .toast-stack {
+      position: fixed;
+      top: 18px;
+      left: 18px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .toast {
+      pointer-events: auto;
+      min-width: 260px;
+      max-width: 360px;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-default);
+      background: var(--bg-surface);
+      box-shadow: var(--shadow-md);
+      font-size: var(--font-size-sm);
+      font-weight: 700;
+      color: var(--color-navy);
+    }
+    .toast.success {
+      border-color: rgba(16,185,129,0.35);
+      background: var(--color-success-bg);
+      color: #065f46;
+    }
+    .toast.error {
+      border-color: rgba(239,68,68,0.35);
+      background: rgba(239,68,68,0.08);
+      color: #991b1b;
+    }
+    .action-btn.is-loading {
+      opacity: 0.65;
+      pointer-events: none;
+    }
+
+    /* ===== Manager Reject Modal ===== */
+    .manager-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-overlay);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+      padding: var(--space-6);
+    }
+    .manager-modal-overlay.visible {
+      display: flex;
+    }
+    .manager-modal {
+      width: 100%;
+      max-width: 520px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      padding: var(--space-7);
+    }
+    .manager-modal h3 {
+      margin: 0 0 var(--space-4);
+      font-size: var(--font-size-md);
+      font-weight: 900;
+      color: var(--color-navy);
+    }
+    .manager-modal .sub {
+      color: var(--text-muted);
+      font-size: var(--font-size-sm);
+      line-height: 1.7;
+      margin-bottom: var(--space-5);
+    }
+    .manager-modal textarea {
+      width: 100%;
+      min-height: 120px;
+      resize: vertical;
+      padding: 12px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-default);
+      font-family: var(--font-main);
+      font-size: var(--font-size-sm);
+      background: var(--bg-surface-2);
+      color: var(--color-navy);
+      margin-bottom: var(--space-5);
+    }
+    .manager-modal-actions {
+      display: flex;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body class="dashboard-page">
+  <div class="dashboard-wrapper">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo-mark" style="display:flex;align-items:center;justify-content:center;">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
+        </div>
+        <div class="sidebar-logo-text">المقاول</div>
+      </div>
+
+      <div class="sidebar-user">
+        <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff;" id="sidebarAvatar">أ</div>
+        <div class="sidebar-user-info">
+          <div class="name" id="sidebarUserName">المدير</div>
+          <div class="role" style="background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.2);color:#93c5fd;">مدير النظام</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-section-label">الإدارة</div>
+        <a href="index.html" class="sidebar-item active">
+          <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+          لوحة التحكم
+        </a>
+        <a href="pending-contractors.html" class="sidebar-item" id="pendingNavItem">
+          <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          طلبات المقاولين
+          <span class="sidebar-badge" id="sidebarPendingCount">0</span>
+        </a>
+        <a href="all-projects.html" class="sidebar-item" id="allProjectsNavItem">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+          كل المشاريع
+        </a>
+      </nav>
+
+      <div class="sidebar-cta">
+        <button class="btn btn-ghost-light btn-full" id="logoutBtn">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+          تسجيل الخروج
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="dashboard-main">
+      <div class="dashboard-topbar">
+        <div class="topbar-page-title">لوحة الإدارة</div>
+        <div class="topbar-actions">
+          <div class="topbar-user">
+            <div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;" id="topbarAvatar">أ</div>
+            <div class="topbar-user-name" id="topbarUserName">مدير النظام</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-content">
+
+        <!-- Welcome Hero -->
+        <div class="welcome-hero">
+          <div class="welcome-hero-inner">
+            <div>
+              <div class="welcome-tag">
+                <div class="welcome-tag-dot"></div>
+                لوحة إدارة النظام
+              </div>
+              <h1 class="welcome-title">لوحة <span class="gold">الإدارة</span> ⚙️</h1>
+              <p class="welcome-subtitle">راقب نشاط المنصة، وافق على المقاولين، وتابع المشاريع والعقود.</p>
+            </div>
+            <div class="welcome-visual">
+              <div class="welcome-badge">
+                <div class="welcome-badge-num" id="heroTotalProjects">—</div>
+                <div class="welcome-badge-lbl">مشروع إجمالي</div>
+              </div>
+              <div class="welcome-badge">
+                <div class="welcome-badge-num" id="heroPendingContractors">—</div>
+                <div class="welcome-badge-lbl">طلب مقاول</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="stat-grid">
+          <div class="stat-card accent-blue">
+            <div class="stat-card-header">
+              <div class="stat-card-label">مشاريع مفتوحة</div>
+              <div class="stat-card-icon blue-bg">
+                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+              </div>
+            </div>
+            <div class="stat-card-value" id="statOpenProjects">—</div>
+            <div class="stat-card-desc">تقبل عروض حالياً</div>
+          </div>
+
+          <div class="stat-card accent-success">
+            <div class="stat-card-header">
+              <div class="stat-card-label">مشاريع مكتملة</div>
+              <div class="stat-card-icon success-bg">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+              </div>
+            </div>
+            <div class="stat-card-value" id="statAwardedProjects">—</div>
+            <div class="stat-card-desc">تم تكليف مقاول</div>
+          </div>
+
+          <div class="stat-card accent-warning">
+            <div class="stat-card-header">
+              <div class="stat-card-label">مقاولون بانتظار موافقة</div>
+              <div class="stat-card-icon warning-bg">
+                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+              </div>
+            </div>
+            <div class="stat-card-value" id="statPendingContractors">—</div>
+            <div class="stat-card-desc">وثائق تنتظر مراجعتك</div>
+          </div>
+
+          <div class="stat-card accent-gold">
+            <div class="stat-card-header">
+              <div class="stat-card-label">إجمالي المشاريع</div>
+              <div class="stat-card-icon gold-bg">
+                <svg viewBox="0 0 24 24"><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zm10-10h8v8h-8V3zm0 10h8v8h-8v-8z"/></svg>
+              </div>
+            </div>
+            <div class="stat-card-value" id="statTotalProjects">—</div>
+            <div class="stat-card-desc">منذ إطلاق المنصة</div>
+          </div>
+        </div>
+
+        <!-- Pending Contractors -->
+        <h2 class="section-title" id="pendingSection">طلبات المقاولين المعلقة</h2>
+        <div class="pending-list" style="display:none;">
+          <div class="pending-list-header">
+            <span class="pending-list-title">بانتظار الموافقة</span>
+            <span class="pending-list-count" id="pendingListCount">0 طلب</span>
+          </div>
+          <div id="pendingListBody">
+            <div class="empty-state">
+              <div class="empty-state-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+              </div>
+              <div class="empty-state-text">جاري التحميل...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- All Projects -->
+        <h2 class="section-title" id="allProjectsSection">كل المشاريع</h2>
+        <div class="pending-list" id="allProjectsPanel" style="margin-bottom: var(--space-8); display:none;">
+          <div class="pending-list-header">
+            <span class="pending-list-title">عرض المشاريع</span>
+            <span class="pending-list-count" id="allProjectsCount">—</span>
+          </div>
+          <div id="allProjectsBody" style="padding: var(--space-6);">
+            <div class="empty-state">
+              <div class="empty-state-text">اضغط على تبويب “كل المشاريع” لتحميل البيانات.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+
+  <div class="manager-modal-overlay" id="rejectModalOverlay" aria-hidden="true">
+    <div class="manager-modal" role="dialog" aria-modal="true" aria-labelledby="rejectModalTitle">
+      <h3 id="rejectModalTitle">رفض طلب المقاول</h3>
+      <div class="sub">اكتب سبب الرفض (يُرسل للـ API ويجب أن يكون 3 أحرف على الأقل).</div>
+      <textarea id="rejectReasonInput" placeholder="اكتب سبب الرفض..."></textarea>
+      <div class="manager-modal-actions">
+        <button type="button" class="btn btn-outline" id="rejectModalCancel">إلغاء</button>
+        <button type="button" class="btn btn-primary" id="rejectModalConfirm">تأكيد الرفض</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/js/api.js"></script>
+  <script>
+    let pendingContractors = [];
+
+    function showToast(message, type = 'success') {
+      const stack = document.getElementById('toastStack');
+      if (!stack) return;
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      stack.appendChild(toast);
+      setTimeout(() => {
+        toast.remove();
+      }, 3200);
+    }
+
+    function setPendingCounts(count) {
+      document.getElementById('statPendingContractors').textContent = count;
+      document.getElementById('heroPendingContractors').textContent = count;
+      document.getElementById('pendingListCount').textContent = `${count} طلب`;
+      document.getElementById('sidebarPendingCount').textContent = count;
+    }
+
+    function renderPendingList() {
+      const body = document.getElementById('pendingListBody');
+      const count = pendingContractors.length;
+      setPendingCounts(count);
+
+      if (count === 0) {
+        body.innerHTML = `<div class="empty-state">
+          <div class="empty-state-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          </div>
+          <div class="empty-state-text">لا توجد طلبات معلقة الآن</div>
+        </div>`;
+        return;
+      }
+
+      body.innerHTML = pendingContractors.map(c => `
+        <div class="pending-item" id="contractor-row-${c._id}">
+          <div class="pending-item-avatar">${(c.name || '?').charAt(0)}</div>
+          <div>
+            <div class="pending-item-name">${c.name || '—'}</div>
+            <div class="pending-item-meta">${c.specialty || '—'} · ${c.yearsOfExperience || 0} سنة خبرة · ${c.email || ''}</div>
+          </div>
+          <div class="pending-item-actions">
+            <button class="btn btn-sm action-btn" data-action="approve" data-id="${c._id}" style="background:var(--color-success-bg);color:var(--color-success);border-color:rgba(16,185,129,0.25);">موافقة</button>
+            <button class="btn btn-danger btn-sm action-btn" data-action="reject" data-id="${c._id}">رفض</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openRejectModal(contractorId) {
+      const overlay = document.getElementById('rejectModalOverlay');
+      const input = document.getElementById('rejectReasonInput');
+      if (!overlay || !input) return;
+
+      overlay.classList.add('visible');
+      overlay.setAttribute('aria-hidden', 'false');
+
+      window.__rejectContractorId = contractorId;
+      input.value = '';
+      input.focus();
+    }
+
+    function closeRejectModal() {
+      const overlay = document.getElementById('rejectModalOverlay');
+      if (!overlay) return;
+      overlay.classList.remove('visible');
+      overlay.setAttribute('aria-hidden', 'true');
+      window.__rejectContractorId = null;
+    }
+
+    // Modal bindings
+    document.addEventListener('DOMContentLoaded', () => {
+      const overlay = document.getElementById('rejectModalOverlay');
+      const cancelBtn = document.getElementById('rejectModalCancel');
+      const confirmBtn = document.getElementById('rejectModalConfirm');
+
+      if (!overlay || !cancelBtn || !confirmBtn) return;
+
+      cancelBtn.addEventListener('click', () => closeRejectModal());
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeRejectModal();
+      });
+
+      confirmBtn.addEventListener('click', async () => {
+        const id = window.__rejectContractorId;
+        const reason = (document.getElementById('rejectReasonInput').value || '').trim();
+        if (!id) {
+          showToast('لم يتم تحديد المقاول', 'error');
+          return;
+        }
+        if (reason.length < 3) {
+          showToast('اكتب سبب رفض (3 أحرف على الأقل)', 'error');
+          return;
+        }
+
+        const actionButtons = document.querySelectorAll(`.action-btn[data-id="${id}"]`);
+        actionButtons.forEach(b => b.classList.add('is-loading'));
+
+        try {
+          await window.api.fetch(`/admin/contractors/${id}/reject`, {
+            method: 'POST',
+            body: JSON.stringify({ reason }),
+          });
+          pendingContractors = pendingContractors.filter(c => c._id !== id);
+          renderPendingList();
+          showToast('تم رفض طلب المقاول بنجاح', 'success');
+          closeRejectModal();
+        } catch (e) {
+          showToast(`فشل الرفض: ${e.message}`, 'error');
+        } finally {
+          actionButtons.forEach(b => b.classList.remove('is-loading'));
+        }
+      });
+    });
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const pendingBody = document.getElementById('pendingListBody');
+      const ensureUi = (html) => {
+        if (pendingBody) pendingBody.innerHTML = html;
+      };
+
+      ensureUi(`
+        <div class="empty-state">
+          <div class="empty-state-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zM2 20c0-3.31 5.37-6 10-6s10 2.69 10 6v2H2v-2z"/></svg>
+          </div>
+          <div class="empty-state-text">جاري تهيئة لوحة الإدارة...</div>
+        </div>
+      `);
+
+      if (!window.api || typeof window.api.fetch !== 'function') {
+        showToast('خطأ: window.api غير موجود', 'error');
+        ensureUi(`
+          <div class="empty-state">
+            <div class="empty-state-text">تعذر تحميل واجهة الأدمن. أعد تحميل الصفحة.</div>
+          </div>
+        `);
+        return;
+      }
+
+      const userJSON = localStorage.getItem('elm_user');
+      if (!userJSON) {
+        showToast('سجل دخول الإدارة أولاً', 'error');
+        ensureUi(`
+          <div class="empty-state">
+            <div class="empty-state-text">سجل دخول الإدارة أولاً.</div>
+          </div>
+        `);
+        setTimeout(() => (window.location.href = '../../auth/admin-login.html'), 900);
+        return;
+      }
+
+      let user;
+      try {
+        user = JSON.parse(userJSON);
+      } catch (e) {
+        showToast('بيانات المستخدم في المتصفح غير صالحة', 'error');
+        ensureUi(`
+          <div class="empty-state">
+            <div class="empty-state-text">تعذر قراءة بيانات الأدمن من المتصفح.</div>
+          </div>
+        `);
+        return;
+      }
+
+      if (user.role !== 'admin') {
+        showToast('صلاحيات غير كافية لهذه الصفحة', 'error');
+        ensureUi(`
+          <div class="empty-state">
+            <div class="empty-state-text">هذه الصفحة مخصصة للإدارة فقط.</div>
+          </div>
+        `);
+        setTimeout(() => (window.location.href = '../../auth/login.html'), 900);
+        return;
+      }
+
+      const initial = (user.name || 'أ').charAt(0);
+      ['sidebarUserName', 'topbarUserName'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = user.name || 'مدير النظام';
+      });
+      ['sidebarAvatar', 'topbarAvatar'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = initial;
+      });
+
+      // Load projects stats
+      try {
+        showToast('جاري تحميل إحصائيات لوحة الإدارة...', 'success');
+        const [openData, allData] = await Promise.all([
+          window.api.fetch('/projects?status=open&limit=1'),
+          window.api.fetch('/projects?limit=1'),
+        ]);
+        const openCount  = openData.pagination?.total ?? (openData.projects || []).length;
+        const totalCount = allData.pagination?.total ?? (allData.projects || []).length;
+        document.getElementById('statOpenProjects').textContent    = openCount;
+        document.getElementById('statTotalProjects').textContent   = totalCount;
+        document.getElementById('heroTotalProjects').textContent   = totalCount;
+
+        // awarded count — load all and filter
+        const allProjects = await window.api.fetch('/projects?limit=200');
+        const awarded = (allProjects.projects || []).filter(p => p.status === 'awarded').length;
+        document.getElementById('statAwardedProjects').textContent = awarded;
+      } catch (e) { console.error(e); }
+
+      // Load pending contractors
+      try {
+        showToast('جاري تحميل طلبات المقاولين...', 'success');
+        const contractorsData = await window.api.fetch('/admin/contractors/pending');
+        pendingContractors = contractorsData.items || contractorsData.contractors || contractorsData.users || [];
+        renderPendingList();
+      } catch (e) {
+        document.getElementById('pendingListBody').innerHTML = `<div class="empty-state"><div class="empty-state-text">تعذر تحميل الطلبات — ${e.message}</div></div>`;
+        setPendingCounts(0);
+        showToast(`تعذر تحميل الطلبات: ${e.message}`, 'error');
+      }
+
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        localStorage.removeItem('elm_accessToken');
+        localStorage.removeItem('elm_user');
+        window.location.href = '../../index.html';
+      });
+
+      document.getElementById('pendingListBody').addEventListener('click', async (event) => {
+        const btn = event.target.closest('.action-btn');
+        if (!btn) return;
+
+        const id = btn.dataset.id;
+        const action = btn.dataset.action;
+        if (!id || !action) return;
+
+        const actionButtons = document.querySelectorAll(`.action-btn[data-id="${id}"]`);
+        actionButtons.forEach(b => b.classList.add('is-loading'));
+
+        try {
+          if (action === 'reject') {
+            // لا نرسل الرفض إلا بعد إدخال سبب
+            actionButtons.forEach(b => b.classList.remove('is-loading'));
+            openRejectModal(id);
+            return;
+          }
+
+          await window.api.fetch(`/admin/contractors/${id}/${action}`, { method: 'POST' });
+          pendingContractors = pendingContractors.filter(c => c._id !== id);
+          renderPendingList();
+          showToast(action === 'approve' ? 'تمت الموافقة على المقاول بنجاح' : 'تم رفض طلب المقاول', 'success');
+        } catch (e) {
+          actionButtons.forEach(b => b.classList.remove('is-loading'));
+          showToast(`فشل تنفيذ الإجراء: ${e.message}`, 'error');
+        }
+      });
+
+    });
+  </script>
+</body>
+</html>

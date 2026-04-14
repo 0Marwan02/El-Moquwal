@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>المقاول | عرضي على المشروع</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/variables.css">
+  <link rel="stylesheet" href="../../assets/css/base.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/layout.css">
+  <link rel="stylesheet" href="../../assets/css/utilities.css">
+
+  <style>
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: var(--font-size-sm);
+      font-weight: 700;
+      text-decoration: none;
+      margin-bottom: var(--space-6);
+      transition: color var(--transition-base);
+    }
+    .back-btn:hover { color: var(--color-navy); }
+    .back-btn svg { width: 18px; height: 18px; fill: currentColor; }
+
+    .bid-detail-wrap {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: var(--space-6);
+      align-items: start;
+    }
+
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: var(--space-6);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card-title {
+      font-size: var(--font-size-md);
+      font-weight: 800;
+      color: var(--color-navy);
+      margin-bottom: var(--space-5);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-default);
+    }
+
+    .bid-amount-display {
+      background: linear-gradient(135deg, var(--color-navy-dark), var(--color-navy));
+      border-radius: var(--radius-md);
+      padding: var(--space-6);
+      text-align: center;
+      margin-bottom: var(--space-5);
+    }
+    .bid-amount-display .lbl {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: var(--space-2);
+    }
+    .bid-amount-display .val {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--color-gold-light);
+      letter-spacing: -1px;
+    }
+    .bid-amount-display .currency {
+      font-size: 14px;
+      color: rgba(255,255,255,0.7);
+      margin-top: 4px;
+    }
+
+    .status-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 16px;
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: var(--space-5);
+    }
+    .status-tag.pending  { background: rgba(244,166,35,.1); color: var(--color-gold-dark); }
+    .status-tag.accepted { background: var(--color-success-bg); color: var(--color-success); }
+    .status-tag.rejected { background: var(--bg-surface-2); color: var(--text-muted); }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-3) 0;
+      border-bottom: 1px dashed var(--border-default);
+      font-size: var(--font-size-sm);
+    }
+    .meta-row:last-child { border-bottom: none; }
+    .meta-row .lbl { color: var(--text-muted); font-weight: 600; }
+    .meta-row .val { color: var(--color-navy); font-weight: 800; }
+
+    .message-box {
+      background: var(--bg-surface-2);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      padding: var(--space-5);
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+      line-height: 1.8;
+      margin-bottom: var(--space-5);
+    }
+
+    .accepted-notice {
+      padding: var(--space-5);
+      background: rgba(16,185,129,0.08);
+      border: 1px solid rgba(16,185,129,0.2);
+      border-radius: var(--radius-sm);
+      color: #065f46;
+      font-weight: 700;
+      font-size: var(--font-size-sm);
+      line-height: 1.7;
+    }
+
+    .loading-state {
+      text-align: center;
+      padding: var(--space-16);
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 900px) {
+      .bid-detail-wrap { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body class="dashboard-page">
+  <div class="dashboard-wrapper">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo-mark" style="display:flex;align-items:center;justify-content:center;">
+          <svg viewBox="0 0 24 24">
+            <path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z" />
+          </svg>
+        </div>
+        <div class="sidebar-logo-text">المقاول</div>
+      </div>
+
+      <div class="sidebar-user">
+        <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--color-gold),var(--color-gold-dark));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:var(--color-navy-dark);" id="sidebarAvatar">م</div>
+        <div class="sidebar-user-info">
+          <div class="name" id="sidebarUserName">جاري التحميل...</div>
+          <div class="role">مقاول</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-section-label">الرئيسية</div>
+        <a href="index.html" class="sidebar-item">
+          <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" /></svg>
+          لوحة التحكم
+        </a>
+        <div class="sidebar-section-label">المشاريع</div>
+        <a href="browse-projects.html" class="sidebar-item active">
+          <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" /></svg>
+          تصفح المشاريع
+        </a>
+        <a href="my-agreements.html" class="sidebar-item">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" /></svg>
+          اتفاقياتي
+        </a>
+        <a href="profile.html" class="sidebar-item">
+          <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
+          ملفي الشخصي
+        </a>
+      </nav>
+
+      <div class="sidebar-cta">
+        <button class="btn btn-ghost-light btn-full" id="logoutBtnMain">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;">
+            <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
+          </svg>
+          تسجيل الخروج
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="dashboard-main">
+      <div class="dashboard-topbar">
+        <div class="topbar-page-title">عرضي على المشروع</div>
+        <div class="topbar-actions">
+          <div class="topbar-user">
+            <div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--color-gold),var(--color-gold-dark));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--color-navy-dark);" id="topbarAvatar">م</div>
+            <div class="topbar-user-name" id="topbarUserName">جاري...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-content">
+        <a href="browse-projects.html" class="back-btn">
+          <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+          العودة إلى تصفح المشاريع
+        </a>
+
+        <div id="pageContent">
+          <div class="loading-state">⏳ جاري التحميل...</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../../assets/js/api.js"></script>
+  <script>
+    (() => {
+      const TYPE_LABELS = {
+        new_construction: 'بناء جديد', renovation: 'تجديد', finishing: 'تشطيبات',
+        repair: 'إصلاح', extension: 'توسعة', electrical: 'كهرباء',
+        plumbing: 'سباكة', demolition: 'هدم', other: 'أخرى'
+      };
+      const BID_STATUS = {
+        pending: { label: 'قيد المراجعة من العميل', cls: 'pending' },
+        accepted: { label: 'مقبول ✅', cls: 'accepted' },
+        rejected: { label: 'مرفوض', cls: 'rejected' },
+      };
+      const BUDGET_LABELS = {
+        under_50k: 'أقل من 50,000', '50k_200k': '50,000 - 200,000',
+        '200k_500k': '200,000 - 500,000', '500k_1m': '500,000 - 1 مليون', above_1m: 'أكثر من 1 مليون'
+      };
+      const TIMELINE_LABELS = {
+        within_week: 'خلال أسبوع', within_month: 'خلال شهر',
+        '1_3_months': '1 - 3 أشهر', '3_6_months': '3 - 6 أشهر', flexible: 'مرن'
+      };
+
+      const params = new URLSearchParams(location.search);
+      const projectId = params.get('projectId');
+      const container = document.getElementById('pageContent');
+
+      // ====== Sidebar & Topbar ======
+      document.addEventListener('DOMContentLoaded', () => {
+        const user = JSON.parse(localStorage.getItem('elm_user') || '{}');
+        if (user.name) {
+          const initial = user.name.charAt(0) || 'م';
+          document.getElementById('sidebarUserName').textContent = user.name;
+          document.getElementById('topbarUserName').textContent = user.name;
+          document.getElementById('sidebarAvatar').textContent = initial;
+          document.getElementById('topbarAvatar').textContent = initial;
+        }
+
+        const logoutBtn = document.getElementById('logoutBtnMain');
+        if (logoutBtn) {
+          logoutBtn.addEventListener('click', async () => {
+            try { await window.api.fetch('/auth/logout', { method: 'POST' }); } catch (_) {}
+            localStorage.removeItem('elm_accessToken');
+            localStorage.removeItem('elm_user');
+            window.location.href = '../../index.html';
+          });
+        }
+      });
+
+      // ====== Load ======
+      async function load() {
+        if (!projectId) {
+          container.innerHTML = `<div style="text-align:center;padding:var(--space-16);color:var(--text-muted);">❌ لم يتم تحديد المشروع</div>`;
+          return;
+        }
+
+        let project, myBid;
+        try {
+          const [pRes, bRes] = await Promise.all([
+            window.api.fetch(`/projects/${projectId}`),
+            window.api.fetch(`/projects/${projectId}/bids`),
+          ]);
+          project = pRes.project;
+          myBid = bRes.myBid;   // contractor role returns myBid
+        } catch (err) {
+          container.innerHTML = `<div style="text-align:center;padding:var(--space-16);color:var(--text-muted);">❌ فشل تحميل البيانات: ${err.message}</div>`;
+          return;
+        }
+
+        if (!project) {
+          container.innerHTML = `<div style="text-align:center;padding:var(--space-16);color:var(--text-muted);">❌ المشروع غير موجود</div>`;
+          return;
+        }
+        if (!myBid) {
+          container.innerHTML = `<div style="text-align:center;padding:var(--space-16);color:var(--text-muted);">⚠️ لم تقدم عرضاً على هذا المشروع بعد<br><br><a href="browse-projects.html" class="btn btn-primary">تصفح المشاريع</a></div>`;
+          return;
+        }
+
+        render(project, myBid);
+      }
+
+      function render(project, bid) {
+        const status = BID_STATUS[bid.status] || { label: bid.status, cls: 'pending' };
+        const amount = Number(bid.amount).toLocaleString('ar-EG');
+        const duration = bid.proposedDurationDays ? `${bid.proposedDurationDays} يوم` : '—';
+        const submittedAt = new Date(bid.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+
+        const acceptedNotice = bid.status === 'accepted' ? `
+          <div class="accepted-notice">
+            🎉 تهانينا! تم قبول عرضك على هذا المشروع. يمكنك التواصل مع صاحب المشروع للبدء في التنفيذ.
+            <br><br>
+            تجد تفاصيل المشروع في صفحة <a href="my-agreements.html" style="color:var(--color-success);font-weight:800;">اتفاقياتي</a>.
+          </div>` : '';
+
+        const rejectedNotice = bid.status === 'rejected' ? `
+          <div style="padding:var(--space-4);background:var(--bg-surface-2);border:1px solid var(--border-default);border-radius:var(--radius-sm);color:var(--text-muted);font-size:var(--font-size-sm);">
+            تم رفض عرضك على هذا المشروع. يمكنك تصفح مشاريع أخرى وتقديم عروض جديدة.
+          </div>` : '';
+
+        container.innerHTML = `
+          <div class="bid-detail-wrap">
+            <div class="card">
+              <div class="card-title">عرضي المقدم</div>
+
+              <span class="status-tag ${status.cls}">${status.label}</span>
+
+              <div class="bid-amount-display">
+                <div class="lbl">قيمة عرضي</div>
+                <div class="val">${amount}</div>
+                <div class="currency">جنيه مصري</div>
+              </div>
+
+              <p style="font-size:13px;font-weight:800;color:var(--color-navy);margin-bottom:var(--space-3);">رسالتي للعميل</p>
+              <div class="message-box">${bid.message || '—'}</div>
+
+              <div class="meta-row">
+                <span class="lbl">مدة التنفيذ المقترحة</span>
+                <span class="val">${duration}</span>
+              </div>
+              <div class="meta-row">
+                <span class="lbl">تاريخ تقديم العرض</span>
+                <span class="val">${submittedAt}</span>
+              </div>
+
+              ${acceptedNotice}
+              ${rejectedNotice}
+            </div>
+
+            <div class="card">
+              <div class="card-title">تفاصيل المشروع</div>
+              <div class="meta-row"><span class="lbl">اسم المشروع</span><span class="val">${project.title}</span></div>
+              <div class="meta-row"><span class="lbl">النوع</span><span class="val">${TYPE_LABELS[project.projectType] || '—'}</span></div>
+              <div class="meta-row"><span class="lbl">المحافظة</span><span class="val">${project.propertyDetails?.governorate || '—'}</span></div>
+              <div class="meta-row"><span class="lbl">المساحة</span><span class="val">${project.propertyDetails?.area || '—'} م²</span></div>
+              <div class="meta-row"><span class="lbl">الميزانية المتوقعة</span><span class="val">${BUDGET_LABELS[project.budgetRange] || '—'}</span></div>
+              <div class="meta-row"><span class="lbl">الجدول الزمني</span><span class="val">${TIMELINE_LABELS[project.timeline] || '—'}</span></div>
+              <div class="meta-row"><span class="lbl">إجمالي العروض</span><span class="val">${project.bidsCount || 0} عرض</span></div>
+              <div style="margin-top:var(--space-5);">
+                <a href="browse-projects.html" class="btn btn-outline btn-full">تصفح مشاريع أخرى</a>
+              </div>
+            </div>
+          </div>`;
+      }
+
+      load();
+    })();
+  </script>
+</body>
+
+</html>

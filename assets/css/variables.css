@@ -1,0 +1,106 @@
+:root {
+
+  /* --- Premium Color Palette --- */
+  --color-navy:          #0F172A;
+  --color-navy-dark:     #020617;
+  --color-navy-mid:      #1E293B;
+  --color-navy-light:    #334155;
+
+  --color-gold:          #F59E0B;
+  --color-gold-dark:     #B45309;
+  --color-gold-light:    #FCD34D;
+  --color-gold-subtle:   rgba(245, 158, 11, 0.15);
+  
+  --color-accent:        #3B82F6;
+
+  --color-success:       #10B981;
+  --color-success-bg:    rgba(16, 185, 129, 0.15);
+  --color-error:         #EF4444;
+  --color-error-bg:      rgba(239, 68, 68, 0.15);
+  --color-warning:       #F59E0B;
+  --color-warning-bg:    rgba(245, 158, 11, 0.15);
+
+  /* --- Surface / Background --- */
+  --bg-app:              #F8FAFC;
+  --bg-surface:          #FFFFFF;
+  --bg-surface-2:        #F1F5F9;
+  --bg-overlay:          rgba(2, 6, 23, 0.7);
+
+  /* --- Text Variables --- */
+  --text-primary:        #0F172A;
+  --text-secondary:      #475569;
+  --text-muted:          #64748B;
+  --text-light:          #94A3B8;
+  --text-on-dark:        #F8FAFC;
+  --text-on-dark-muted:  #CBD5E1;
+
+  /* --- Borders (Glassmorphism & Crisp styling) --- */
+  --border-default:      rgba(15, 23, 42, 0.08);
+  --border-strong:       rgba(15, 23, 42, 0.15);
+  --border-gold:         rgba(245, 158, 11, 0.4);
+  --border-light:        rgba(255, 255, 255, 0.1);
+
+  /* --- Shadows (Premium Elevation) --- */
+  --shadow-xs:   0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-sm:   0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+  --shadow-md:   0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.05);
+  --shadow-lg:   0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.05);
+  --shadow-gold: 0 10px 25px -5px rgba(245, 158, 11, 0.3);
+  --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.3);
+
+  /* --- Border Radius --- */
+  --radius-xs:   6px;
+  --radius-sm:   10px;
+  --radius-md:   16px;
+  --radius-lg:   24px;
+  --radius-xl:   32px;
+  --radius-full: 9999px;
+
+  /* --- Spacing --- */
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:   12px;
+  --space-4:   16px;
+  --space-5:   20px;
+  --space-6:   24px;
+  --space-8:   32px;
+  --space-10:  40px;
+  --space-12:  48px;
+  --space-16:  64px;
+  --space-20:  80px;
+  --space-24: 100px;
+
+  /* --- Typography --- */
+  --font-main:     'Alexandria', sans-serif;
+  --font-size-xs:   11px;
+  --font-size-sm:   13px;
+  --font-size-base: 15px;
+  --font-size-md:   17px;
+  --font-size-lg:   20px;
+  --font-size-xl:   26px;
+  --font-size-2xl:  34px;
+  --font-size-3xl:  48px;
+  --font-size-hero: clamp(40px, 6vw, 72px);
+
+  /* --- Layout --- */
+  --navbar-height:    76px;
+  --sidebar-width:    260px;
+  --content-max:      1280px;
+  --content-padding:  40px;
+
+  /* --- Transitions --- */
+  --transition-fast:   0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-base:   0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow:   0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-bounce: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* --- Z-Index --- */
+  --z-below:    -1;
+  --z-base:      0;
+  --z-raised:   10;
+  --z-dropdown: 50;
+  --z-sticky:   80;
+  --z-navbar:  100;
+  --z-modal:   200;
+  --z-toast:   300;
+}

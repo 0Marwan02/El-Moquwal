@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>المُقاوٍل | تسجيل مقاول / مهندس</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/variables.css">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/utilities.css">
+  <link rel="stylesheet" href="../assets/css/auth.css">
+</head>
+<body>
+
+  <div class="auth-layout">
+
+    <!-- el brand side el shemal -->
+    <div class="auth-brand-side">
+      <div class="auth-brand-content">
+        <div class="auth-brand-icon">❝</div>
+        <h1 class="auth-brand-title">المقاول</h1>
+        <p class="auth-brand-tagline">
+          انضم لمجتمع المحترفين<br>واعرض مشاريعك لآلاف العملاء
+        </p>
+        <div class="auth-floating-quotes">
+          <div class="auth-float-q">"محترفون موثوقون ومُعتمدون"</div>
+          <div class="auth-float-q">"معرض أعمال يبرز خبراتك"</div>
+          <div class="auth-float-q">"عقود رسمية ودفع مضمون"</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- el form side — 2 steps -->
+    <div class="auth-form-side">
+      <div class="auth-form-box auth-form-box-wide auth-animate-in">
+
+        <!-- mobile logo -->
+        <div class="auth-mobile-logo">
+          <div class="auth-mobile-logo-icon">❝</div>
+          <span>المُقوَّل</span>
+        </div>
+
+        <!-- el header -->
+        <div class="auth-form-header">
+          <h2>تسجيل مقاول / مهندس 🛠️</h2>
+          <p>أكمل البيانات وارفع وثائقك للمراجعة</p>
+        </div>
+
+        <!-- el role badge -->
+        <div class="auth-role-badge">
+          <span class="badge badge-gold">مقاول / مهندس</span>
+          <a href="role-select.html" class="auth-forgot-link">تغيير النوع</a>
+        </div>
+
+        <!-- el stepper -->
+        <div class="auth-stepper" id="authStepper">
+          <div class="auth-step active" data-step="1">
+            <div class="auth-step-num">1</div>
+            <span>البيانات الأساسية</span>
+          </div>
+          <div class="auth-step-line"></div>
+          <div class="auth-step" data-step="2">
+            <div class="auth-step-num">2</div>
+            <span>الوثائق والتخصص</span>
+          </div>
+        </div>
+
+        <!-- alert -->
+        <div class="auth-alert" id="registerAlert" role="alert"></div>
+
+        <!-- el form — 2 steps -->
+        <form class="auth-form" id="contractorRegisterForm" novalidate enctype="multipart/form-data">
+
+          <!-- ====== STEP 1 ====== -->
+          <div class="auth-step-content" data-step-content="1">
+
+            <div class="auth-field">
+              <label class="auth-label" for="regName">الاسم الكامل</label>
+              <div class="auth-input-wrap">
+                <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <input class="input" type="text" id="regName" placeholder="محمد أحمد" required autocomplete="name">
+              </div>
+            </div>
+
+            <div class="auth-field">
+              <label class="auth-label" for="regNID">الرقم القومي</label>
+              <div class="auth-input-wrap">
+                <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="2" y="5" width="20" height="14" rx="2"/>
+                  <path d="M2 10h20M6 15h4"/>
+                </svg>
+                <input class="input" type="text" id="regNID" placeholder="14 رقم" pattern="\d{14}" maxlength="14" inputmode="numeric" required>
+              </div>
+            </div>
+
+            <div class="auth-field">
+              <label class="auth-label" for="regEmail">البريد الإلكتروني</label>
+              <div class="auth-input-wrap">
+                <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                <input class="input" type="email" id="regEmail" placeholder="example@mail.com" required autocomplete="email">
+              </div>
+            </div>
+
+            <div class="auth-field">
+              <label class="auth-label" for="regPhone">رقم الهاتف</label>
+              <div class="auth-input-wrap">
+                <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
+                </svg>
+                <input class="input" type="tel" id="regPhone" placeholder="01xxxxxxxxx" required autocomplete="tel" dir="ltr" style="text-align:left;">
+              </div>
+            </div>
+
+            <div class="auth-field">
+              <label class="auth-label" for="regPass">كلمة المرور</label>
+              <div class="auth-input-wrap">
+                <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0110 0v4"/>
+                </svg>
+                <input class="input" type="password" id="regPass" placeholder="8 حروف + رقم + رمز" required autocomplete="new-password">
+                <button type="button" class="auth-pass-toggle" data-target="regPass" aria-label="إظهار كلمة المرور">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="auth-strength-bar"><div class="auth-strength-fill" id="strengthFill"></div></div>
+              <span class="auth-strength-label" id="strengthLabel"></span>
+            </div>
+
+            <div class="auth-field">
+              <label class="auth-label" for="regPassConfirm">تأكيد كلمة المرور</label>
+              <div class="auth-input-wrap">
+                <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                <input class="input" type="password" id="regPassConfirm" placeholder="أعد كتابة كلمة المرور" required autocomplete="new-password">
+              </div>
+            </div>
+
+            <!-- el next button lel step 2 -->
+            <button type="button" class="btn btn-primary btn-full btn-lg auth-submit" id="step1NextBtn">
+              متابعة للخطوة التالية
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="transform:scaleX(-1)">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- ====== STEP 2 ====== -->
+          <div class="auth-step-content" data-step-content="2" hidden>
+
+            <!-- el takhasos -->
+            <div class="auth-field">
+              <label class="auth-label" for="regSpecialty">التخصص</label>
+              <div class="auth-input-wrap">
+                <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>
+                </svg>
+                <select class="input select" id="regSpecialty" required>
+                  <option value="">اختر التخصص</option>
+                  <option value="civil_engineer">مهندس مدني</option>
+                  <option value="architect">مهندس معماري</option>
+                  <option value="general_contractor">مقاول عام</option>
+                  <option value="electrical">كهربائي</option>
+                  <option value="plumber">سباك</option>
+                  <option value="carpenter">نجار</option>
+                  <option value="painter">نقّاش</option>
+                  <option value="finishing">تشطيبات</option>
+                  <option value="other">أخرى</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- sanawat el khebra -->
+            <div class="auth-field">
+              <label class="auth-label" for="regYears">سنوات الخبرة</label>
+              <div class="auth-input-wrap">
+                <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="4" width="18" height="18" rx="2"/>
+                  <path d="M16 2v4M8 2v4M3 10h18"/>
+                </svg>
+                <input class="input" type="number" id="regYears" placeholder="مثلاً 5" min="0" max="60" required>
+              </div>
+            </div>
+
+            <!-- bio -->
+            <div class="auth-field">
+              <label class="auth-label" for="regBio">نبذة عنك <span class="form-hint" style="font-weight:400;">(اختياري)</span></label>
+              <textarea class="input textarea" id="regBio" placeholder="اتكلم عن خبراتك ومشاريعك السابقة..." maxlength="500"></textarea>
+            </div>
+
+            <!-- upload 1 — el shahada -->
+            <div class="auth-field">
+              <label class="auth-label">الشهادة الجامعية / الحرفية</label>
+              <div class="auth-upload-zone" data-upload-target="regCertificate">
+                <input type="file" id="regCertificate" name="certificate" accept=".pdf,.jpg,.jpeg,.png,.webp" hidden>
+                <div class="auth-upload-placeholder">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                  </svg>
+                  <span>اضغط أو اسحب ملف هنا</span>
+                  <small>PDF / JPG / PNG — حتى 5MB</small>
+                </div>
+                <div class="auth-upload-filled" hidden>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                    <path d="M14 2v6h6M9 15l2 2 4-4"/>
+                  </svg>
+                  <div class="auth-upload-info">
+                    <span class="auth-upload-name"></span>
+                    <small class="auth-upload-size"></small>
+                  </div>
+                  <button type="button" class="auth-upload-remove" aria-label="حذف الملف">×</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- upload 2 — karneeh el ni2aba -->
+            <div class="auth-field">
+              <label class="auth-label">كارنيه النقابة</label>
+              <div class="auth-upload-zone" data-upload-target="regCard">
+                <input type="file" id="regCard" name="membershipCard" accept=".pdf,.jpg,.jpeg,.png,.webp" hidden>
+                <div class="auth-upload-placeholder">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="2" y="5" width="20" height="14" rx="2"/>
+                    <circle cx="9" cy="12" r="2.5"/>
+                    <path d="M14 10h5M14 14h4"/>
+                  </svg>
+                  <span>اضغط أو اسحب ملف هنا</span>
+                  <small>PDF / JPG / PNG — حتى 5MB</small>
+                </div>
+                <div class="auth-upload-filled" hidden>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                    <path d="M14 2v6h6M9 15l2 2 4-4"/>
+                  </svg>
+                  <div class="auth-upload-info">
+                    <span class="auth-upload-name"></span>
+                    <small class="auth-upload-size"></small>
+                  </div>
+                  <button type="button" class="auth-upload-remove" aria-label="حذف الملف">×</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- el terms -->
+            <div class="auth-check-row">
+              <label class="checkbox-wrap">
+                <input type="checkbox" id="agreeTerms" required>
+                <span>أوافق على <a href="terms.html" style="color:var(--color-gold-dark);font-weight:700;">الشروط والأحكام</a></span>
+              </label>
+            </div>
+
+            <!-- back + submit -->
+            <div class="auth-step-actions">
+              <button type="button" class="btn btn-outline btn-lg" id="step2BackBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                  <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                رجوع
+              </button>
+              <button type="submit" class="btn btn-primary btn-lg auth-submit" id="contractorRegisterBtn">
+                <span class="btn-label">إرسال الطلب للمراجعة</span>
+                <span class="auth-btn-dots" hidden><span></span><span></span><span></span></span>
+              </button>
+            </div>
+          </div>
+
+        </form>
+
+        <p class="auth-footer-text">
+          عندك حساب بالفعل؟
+          <a href="login.html">سجل دخولك</a>
+        </p>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script src="../assets/js/auth.js"></script>
+</body>
+</html>

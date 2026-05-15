@@ -198,9 +198,43 @@
               <textarea class="input textarea" id="regBio" placeholder="اتكلم عن خبراتك ومشاريعك السابقة..." maxlength="500"></textarea>
             </div>
 
-            <!-- upload 1 — el shahada -->
+            <!-- upload 1 — soura el beta2a el wataneya (MANDATORY) -->
             <div class="auth-field">
-              <label class="auth-label">الشهادة الجامعية / الحرفية</label>
+              <label class="auth-label">
+                صورة بطاقة الرقم القومي
+                <span style="color:var(--color-error);margin-right:4px;">*</span>
+              </label>
+              <div class="auth-upload-zone" data-upload-target="regNidPhoto">
+                <input type="file" id="regNidPhoto" name="nationalIdPhoto" accept=".jpg,.jpeg,.png,.webp" hidden>
+                <div class="auth-upload-placeholder">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="2" y="5" width="20" height="14" rx="2"/>
+                    <circle cx="9" cy="12" r="2.5"/>
+                    <path d="M14 10h5M14 14h4"/>
+                  </svg>
+                  <span>ارفع صورة وجه البطاقة الوطنية</span>
+                  <small>JPG / PNG / WebP — حتى 5MB</small>
+                </div>
+                <div class="auth-upload-filled" hidden>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                    <path d="M14 2v6h6M9 15l2 2 4-4"/>
+                  </svg>
+                  <div class="auth-upload-info">
+                    <span class="auth-upload-name"></span>
+                    <small class="auth-upload-size"></small>
+                  </div>
+                  <button type="button" class="auth-upload-remove" aria-label="حذف الملف">×</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- upload 2 — el shahada (OPTIONAL) -->
+            <div class="auth-field">
+              <label class="auth-label">
+                الشهادة الجامعية / الحرفية
+                <span class="form-hint" style="font-weight:400;">(اختياري)</span>
+              </label>
               <div class="auth-upload-zone" data-upload-target="regCertificate">
                 <input type="file" id="regCertificate" name="certificate" accept=".pdf,.jpg,.jpeg,.png,.webp" hidden>
                 <div class="auth-upload-placeholder">
@@ -224,9 +258,12 @@
               </div>
             </div>
 
-            <!-- upload 2 — karneeh el ni2aba -->
+            <!-- upload 3 — karneeh el ni2aba (OPTIONAL) -->
             <div class="auth-field">
-              <label class="auth-label">كارنيه النقابة</label>
+              <label class="auth-label">
+                كارنيه النقابة
+                <span class="form-hint" style="font-weight:400;">(اختياري)</span>
+              </label>
               <div class="auth-upload-zone" data-upload-target="regCard">
                 <input type="file" id="regCard" name="membershipCard" accept=".pdf,.jpg,.jpeg,.png,.webp" hidden>
                 <div class="auth-upload-placeholder">
@@ -237,6 +274,36 @@
                   </svg>
                   <span>اضغط أو اسحب ملف هنا</span>
                   <small>PDF / JPG / PNG — حتى 5MB</small>
+                </div>
+                <div class="auth-upload-filled" hidden>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                    <path d="M14 2v6h6M9 15l2 2 4-4"/>
+                  </svg>
+                  <div class="auth-upload-info">
+                    <span class="auth-upload-name"></span>
+                    <small class="auth-upload-size"></small>
+                  </div>
+                  <button type="button" class="auth-upload-remove" aria-label="حذف الملف">×</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- upload 4 — soura profile (OPTIONAL) -->
+            <div class="auth-field">
+              <label class="auth-label">
+                صورة شخصية
+                <span class="form-hint" style="font-weight:400;">(اختياري)</span>
+              </label>
+              <div class="auth-upload-zone" data-upload-target="regAvatar">
+                <input type="file" id="regAvatar" name="profilePicture" accept=".jpg,.jpeg,.png,.webp" hidden>
+                <div class="auth-upload-placeholder">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                  <span>اضغط أو اسحب صورتك الشخصية</span>
+                  <small>JPG / PNG / WebP — حتى 5MB</small>
                 </div>
                 <div class="auth-upload-filled" hidden>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

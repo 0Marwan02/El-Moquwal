@@ -36,6 +36,17 @@ const propertyDetailsSchema = new mongoose.Schema(
     floors: { type: Number, default: 1, min: 1, max: 30 },       // عدد الطوابق
     rooms: { type: Number, default: 0, min: 0 },                 // عدد الغرف
     bathrooms: { type: Number, default: 0, min: 0 },             // عدد الحمامات
+    // إحداثيات GPS اختيارية — بتتملى من زرار «موقعي الحالي» في الواجهة
+    gpsCoords: {
+      type: new mongoose.Schema(
+        {
+          lat: { type: Number, min: -90, max: 90 },
+          lng: { type: Number, min: -180, max: 180 },
+        },
+        { _id: false }
+      ),
+      default: null,
+    },
   },
   { _id: false }
 );
@@ -111,11 +122,11 @@ const projectSchema = new mongoose.Schema(
       ],
     },
 
-    // عدد المهندسين المطلوبين (يحدده العميل عند النشر)
+    // عدد المهندسين المطلوبين — 0 = يقرر المقاول
     requiredEngineers: {
       type: Number,
-      default: 1,
-      min: 1,
+      default: 0,
+      min: 0,
       max: 50,
     },
 
@@ -160,6 +171,11 @@ const projectSchema = new mongoose.Schema(
       default: null,
     },
     awardedAt: { type: Date, default: null },
+
+    // إغلاق المشروع وتقييم المقاول
+    closedAt: { type: Date, default: null },
+    clientRating: { type: Number, default: null, min: 1, max: 5 },
+    clientReview: { type: String, default: '', maxlength: 500 },
 
     // عدد العروض المقدمة — denormalized للأداء
     bidsCount: { type: Number, default: 0, min: 0 },

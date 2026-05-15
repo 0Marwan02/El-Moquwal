@@ -76,12 +76,16 @@ CLAUDE.md
 GEMINI.md
 el_moquwal_plan.md
 implementation_plan.md
+business_model_ideas.md
+feature.md
 *.md.resolved
 *.md.tmp
 API_CONTRACTS.md
+moqawel.txt
 
 # ==========================================
 # ملفات مؤقتة عامة
 # ==========================================
 tmp/
 temp/
+master_plan.md

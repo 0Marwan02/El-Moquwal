@@ -7,6 +7,9 @@ const User = require('../models/User');
 const Customer = require('../models/CustomerProfile');
 const Contractor = require('../models/ContractorProfile');
 const GuestSession = require('../models/GuestSession');
+const CreditLedger = require('../models/CreditLedger');
+require('../models/Project');
+require('../models/Bid');
 
 const { hashPassword, verifyPassword } = require('../utils/password');
 const { signAccess, signRefresh, verifyRefresh } = require('../utils/jwt');
@@ -15,6 +18,7 @@ const { parseNID } = require('../utils/nationalId');
 const { AppError, asyncHandler } = require('../middleware/errorHandler');
 const { cleanupFiles } = require('../middleware/upload');
 const logger = require('../utils/logger');
+const { INITIAL_CONTRACTOR_CREDITS, COST_DEFAULT, COST_ABOVE_1M } = require('../utils/credits');
 
 // lockout config — ba3d 5 mo7awlat fashla, yetqafel le 15 dqeq2a
 const MAX_LOGIN_ATTEMPTS = 5;
@@ -172,10 +176,10 @@ const registerContractor = asyncHandler(async (req, res) => {
   try {
     const data = contractorRegisterSchema.parse(req.body);
 
-    // lazem el 2 files yebo nfos el request
-    if (!req.files || !req.files.certificate || !req.files.membershipCard) {
+    // nationalIdPhoto is mandatory — certificate, membershipCard, profilePicture optional
+    if (!req.files || !req.files.nationalIdPhoto) {
       cleanupFiles(req.files);
-      throw new AppError('لازم ترفع الشهادة وكارنيه النقابة', 400, 'FILES_REQUIRED');
+      throw new AppError('لازم ترفع صورة بطاقة الرقم القومي', 400, 'FILES_REQUIRED');
     }
 
     // n3ml parse lel NID
@@ -201,8 +205,15 @@ const registerContractor = asyncHandler(async (req, res) => {
     }
 
     const passwordHash = await hashPassword(data.password);
-    const cert = req.files.certificate[0];
-    const card = req.files.membershipCard[0];
+    const cert = req.files.certificate?.[0];
+    const card = req.files.membershipCard?.[0];
+    const nidPhoto = req.files.nationalIdPhoto[0];
+    const avatar = req.files.profilePicture?.[0];
+
+    function fileDoc(f) {
+      if (!f) return null;
+      return { filename: f.filename, originalName: f.originalname, mimetype: f.mimetype, size: f.size };
+    }
 
     // el contractor byetla3 be status pending le 7ad ma el admin y2blo
     const contractor = await Contractor.create({
@@ -213,21 +224,14 @@ const registerContractor = asyncHandler(async (req, res) => {
       nationalIdHash: nidHash,
       nationalIdLast4: data.nationalId.slice(-4),
       status: 'pending',
+      creditBalance: INITIAL_CONTRACTOR_CREDITS,
       specialty: data.specialty,
       yearsOfExperience: data.yearsOfExperience,
       bio: data.bio,
-      certificate: {
-        filename: cert.filename,
-        originalName: cert.originalname,
-        mimetype: cert.mimetype,
-        size: cert.size,
-      },
-      membershipCard: {
-        filename: card.filename,
-        originalName: card.originalname,
-        mimetype: card.mimetype,
-        size: card.size,
-      },
+      certificate: fileDoc(cert),
+      membershipCard: fileDoc(card),
+      nationalIdPhoto: fileDoc(nidPhoto),
+      profilePicture: fileDoc(avatar),
     });
 
     // issue tokens immediately so contractor lands on their profile
@@ -235,9 +239,18 @@ const registerContractor = asyncHandler(async (req, res) => {
     setRefreshCookie(res, refreshToken);
 
     logger.info({ userId: contractor._id.toString() }, 'Contractor registered (pending)');
+    const userJson = contractor.toJSON();
+    const bal =
+      typeof userJson.creditBalance === 'number' && !Number.isNaN(userJson.creditBalance)
+        ? userJson.creditBalance
+        : INITIAL_CONTRACTOR_CREDITS;
     res.status(201).json({
       message: 'تم استلام طلبك بنجاح. الإدارة هتراجع حسابك وترد عليك قريب.',
-      user: contractor.toJSON(),
+      user: userJson,
+      wallet: {
+        creditBalance: bal,
+        bidCreditCost: { default: COST_DEFAULT, above_1m: COST_ABOVE_1M },
+      },
       accessToken,
     });
   } catch (err) {
@@ -288,13 +301,34 @@ const login = asyncHandler(async (req, res) => {
   user.loginAttempts = 0;
   user.lockUntil = null;
   user.lastLoginAt = new Date();
+
+  // 🎉 capture + reset el welcome flag atomically (one-time use)
+  const showWelcome = user.role === 'contractor' && user.firstLoginAfterActivation === true;
+  if (showWelcome) {
+    user.firstLoginAfterActivation = false;
+  }
+
   await user.save();
 
   const { accessToken, refreshToken } = issueTokens(user);
   setRefreshCookie(res, refreshToken);
 
   logger.info({ userId: user._id.toString(), role: user.role }, 'User logged in');
-  res.json({ user: user.toJSON(), accessToken });
+  const payload = { user: user.toJSON(), accessToken };
+  if (user.role === 'contractor') {
+    const u = payload.user;
+    const bal =
+      typeof u.creditBalance === 'number' && !Number.isNaN(u.creditBalance)
+        ? u.creditBalance
+        : INITIAL_CONTRACTOR_CREDITS;
+    payload.wallet = {
+      creditBalance: bal,
+      bidCreditCost: { default: COST_DEFAULT, above_1m: COST_ABOVE_1M },
+    };
+    // byba3at lel frontend 3ashan y3rz el welcome modal marra wa7da bas
+    if (showWelcome) payload.firstLoginAfterActivation = true;
+  }
+  res.json(payload);
 });
 
 // POST /api/auth/admin/login — separate endpoint lel admin
@@ -361,7 +395,46 @@ const logout = asyncHandler(async (req, res) => {
 
 // GET /api/auth/me
 const me = asyncHandler(async (req, res) => {
+  if (req.user.role === 'contractor') {
+    const bal =
+      typeof req.user.creditBalance === 'number' && !Number.isNaN(req.user.creditBalance)
+        ? req.user.creditBalance
+        : INITIAL_CONTRACTOR_CREDITS;
+    return res.json({
+      user: req.user,
+      wallet: {
+        creditBalance: bal,
+        bidCreditCost: { default: COST_DEFAULT, above_1m: COST_ABOVE_1M },
+      },
+    });
+  }
   res.json({ user: req.user });
+});
+
+const listCreditLedger = asyncHandler(async (req, res) => {
+  const page = Math.max(1, Number(req.query.page) || 1);
+  const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
+  const skip = (page - 1) * limit;
+
+  const [items, total] = await Promise.all([
+    CreditLedger.find({ user: req.user._id })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate('project', 'title status budgetRange')
+      .populate('bid', 'status amount')
+      .lean(),
+    CreditLedger.countDocuments({ user: req.user._id }),
+  ]);
+
+  res.json({
+    items,
+    pagination: {
+      total,
+      page,
+      pages: Math.ceil(total / limit) || 1,
+    },
+  });
 });
 
 module.exports = {
@@ -373,4 +446,5 @@ module.exports = {
   refresh,
   logout,
   me,
+  listCreditLedger,
 };

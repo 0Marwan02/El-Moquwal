@@ -405,10 +405,24 @@
         return parts.length ? parts.join('، ') : JSON.stringify(req);
       }
 
-      function renderProject(project, bidsPayload) {
+      function renderProject(project, bidsPayload, wallet) {
         const myBid = bidsPayload.myBid;
         const bidsCount = bidsPayload.bidsCount ?? project.bidsCount ?? 0;
         const eng = project.requiredEngineers != null ? project.requiredEngineers : 1;
+
+        let creditHint = '';
+        if (!myBid && project.status === 'open' && wallet) {
+          const cost =
+            project.budgetRange === 'above_1m'
+              ? wallet.bidCreditCost.above_1m
+              : wallet.bidCreditCost.default;
+          creditHint =
+            '<p class="blind-note" style="margin-bottom:var(--space-3);">رصيد نقاطك: <strong>' +
+            wallet.creditBalance +
+            '</strong> — تكلفة تقديم عرض على هذا المشروع: <strong>' +
+            cost +
+            '</strong> نقطة.</p>';
+        }
 
         const apiBase = window.api.API_URL.replace(/\/?api\/?$/, '');
         const photos = (project.photos || []).map(ph => {
@@ -443,6 +457,7 @@
           bidPanelHtml = `
             <div class="bid-panel">
               <h3>قدّم عرضاً</h3>
+              ${creditHint}
               <div class="blind-note">العروض سرية — لن ترى مبالغ المقاولين الآخرين.</div>
               <form id="bidForm">
                 <div class="form-field">
@@ -507,11 +522,21 @@
             btn.disabled = true;
             btn.textContent = 'جاري الإرسال...';
             try {
-              await window.api.fetch(`/projects/${projectId}/bids`, {
+              const res = await window.api.fetch(`/projects/${projectId}/bids`, {
                 method: 'POST',
                 body: JSON.stringify(body),
               });
-              showToast('تم إرسال العرض بنجاح', 'success');
+              const spent = typeof res.creditsSpent === 'number' ? res.creditsSpent : '';
+              const after = typeof res.creditBalanceAfter === 'number' ? res.creditBalanceAfter : '';
+              let msg = 'تم إرسال العرض بنجاح';
+              if (spent !== '') msg += ' — خُصم ' + spent + ' نقطة';
+              if (after !== '') msg += ' — رصيدك الآن ' + after;
+              showToast(msg, 'success');
+              try {
+                const u = JSON.parse(localStorage.getItem('elm_user') || '{}');
+                if (after !== '') u.creditBalance = after;
+                localStorage.setItem('elm_user', JSON.stringify(u));
+              } catch (_) {}
               await load();
             } catch (err) {
               showToast(err.message || 'تعذر إرسال العرض', 'error');
@@ -529,11 +554,16 @@
         }
         root.innerHTML = '<div class="loading-state">جاري التحميل...</div>';
         try {
+          let wallet = null;
+          try {
+            const me = await window.api.fetch('/auth/me');
+            if (me.wallet) wallet = me.wallet;
+          } catch (_) {}
           const [pRes, bRes] = await Promise.all([
             window.api.fetch(`/projects/${projectId}`),
             window.api.fetch(`/projects/${projectId}/bids`),
           ]);
-          renderProject(pRes.project, bRes);
+          renderProject(pRes.project, bRes, wallet);
         } catch (err) {
           root.innerHTML = `<div class="error-state">${escapeHtml(err.message)}</div>`;
         }

@@ -128,40 +128,7 @@
       color: var(--text-muted);
     }
 
-    /* Toast */
-    .toast-stack {
-      position: fixed;
-      top: 18px;
-      left: 18px;
-      z-index: 2000;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      pointer-events: none;
-    }
-    .toast {
-      pointer-events: auto;
-      min-width: 260px;
-      max-width: 360px;
-      padding: 12px 14px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border-default);
-      background: var(--bg-surface);
-      box-shadow: var(--shadow-md);
-      font-size: var(--font-size-sm);
-      font-weight: 700;
-      color: var(--color-navy);
-    }
-    .toast.success {
-      border-color: rgba(16, 185, 129, 0.35);
-      background: var(--color-success-bg);
-      color: #065f46;
-    }
-    .toast.error {
-      border-color: rgba(239, 68, 68, 0.35);
-      background: rgba(239, 68, 68, 0.08);
-      color: #991b1b;
-    }
+    /* local action-btn loading state */
     .action-btn.is-loading {
       opacity: 0.65;
       pointer-events: none;
@@ -310,11 +277,19 @@
     function showToast(message, type = 'success') {
       const stack = document.getElementById('toastStack');
       if (!stack) return;
+      const icons = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
+      const t = ['success','error','info','warning'].includes(type) ? type : 'success';
       const toast = document.createElement('div');
-      toast.className = `toast ${type}`;
-      toast.textContent = message;
+      toast.className = `toast-item toast-${t}`;
+      toast.innerHTML = `
+        <span class="toast-icon">${icons[t]}</span>
+        <div class="toast-body"><div class="toast-msg">${message}</div></div>
+        <button class="toast-close" onclick="this.closest('.toast-item').remove()">×</button>`;
       stack.appendChild(toast);
-      setTimeout(() => toast.remove(), 3200);
+      setTimeout(() => {
+        toast.classList.add('toast-exit');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
     }
 
     function escapeHtml(s) {
@@ -347,17 +322,50 @@
         return;
       }
 
+      const SPECIALTY_LABELS = {
+        civil_engineer: 'مهندس مدني', architect: 'مهندس معماري',
+        electrical: 'كهربائي', plumber: 'سباك', carpenter: 'نجار',
+        painter: 'نقّاش', general_contractor: 'مقاول عام',
+        finishing: 'تشطيبات', other: 'أخرى'
+      };
+      const API_BASE = window.__API_BASE__ || 'http://localhost:4000';
+
+      function docLink(fileObj, label) {
+        if (!fileObj || !fileObj.filename) return `<span style="color:var(--text-muted);font-size:12px;">—</span>`;
+        const url = `${API_BASE}/uploads/${fileObj.filename}`;
+        return `<a href="${url}" target="_blank" rel="noopener"
+          style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;
+                 color:var(--color-accent);background:rgba(59,130,246,0.08);
+                 border:1px solid rgba(59,130,246,0.2);border-radius:6px;padding:3px 8px;text-decoration:none;">
+          📎 ${label}
+        </a>`;
+      }
+
       body.innerHTML = pendingContractors.map(c => `
-        <div class="pending-item">
-          <div class="pending-item-avatar">${(c.name || '?').charAt(0)}</div>
-          <div style="min-width:0;">
+        <div class="pending-item" style="flex-wrap:wrap;align-items:flex-start;gap:var(--space-3);padding:var(--space-5) var(--space-6);">
+          <div class="pending-item-avatar" style="align-self:center;">${(c.name || '?').charAt(0)}</div>
+          <div style="min-width:0;flex:1;">
             <div class="pending-item-name">${escapeHtml(c.name || '—')}</div>
-            <div class="pending-item-meta">${escapeHtml(c.specialty || '—')} · ${escapeHtml(String(c.yearsOfExperience || 0))} سنة خبرة · ${escapeHtml(c.email || '')}</div>
+            <div class="pending-item-meta" style="margin-bottom:var(--space-2);">
+              ${escapeHtml(SPECIALTY_LABELS[c.specialty] || c.specialty || '—')} ·
+              ${escapeHtml(String(c.yearsOfExperience || 0))} سنة خبرة ·
+              ${escapeHtml(c.email || '')} ·
+              ${escapeHtml(c.phone || '')}
+            </div>
+            ${c.bio ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:var(--space-2);">${escapeHtml(c.bio)}</div>` : ''}
+            <div style="display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-2);">
+              ${docLink(c.nationalIdPhoto, 'بطاقة الرقم القومي')}
+              ${c.certificate ? docLink(c.certificate, 'الشهادة') : '<span style="font-size:11px;color:var(--text-muted);">بدون شهادة</span>'}
+              ${c.membershipCard ? docLink(c.membershipCard, 'كارنيه النقابة') : ''}
+              ${c.profilePicture ? docLink(c.profilePicture, 'صورة شخصية') : ''}
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:var(--space-2);">
+              آخر 4 أرقام من الرقم القومي: ${escapeHtml(c.nationalIdLast4 || '—')}
+            </div>
           </div>
-          <div class="pending-item-actions">
-            <button class="btn btn-sm action-btn" data-action="approve" data-id="${c._id}"
-              style="background:var(--color-success-bg);color:var(--color-success);border-color:rgba(16,185,129,0.25);">موافقة</button>
-            <button class="btn btn-danger btn-sm action-btn" data-action="reject" data-id="${c._id}">رفض</button>
+          <div class="pending-item-actions" style="align-self:center;margin-right:0;">
+            <button class="btn btn-sm btn-accept action-btn" data-action="approve" data-id="${c._id}">✓ موافقة</button>
+            <button class="btn btn-sm btn-reject action-btn" data-action="reject" data-id="${c._id}">✕ رفض</button>
           </div>
         </div>
       `).join('');

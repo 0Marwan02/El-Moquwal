@@ -33,9 +33,13 @@ const contractorSchema = new mongoose.Schema({
   },
   yearsOfExperience: { type: Number, required: true, min: 0, max: 60 },
   bio: { type: String, maxlength: 500, default: '' },
-  // el fayelat el rsmya
-  certificate: { type: uploadedFileSchema, required: true },
-  membershipCard: { type: uploadedFileSchema, required: true },
+  // el fayelat el rsmya — certificate we membershipCard optional
+  certificate: { type: uploadedFileSchema, required: false, default: null },
+  membershipCard: { type: uploadedFileSchema, required: false, default: null },
+  // soura el beta2a el wataneya — MANDATORY
+  nationalIdPhoto: { type: uploadedFileSchema, required: true },
+  // soura el profile — OPTIONAL
+  profilePicture: { type: uploadedFileSchema, required: false, default: null },
   // rejection reason law el admin rafad
   rejectionReason: { type: String, default: null },
   // ay notes men el admin
@@ -46,6 +50,8 @@ const contractorSchema = new mongoose.Schema({
   // rating + portfolio hanet3ml fehom fe marahel gayya
   rating: { type: Number, default: 0, min: 0, max: 5 },
   completedProjects: { type: Number, default: 0 },
+  // نقاط تقديم العروض (MON-CREDITS-01) — هدية تسجيل افتراضية
+  creditBalance: { type: Number, default: 5, min: 0, max: 1000000 },
 });
 
 const Contractor = User.discriminator('contractor', contractorSchema);

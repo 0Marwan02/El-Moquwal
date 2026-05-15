@@ -49,7 +49,7 @@ const upload = multer({
   fileFilter,
   limits: {
     fileSize: env.UPLOAD_MAX_SIZE_MB * 1024 * 1024,
-    files: 2,
+    files: 4, // certificate + membershipCard + nationalIdPhoto + profilePicture
   },
 });
 

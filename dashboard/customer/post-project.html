@@ -18,7 +18,7 @@
     /* ============================================================
        STYLES FOR POST-PROJECT PAGE
        ============================================================ */
-    
+
     /* ====== Stepper Visuals ====== */
     .steps-bar {
       display: flex;
@@ -60,7 +60,7 @@
     .step-sub { color: var(--text-muted); font-size: var(--font-size-sm); margin-bottom: var(--space-6); }
 
     /* ====== Project Type Selection ====== */
-    .type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--space-4); }
+    .type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-4); }
     .type-card {
       position: relative; cursor: pointer; padding: var(--space-5);
       border-radius: var(--radius-md); border: 2px solid var(--border-default);
@@ -69,39 +69,206 @@
     }
     .type-card:hover { border-color: var(--color-gold); transform: translateY(-2px); box-shadow: var(--shadow-md); }
     .type-card input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
-    .type-card .t-icon { width: 44px; height: 44px; border-radius: var(--radius-sm); background: var(--color-gold-subtle); display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: var(--space-2); }
+    .type-card .t-icon { width: 48px; height: 48px; border-radius: var(--radius-sm); background: var(--color-gold-subtle); display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: var(--space-2); }
     .type-card .t-title { font-weight: 800; color: var(--color-navy); font-size: var(--font-size-base); }
     .type-card .t-desc { font-size: 11px; color: var(--text-muted); line-height: 1.6; }
     .type-card.selected { border-color: var(--color-gold); background: var(--color-gold-subtle); box-shadow: var(--shadow-gold); }
 
-    /* Forms */
+    /* ====== Forms ====== */
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); margin-bottom: var(--space-5); }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-5); margin-bottom: var(--space-5); }
     .form-field { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-5); }
     .form-field label { font-size: var(--font-size-sm); font-weight: 700; color: var(--color-navy); }
     .form-field input, .form-field select, .form-field textarea {
       width: 100%; padding: 12px 14px; background: var(--bg-surface-2);
       border: 1.5px solid transparent; border-radius: var(--radius-sm);
       font-family: var(--font-main); font-size: var(--font-size-base);
+      color: var(--text-primary); transition: all var(--transition-base);
     }
     .form-field input:focus, .form-field select:focus, .form-field textarea:focus {
-      background: var(--bg-surface); border-color: var(--color-gold); box-shadow: 0 0 0 3px var(--color-gold-subtle);
+      background: var(--bg-surface); border-color: var(--color-gold); box-shadow: 0 0 0 3px var(--color-gold-subtle); outline: none;
+    }
+    .form-field.has-error input, .form-field.has-error select {
+      border-color: var(--color-error); box-shadow: 0 0 0 3px var(--color-error-bg);
+    }
+    .hint { font-size: 11px; color: var(--text-muted); }
+    .err-msg { font-size: 12px; color: var(--color-error); font-weight: 600; display: none; }
+    .form-field.has-error .err-msg { display: block; }
+
+    /* ====== GPS Button ====== */
+    .gps-row { display: flex; gap: var(--space-3); align-items: flex-end; }
+    .gps-row .form-field { flex: 1; margin-bottom: 0; }
+    .btn-gps {
+      display: inline-flex; align-items: center; gap: var(--space-2);
+      padding: 12px 16px; border-radius: var(--radius-sm);
+      background: rgba(59,130,246,0.08); color: #1e40af;
+      border: 1.5px solid rgba(59,130,246,0.25);
+      font-family: var(--font-main); font-size: var(--font-size-sm);
+      font-weight: 700; cursor: pointer; white-space: nowrap;
+      transition: all var(--transition-base); flex-shrink: 0;
+    }
+    .btn-gps:hover { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.4); }
+    .btn-gps:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-gps svg { width: 16px; height: 16px; }
+
+    /* ====== Checkboxes ====== */
+    .check-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-5); }
+    .check-item {
+      display: flex; align-items: center; gap: var(--space-2);
+      padding: 10px 14px; border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border-default); background: var(--bg-surface-2);
+      cursor: pointer; font-size: var(--font-size-sm); font-weight: 600;
+      color: var(--text-secondary); transition: all var(--transition-base);
+    }
+    .check-item:hover { border-color: var(--color-gold); background: var(--color-gold-subtle); }
+    .check-item.checked { border-color: var(--color-gold); background: var(--color-gold-subtle); color: var(--color-navy); }
+    .check-item input[type="checkbox"] { accent-color: var(--color-gold); width: 16px; height: 16px; }
+
+    /* ====== Budget / Timeline Pills ====== */
+    .pill-grid { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-3); }
+    .pill-card {
+      display: inline-flex; align-items: center; gap: var(--space-2);
+      padding: 10px 18px; border-radius: var(--radius-full);
+      border: 2px solid var(--border-default); background: var(--bg-surface-2);
+      font-family: var(--font-main); font-size: var(--font-size-sm); font-weight: 700;
+      color: var(--text-secondary); cursor: pointer; transition: all var(--transition-base);
+    }
+    .pill-card:hover { border-color: var(--color-gold); color: var(--color-navy); background: var(--color-gold-subtle); }
+    .pill-card input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
+    .pill-card.selected { border-color: var(--color-gold); background: var(--color-gold); color: var(--color-navy-dark); }
+
+    /* ====== AI Estimate Box (Premium) ====== */
+    .ai-estimate-box {
+      background: linear-gradient(135deg, var(--color-navy-dark) 0%, var(--color-navy) 100%);
+      border-radius: var(--radius-md);
+      padding: var(--space-8);
+      margin-top: var(--space-6);
+      position: relative;
+      overflow: hidden;
+    }
+    .ai-estimate-box::before {
+      content: '';
+      position: absolute;
+      top: -60px; left: -60px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(244,166,35,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .ai-estimate-box::after {
+      content: '';
+      position: absolute;
+      bottom: -40px; right: 10%;
+      width: 150px; height: 150px;
+      background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .ai-box-inner { position: relative; z-index: 1; }
+    .ai-badge {
+      display: inline-flex; align-items: center; gap: var(--space-2);
+      background: rgba(244,166,35,0.12); border: 1px solid rgba(244,166,35,0.25);
+      color: var(--color-gold-light); padding: 4px 12px;
+      border-radius: var(--radius-full); font-size: 11px; font-weight: 800;
+      letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: var(--space-4);
+    }
+    .ai-badge-dot { width: 6px; height: 6px; background: var(--color-gold); border-radius: 50%; animation: pulseDot 2s ease-in-out infinite; }
+    @keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.7); } }
+    .ai-title { font-size: var(--font-size-lg); font-weight: 900; color: #fff; margin-bottom: var(--space-2); }
+    .ai-desc { font-size: var(--font-size-sm); color: var(--text-on-dark-muted); margin-bottom: var(--space-6); line-height: 1.7; }
+    .ai-result {
+      margin-top: var(--space-5);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-sm);
+      padding: var(--space-5) var(--space-6);
+      font-size: var(--font-size-base);
+      color: #fff;
+      display: none;
+    }
+    .ai-result.visible { display: block; }
+    .ai-estimate-range {
+      font-size: var(--font-size-xl);
+      font-weight: 900;
+      color: var(--color-gold-light);
+      margin-bottom: var(--space-2);
+    }
+    .ai-estimate-reason {
+      font-size: var(--font-size-sm);
+      color: var(--text-on-dark-muted);
+      line-height: 1.7;
     }
 
-    /* Review & File */
-    .drop-zone { border: 2px dashed var(--border-strong); border-radius: var(--radius-md); padding: var(--space-10) var(--space-6); text-align: center; background: var(--bg-surface-2); cursor: pointer; }
-    .drop-zone:hover { border-color: var(--color-gold); background: var(--color-gold-subtle); }
-    
+    /* ====== Photo Upload Zone (Premium) ====== */
+    .drop-zone {
+      border: 2px dashed var(--border-strong); border-radius: var(--radius-md);
+      padding: var(--space-10) var(--space-6); text-align: center;
+      background: var(--bg-surface-2); cursor: pointer;
+      transition: all var(--transition-base);
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--color-gold); background: var(--color-gold-subtle);
+    }
+    .drop-zone input { display: none; }
+    .dz-icon { font-size: 40px; margin-bottom: var(--space-3); }
+    .dz-title { font-size: var(--font-size-base); font-weight: 700; color: var(--color-navy); margin-bottom: var(--space-2); }
+    .dz-sub { font-size: var(--font-size-xs); color: var(--text-muted); }
+
+    .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: var(--space-3); margin-top: var(--space-4); }
+    .preview-item { position: relative; border-radius: var(--radius-sm); overflow: hidden; aspect-ratio: 1; background: var(--bg-surface-2); }
+    .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+    .preview-item .rm {
+      position: absolute; top: 4px; right: 4px;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: rgba(0,0,0,0.55); color: #fff;
+      border: none; cursor: pointer; font-size: 14px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      transition: background var(--transition-fast);
+    }
+    .preview-item .rm:hover { background: var(--color-error); }
+
+    /* ====== Review Summary (Premium) ====== */
+    .review-box {
+      background: var(--bg-surface-2);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: var(--space-6);
+      margin-top: var(--space-6);
+    }
+    .review-box h4 {
+      font-size: var(--font-size-base);
+      font-weight: 800;
+      color: var(--color-navy);
+      margin-bottom: var(--space-5);
+      padding-bottom: var(--space-3);
+      border-bottom: 1px solid var(--border-default);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    .review-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: var(--space-4);
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--border-default);
+    }
+    .review-item:last-child { border-bottom: none; }
+    .rv-key { font-size: var(--font-size-sm); color: var(--text-muted); font-weight: 600; min-width: 140px; }
+    .rv-val { font-size: var(--font-size-sm); color: var(--color-navy); font-weight: 700; text-align: left; }
+
+    /* ====== Navigation Buttons ====== */
     .nav-buttons { display: flex; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-6); }
 
     @media (max-width: 768px) {
-      .form-row { grid-template-columns: 1fr; }
+      .form-row, .form-row-3 { grid-template-columns: 1fr; }
       .steps-bar { overflow-x: auto; padding: 12px; }
       .step-label { display: none; }
+      .gps-row { flex-direction: column; }
     }
   </style>
 </head>
 <body class="dashboard-page">
-<div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true" style="position:fixed;top:18px;left:18px;z-index:2000;display:flex;flex-direction:column;gap:10px;pointer-events:none;"></div>
+<div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
   <div class="dashboard-wrapper">
 
     <!-- Sidebar -->
@@ -267,7 +434,7 @@
         <!-- ========== STEP 2 — بيانات العقار ========== -->
         <section class="step-panel" data-panel="2">
           <h2 class="step-title">بيانات العقار</h2>
-          <p class="step-sub">أدخل بيانات العقار الرئيسية</p>
+          <p class="step-sub">أدخل بيانات العقار الرئيسية — كل التفاصيل تساعد في دقة التقدير</p>
 
           <div class="form-row">
             <div class="form-field">
@@ -295,17 +462,35 @@
             </div>
           </div>
 
-          <div class="form-row">
-            <div class="form-field">
+          <div class="form-row-3">
+            <div class="form-field" style="margin-bottom:0">
               <label for="floors">عدد الأدوار</label>
               <input type="number" id="floors" name="floors" min="1" max="20" placeholder="مثال: 2">
               <div class="err-msg">أدخل عدد الأدوار من 1 إلى 20</div>
             </div>
+            <div class="form-field" style="margin-bottom:0">
+              <label for="rooms">عدد الغرف</label>
+              <input type="number" id="rooms" name="rooms" min="0" max="50" placeholder="مثال: 3">
+              <div class="hint">اختياري</div>
+            </div>
+            <div class="form-field" style="margin-bottom:0">
+              <label for="bathrooms">عدد الحمامات</label>
+              <input type="number" id="bathrooms" name="bathrooms" min="0" max="20" placeholder="مثال: 2">
+              <div class="hint">اختياري</div>
+            </div>
+          </div>
 
-            <div class="form-field">
-              <label for="addressDesc">وصف العنوان / المنطقة</label>
-              <input type="text" id="addressDesc" name="addressDesc" placeholder="مثال: التجمع الخامس — الحي التامن">
-              <div class="err-msg">اكتب وصف للعنوان</div>
+          <div class="form-field" style="margin-top: var(--space-5);">
+            <label for="addressDesc">وصف العنوان / المنطقة</label>
+            <div class="gps-row">
+              <div class="form-field" style="margin-bottom:0; flex:1;">
+                <input type="text" id="addressDesc" name="addressDesc" placeholder="مثال: التجمع الخامس — الحي الثامن أو اضغط GPS">
+                <div class="err-msg">اكتب وصف للعنوان</div>
+              </div>
+              <button type="button" class="btn-gps" id="gpsBtn" onclick="captureGPS()">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                📍 موقعي الحالي
+              </button>
             </div>
           </div>
         </section>
@@ -325,10 +510,17 @@
           </div>
 
           <div class="form-field">
-            <label for="requiredEngineers">عدد المهندسين المطلوبين</label>
-            <input type="number" id="requiredEngineers" name="requiredEngineers" min="1" max="50" value="1">
-            <div class="hint">الافتراضي مهندس واحد — حتى 50</div>
-            <div class="err-msg" id="err-engineers" style="display:none;">أدخل عدداً بين 1 و 50</div>
+            <label for="requiredEngineers">عدد المهندسين / العمال المطلوبين</label>
+            <select id="requiredEngineers" name="requiredEngineers">
+              <option value="0">لا أعرف / يقرر المقاول</option>
+              <option value="1">1 مهندس / عامل</option>
+              <option value="2">2 مهندسين / عمال</option>
+              <option value="3">3 مهندسين / عمال</option>
+              <option value="5">5 مهندسين / عمال</option>
+              <option value="10">10 مهندسين / عمال</option>
+              <option value="20">20 مهندس / عامل أو أكثر</option>
+            </select>
+            <div class="hint">اختيار "يقرر المقاول" يمنح المقاول مرونة في تحديد الفريق المناسب</div>
           </div>
         </section>
 
@@ -361,37 +553,49 @@
             <div class="err-msg" id="err-timeline">اختر الجدول الزمني</div>
           </div>
 
-          <!-- ====== AI Price Estimate Box ====== -->
+          <!-- ====== AI Price Estimate Box (Premium) ====== -->
           <div class="ai-estimate-box">
-            <div class="ai-title">✨ تقدير السعر بواسطة الذكاء الاصطناعي</div>
-            <div class="ai-desc">
-              احصل على تقدير مبدئي لسعر مشروعك بناءً على البيانات اللي أدخلتها
+            <div class="ai-box-inner">
+              <div class="ai-badge">
+                <span class="ai-badge-dot"></span>
+                ذكاء اصطناعي
+              </div>
+              <div class="ai-title">تقدير السعر بالذكاء الاصطناعي</div>
+              <div class="ai-desc">
+                احصل على تقدير دقيق لتكلفة مشروعك بناءً على جميع البيانات التي أدخلتها —
+                الموقع والمساحة والغرف والمتطلبات المحددة.
+              </div>
+              <button type="button" class="btn btn-primary" id="aiEstimateBtn">
+                ✨ اطلب التقدير الذكي الآن
+              </button>
+              <div class="ai-result" id="aiResult">
+                <div class="ai-estimate-range" id="aiRange"></div>
+                <div class="ai-estimate-reason" id="aiReason"></div>
+              </div>
             </div>
-            <button type="button" class="btn btn-primary" id="aiEstimateBtn" style="align-self: flex-start;">
-              طلب تقدير ذكي الآن
-            </button>
-            <div class="ai-result" id="aiResult"></div>
           </div>
         </section>
 
         <!-- ========== STEP 5 — الصور والمراجعة ========== -->
         <section class="step-panel" data-panel="5">
           <h2 class="step-title">الصور والمراجعة النهائية</h2>
-          <p class="step-sub">ارفق صور للعقار (اختياري) وراجع البيانات قبل الإرسال</p>
+          <p class="step-sub">ارفق صور للعقار (اختياري) لمساعدة المقاولين على فهم طبيعة المشروع، ثم راجع ملخص بياناتك</p>
 
-          <!-- Drop Zone -->
+          <!-- Drop Zone (Premium) -->
           <div class="drop-zone" id="dropZone">
             <div class="dz-icon">📷</div>
             <div class="dz-title">اسحب الصور هنا أو اضغط للاختيار</div>
-            <div class="dz-sub">حتى 10 صور - الحد الأقصى 5 ميجا لكل صورة</div>
+            <div class="dz-sub">حتى 10 صور — الحد الأقصى 5 ميجا لكل صورة — JPG / PNG / WebP</div>
             <input type="file" id="photoInput" accept="image/*" multiple>
           </div>
-
           <div class="preview-grid" id="previewGrid"></div>
 
-          <!-- Review Summary -->
+          <!-- Review Summary (Premium) -->
           <div class="review-box">
-            <h4>ملخص المشروع</h4>
+            <h4>
+              <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:var(--color-gold);flex-shrink:0;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+              ملخص المشروع
+            </h4>
             <div id="reviewContent"></div>
           </div>
         </section>
@@ -415,26 +619,59 @@
    post-project.js (inline) — الـ multi-step form logic
    ============================================================ */
 
+// GPS capture function (global so onclick can reach it)
+function captureGPS() {
+  const btn = document.getElementById('gpsBtn');
+  if (!navigator.geolocation) {
+    showToastGlobal('المتصفح لا يدعم تحديد الموقع', 'error');
+    return;
+  }
+  btn.textContent = '⏳ جاري تحديد موقعك...';
+  btn.disabled = true;
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const lat = pos.coords.latitude.toFixed(5);
+      const lng = pos.coords.longitude.toFixed(5);
+      const addrEl = document.getElementById('addressDesc');
+      if (addrEl) addrEl.value = `${lat}° ش، ${lng}° ط`;
+      window.__gpsCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      btn.innerHTML = '✅ تم تحديد الموقع';
+      btn.disabled = false;
+      showToastGlobal('تم تحديد موقعك الجغرافي بنجاح', 'success');
+    },
+    (err) => {
+      btn.innerHTML = '📍 موقعي الحالي';
+      btn.disabled = false;
+      showToastGlobal('تعذر تحديد موقعك — تأكد من السماح بالوصول للموقع', 'error');
+    },
+    { timeout: 10000, enableHighAccuracy: true }
+  );
+}
+
+function showToastGlobal(message, type) {
+  // forward to the IIFE's showToast when available
+  if (window.__showToast) window.__showToast(message, type);
+}
+
 (() => {
   function showToast(message, type = 'success') {
     const stack = document.getElementById('toastStack');
     if (!stack) return;
+    const icons = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
+    const t = ['success','error','info','warning'].includes(type) ? type : 'success';
     const toast = document.createElement('div');
-    toast.textContent = message;
-    toast.style.pointerEvents = 'auto';
-    toast.style.minWidth = '260px';
-    toast.style.maxWidth = '360px';
-    toast.style.padding = '12px 14px';
-    toast.style.borderRadius = '12px';
-    toast.style.border = type === 'error' ? '1px solid rgba(239,68,68,0.35)' : '1px solid rgba(16,185,129,0.35)';
-    toast.style.background = type === 'error' ? 'rgba(239,68,68,0.08)' : 'var(--color-success-bg)';
-    toast.style.color = type === 'error' ? '#991b1b' : '#065f46';
-    toast.style.boxShadow = 'var(--shadow-md)';
-    toast.style.fontSize = 'var(--font-size-sm)';
-    toast.style.fontWeight = '700';
+    toast.className = `toast-item toast-${t}`;
+    toast.innerHTML = `
+      <span class="toast-icon">${icons[t]}</span>
+      <div class="toast-body"><div class="toast-msg">${message}</div></div>
+      <button class="toast-close" onclick="this.closest('.toast-item').remove()">×</button>`;
     stack.appendChild(toast);
-    setTimeout(() => toast.remove(), 3200);
+    setTimeout(() => {
+      toast.classList.add('toast-exit');
+      setTimeout(() => toast.remove(), 300);
+    }, 3500);
   }
+  window.__showToast = showToast;
 
   if (!localStorage.getItem('elm_user') || !localStorage.getItem('elm_accessToken')) {
     window.location.href = '../../auth/login.html';
@@ -598,13 +835,8 @@
       });
     }
     if (n === 3) {
-      const eng = document.getElementById('requiredEngineers');
-      const wrap = eng.closest('.form-field');
-      const nEng = eng.value === '' ? NaN : +eng.value;
-      const engOk = Number.isFinite(nEng) && nEng >= 1 && nEng <= 50;
-      document.getElementById('err-engineers').style.display = engOk ? 'none' : 'block';
-      if (!engOk) { wrap.classList.add('has-error'); ok = false; }
-      else wrap.classList.remove('has-error');
+      // engineers is now a select — always valid (0 = let contractor decide)
+      ok = true;
     }
     if (n === 4) {
       const b = document.querySelector('input[name="budget"]:checked');
@@ -674,30 +906,39 @@
   }
 
   // ===== Review summary =====
+  const ENG_LABELS = {
+    '0': 'يقرر المقاول', '1': 'مهندس واحد', '2': 'مهندسان',
+    '3': '3 مهندسين', '5': '5 مهندسين', '10': '10 مهندسين', '20': '20+ مهندس'
+  };
+
   function buildReview() {
-    const type     = document.querySelector('input[name="projectType"]:checked')?.value;
-    const gov      = document.getElementById('governorate').value;
-    const area     = document.getElementById('area').value;
-    const floors   = document.getElementById('floors').value;
-    const addrDesc = document.getElementById('addressDesc').value;
-    const reqs     = [...document.querySelectorAll('input[name="req"]:checked')].map(i => i.value);
-    const notes    = document.getElementById('extraNotes').value;
-    const engineers = document.getElementById('requiredEngineers').value;
-    const budget   = document.querySelector('input[name="budget"]:checked')?.value;
-    const timeline = document.querySelector('input[name="timeline"]:checked')?.value;
+    const type      = document.querySelector('input[name="projectType"]:checked')?.value;
+    const gov       = document.getElementById('governorate').value;
+    const area      = document.getElementById('area').value;
+    const floors    = document.getElementById('floors').value;
+    const rooms     = document.getElementById('rooms').value;
+    const bathrooms = document.getElementById('bathrooms').value;
+    const addrDesc  = document.getElementById('addressDesc').value;
+    const reqs      = [...document.querySelectorAll('input[name="req"]:checked')].map(i => i.value);
+    const notes     = document.getElementById('extraNotes').value;
+    const engVal    = document.getElementById('requiredEngineers').value;
+    const budget    = document.querySelector('input[name="budget"]:checked')?.value;
+    const timeline  = document.querySelector('input[name="timeline"]:checked')?.value;
 
     const rows = [
       ['نوع المشروع', TYPE_LABELS[type] || '—'],
       ['المحافظة', gov || '—'],
       ['المساحة', area ? area + ' م²' : '—'],
       ['عدد الأدوار', floors || '—'],
-      ['العنوان', addrDesc || '—'],
+      ['عدد الغرف', rooms || '—'],
+      ['عدد الحمامات', bathrooms || '—'],
+      ['العنوان / الموقع', addrDesc || '—'],
       ['المتطلبات', reqs.length ? reqs.join('، ') : '—'],
-      ['عدد المهندسين المطلوبين', engineers || '1'],
+      ['الفريق المطلوب', ENG_LABELS[engVal] || 'يقرر المقاول'],
       ['الملاحظات', notes || '—'],
       ['الميزانية', BUDGET_LABELS[budget] || '—'],
       ['الجدول الزمني', TIMELINE_LABELS[timeline] || '—'],
-      ['عدد الصور', uploadedFiles.length]
+      ['عدد الصور', uploadedFiles.length + ' صورة']
     ];
 
     document.getElementById('reviewContent').innerHTML = rows.map(([k, v]) =>
@@ -707,35 +948,55 @@
 
   // ===== AI Estimate button calls backend ======
   document.getElementById('aiEstimateBtn').addEventListener('click', async () => {
-    const result = document.getElementById('aiResult');
-    result.textContent = '⏳ جاري تقدير السعر...';
-    result.classList.add('visible');
-    
+    const resultBox = document.getElementById('aiResult');
+    const rangeEl  = document.getElementById('aiRange');
+    const reasonEl = document.getElementById('aiReason');
+    const btn = document.getElementById('aiEstimateBtn');
+
+    btn.disabled = true;
+    btn.textContent = '⏳ جاري التقدير...';
+    rangeEl.textContent = '';
+    reasonEl.textContent = 'يتحقق الذكاء الاصطناعي من بيانات مشروعك...';
+    resultBox.classList.add('visible');
+
     try {
       const type = document.querySelector('input[name="projectType"]:checked')?.value || 'other';
+      const checkedReqs = [...document.querySelectorAll('input[name="req"]:checked')].map(i => i.value);
+      const notes = document.getElementById('extraNotes').value.trim();
+
       const bodyParams = {
         projectType: type,
         propertyDetails: {
           governorate: document.getElementById('governorate').value || 'غير محدد',
+          district: document.getElementById('addressDesc').value || '',
           area: +document.getElementById('area').value || 100,
-          floors: +document.getElementById('floors').value || 1
+          floors: +document.getElementById('floors').value || 1,
+          rooms: +document.getElementById('rooms').value || 0,
+          bathrooms: +document.getElementById('bathrooms').value || 0,
         },
-        requirements: {
-          'متطلبات': [...document.querySelectorAll('input[name="req"]:checked')].map(i => i.value).join(', ')
-        },
+        requirements: checkedReqs.length
+          ? { 'عناصر مطلوبة': checkedReqs.join('، '), 'ملاحظات': notes || '' }
+          : { 'ملاحظات': notes || '' },
         budgetRange: document.querySelector('input[name="budget"]:checked')?.value || 'flexible',
-        timeline: document.querySelector('input[name="timeline"]:checked')?.value || 'flexible'
+        timeline:    document.querySelector('input[name="timeline"]:checked')?.value || 'flexible'
       };
-      
+
       const response = await window.api.fetch('/projects/ai-estimate', {
         method: 'POST',
         body: JSON.stringify(bodyParams)
       });
-      
-      const { minEstimate, maxEstimate } = response.aiEstimatedPrice;
-      result.textContent = `💰 التقدير المبدئي: ${minEstimate.toLocaleString('ar-EG')} — ${maxEstimate.toLocaleString('ar-EG')} جنيه`;
+
+      const { minEstimate, maxEstimate, reasoning } = response.aiEstimatedPrice;
+      rangeEl.textContent  = `${minEstimate.toLocaleString('ar-EG')} — ${maxEstimate.toLocaleString('ar-EG')} جنيه مصري`;
+      reasonEl.textContent = reasoning || '';
+      // Store estimate for bid limits reference
+      window.__aiEstimate = { min: minEstimate, max: maxEstimate };
     } catch (err) {
-      result.textContent = '❌ ' + (err.message || 'حدث خطأ في جلب التقدير.');
+      rangeEl.textContent  = '❌ تعذر الحصول على التقدير';
+      reasonEl.textContent = err.message || 'حاول مرة أخرى';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '✨ اطلب التقدير الذكي الآن';
     }
   });
 
@@ -746,6 +1007,7 @@
     
     // Build payload
     const type = document.querySelector('input[name="projectType"]:checked')?.value;
+    const engVal = parseInt(document.getElementById('requiredEngineers').value, 10) || 0;
     const bodyParams = {
       title: 'مشروع ' + (TYPE_LABELS[type] || 'جديد'),
       description: document.getElementById('extraNotes').value,
@@ -754,14 +1016,17 @@
         governorate: document.getElementById('governorate').value,
         district: document.getElementById('addressDesc').value,
         area: +document.getElementById('area').value,
-        floors: +document.getElementById('floors').value || 1
+        floors: +document.getElementById('floors').value || 1,
+        rooms: +document.getElementById('rooms').value || 0,
+        bathrooms: +document.getElementById('bathrooms').value || 0,
+        gpsCoords: window.__gpsCoords || null,
       },
       requirements: {
-         'عناصر': [...document.querySelectorAll('input[name="req"]:checked')].map(i => i.value).join(', ')
+        'عناصر': [...document.querySelectorAll('input[name="req"]:checked')].map(i => i.value).join(', ')
       },
       budgetRange: document.querySelector('input[name="budget"]:checked')?.value,
       timeline: document.querySelector('input[name="timeline"]:checked')?.value,
-      requiredEngineers: Math.min(50, Math.max(1, parseInt(document.getElementById('requiredEngineers').value, 10) || 1)),
+      requiredEngineers: Math.min(50, Math.max(0, engVal)),
     };
 
     const submitBtn = document.getElementById('submitBtn');

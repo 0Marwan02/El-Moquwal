@@ -53,6 +53,9 @@ const userSchema = new mongoose.Schema(
     loginAttempts: { type: Number, default: 0 },
     lockUntil: { type: Date, default: null },
     lastLoginAt: { type: Date, default: null },
+    // 🎉 flag bybaan en el contractor etfada lel mara el awla ba3d el activation
+    // betbaan true lama el admin y2bal el account, w betetzabat false ba3d awel login
+    firstLoginAfterActivation: { type: Boolean, default: false },
   },
   {
     timestamps: true,

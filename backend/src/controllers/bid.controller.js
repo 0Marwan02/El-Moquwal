@@ -3,6 +3,9 @@ const { z } = require('zod');
 
 const Bid = require('../models/Bid');
 const Project = require('../models/Project');
+const Contractor = require('../models/ContractorProfile');
+const CreditLedger = require('../models/CreditLedger');
+const { getBidCreditCost, INITIAL_CONTRACTOR_CREDITS } = require('../utils/credits');
 const { AppError, asyncHandler } = require('../middleware/errorHandler');
 
 // =====================================================
@@ -41,7 +44,63 @@ const submitBid = asyncHandler(async (req, res) => {
   const parsed = submitBidSchema.safeParse(req.body);
   if (!parsed.success) throw new AppError('بيانات غير صحيحة', 400, 'VALIDATION_ERROR');
 
-  // بيستخدم upsert — لو الـ contractor بعت من قبل يرجع duplicate error (unique index)
+  // Enforce bid limits when project has AI estimate (±30% of estimate range)
+  if (project.aiEstimatedPrice?.minEstimate && project.aiEstimatedPrice?.maxEstimate) {
+    const minAllowed = Math.floor(project.aiEstimatedPrice.minEstimate * 0.70);
+    const maxAllowed = Math.ceil(project.aiEstimatedPrice.maxEstimate * 1.40);
+    if (parsed.data.amount < minAllowed || parsed.data.amount > maxAllowed) {
+      throw new AppError(
+        `قيمة العرض يجب أن تكون بين ${minAllowed.toLocaleString('ar-EG')} و ${maxAllowed.toLocaleString('ar-EG')} جنيه (بناءً على التقدير الذكي للمشروع)`,
+        400,
+        'BID_OUT_OF_RANGE'
+      );
+    }
+  }
+
+  const creditCost = getBidCreditCost(project);
+
+  const updatedContractor = await Contractor.findOneAndUpdate(
+    {
+      _id: req.user._id,
+      role: 'contractor',
+      status: 'active',
+      $expr: {
+        $gte: [{ $ifNull: ['$creditBalance', INITIAL_CONTRACTOR_CREDITS] }, creditCost],
+      },
+    },
+    [
+      {
+        $set: {
+          creditBalance: {
+            $max: [
+              0,
+              {
+                $subtract: [
+                  { $ifNull: ['$creditBalance', INITIAL_CONTRACTOR_CREDITS] },
+                  creditCost,
+                ],
+              },
+            ],
+          },
+        },
+      },
+    ],
+    { new: true }
+  );
+
+  if (!updatedContractor) {
+    const c = await Contractor.findById(req.user._id).select('creditBalance').lean();
+    const bal =
+      typeof c?.creditBalance === 'number' && !Number.isNaN(c.creditBalance)
+        ? c.creditBalance
+        : INITIAL_CONTRACTOR_CREDITS;
+    throw new AppError(
+      `رصيد النقاط غير كافٍ لتقديم العرض. المطلوب ${creditCost} نقطة${creditCost > 1 ? 'ات' : ''} ورصيدك الحالي ${bal} نقطة.`,
+      402,
+      'INSUFFICIENT_CREDITS'
+    );
+  }
+
   let bid;
   try {
     bid = await Bid.create({
@@ -50,13 +109,33 @@ const submitBid = asyncHandler(async (req, res) => {
       ...parsed.data,
     });
   } catch (err) {
+    await Contractor.findByIdAndUpdate(req.user._id, { $inc: { creditBalance: creditCost } });
+    await CreditLedger.create({
+      user: req.user._id,
+      delta: creditCost,
+      reason: 'bid_submit_refund',
+      balanceAfter:
+        (typeof updatedContractor.creditBalance === 'number'
+          ? updatedContractor.creditBalance
+          : 0) + creditCost,
+      project: project._id,
+      meta: err.code === 11000 ? 'duplicate_bid' : 'bid_create_failed',
+    });
     if (err.code === 11000) {
       throw new AppError('لقد قدمت عرضاً على هذا المشروع من قبل', 409, 'BID_EXISTS');
     }
     throw err;
   }
 
-  // زيادة عداد العروض بالـ project
+  await CreditLedger.create({
+    user: req.user._id,
+    delta: -creditCost,
+    reason: 'bid_submit',
+    balanceAfter: updatedContractor.creditBalance,
+    project: project._id,
+    bid: bid._id,
+  });
+
   await Project.findByIdAndUpdate(project._id, { $inc: { bidsCount: 1 } });
 
   // بنرجع للـ contractor عرضه هو بس (مش amount الناس التانية)
@@ -70,6 +149,8 @@ const submitBid = asyncHandler(async (req, res) => {
       status: bid.status,
       createdAt: bid.createdAt,
     },
+    creditsSpent: creditCost,
+    creditBalanceAfter: updatedContractor.creditBalance,
   });
 });
 

@@ -495,8 +495,89 @@
     </main>
   </div>
 
+  <!-- Welcome Modal (First Login After Activation) -->
+  <div class="manager-modal-overlay" id="welcomeModalOverlay" aria-hidden="true" style="display:none;align-items:center;justify-content:center;">
+    <div style="
+      width: 100%; max-width: 480px;
+      background: var(--bg-surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      animation: welcomeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    ">
+      <div style="
+        background: linear-gradient(135deg, var(--color-navy-dark), var(--color-navy));
+        padding: var(--space-10) var(--space-8);
+        text-align: center;
+        position: relative; overflow: hidden;
+      ">
+        <div style="
+          position:absolute;top:-60px;left:50%;transform:translateX(-50%);
+          width:300px;height:300px;
+          background:radial-gradient(circle,rgba(244,166,35,0.15) 0%,transparent 70%);
+          pointer-events:none;
+        "></div>
+        <div style="font-size:56px;margin-bottom:var(--space-4);position:relative;">🎉</div>
+        <h3 style="
+          font-size:var(--font-size-xl);font-weight:900;
+          color:#fff;margin-bottom:var(--space-2);position:relative;
+        ">تهانينا على انضمامك!</h3>
+        <p style="
+          font-size:var(--font-size-sm);
+          color:var(--text-on-dark-muted);
+          line-height:1.7;position:relative;
+        ">
+          تم تفعيل حسابك على منصة <strong style="color:var(--color-gold);">المقاول</strong> بنجاح.
+          أنت الآن جزء من مجتمع المحترفين ويمكنك تصفح المشاريع وتقديم عروضك.
+        </p>
+      </div>
+      <div style="padding:var(--space-6) var(--space-8);">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);margin-bottom:var(--space-6);">
+          <div style="
+            background:var(--bg-surface-2);border-radius:var(--radius-sm);
+            padding:var(--space-4);text-align:center;
+          ">
+            <div style="font-size:24px;font-weight:900;color:var(--color-gold-dark);margin-bottom:4px;">✓</div>
+            <div style="font-size:var(--font-size-xs);color:var(--text-muted);font-weight:600;">تقديم عروض الأسعار</div>
+          </div>
+          <div style="
+            background:var(--bg-surface-2);border-radius:var(--radius-sm);
+            padding:var(--space-4);text-align:center;
+          ">
+            <div style="font-size:24px;font-weight:900;color:var(--color-gold-dark);margin-bottom:4px;">✓</div>
+            <div style="font-size:var(--font-size-xs);color:var(--text-muted);font-weight:600;">تصفح المشاريع المتاحة</div>
+          </div>
+        </div>
+        <a href="browse-projects.html" class="btn btn-primary btn-full btn-lg" onclick="closeWelcomeModal()">
+          ابدأ تصفح المشاريع الآن
+        </a>
+        <button class="btn btn-outline btn-full" style="margin-top:var(--space-3);" onclick="closeWelcomeModal()">
+          إغلاق
+        </button>
+      </div>
+    </div>
+  </div>
+  <style>
+    @keyframes welcomeIn {
+      from { opacity: 0; transform: scale(0.9) translateY(20px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+  </style>
+
   <script src="../../assets/js/api.js"></script>
   <script>
+    function showWelcomeModal(name) {
+      const overlay = document.getElementById('welcomeModalOverlay');
+      if (!overlay) return;
+      overlay.style.display = 'flex';
+      overlay.setAttribute('aria-hidden', 'false');
+    }
+    function closeWelcomeModal() {
+      const overlay = document.getElementById('welcomeModalOverlay');
+      if (!overlay) return;
+      overlay.style.display = 'none';
+      overlay.setAttribute('aria-hidden', 'true');
+    }
     document.addEventListener('DOMContentLoaded', async () => {
       const userJSON = localStorage.getItem('elm_user');
       if (!userJSON) {
@@ -518,21 +599,26 @@
         if (el) el.textContent = initial;
       });
 
-      // show approval status
-      if (user.approvalStatus && user.approvalStatus !== 'approved') {
+      // show approval status based on user.status
+      if (user.status === 'pending' || user.status === 'suspended') {
         const notice = document.getElementById('pendingNotice');
         const pill   = document.getElementById('approvalStatus');
         const text   = document.getElementById('approvalText');
         if (notice) notice.hidden = false;
         if (pill)   pill.style.display = 'inline-flex';
-        if (text)   text.textContent = user.approvalStatus === 'rejected' ? 'تم رفض الطلب' : 'في انتظار الموافقة';
-        if (pill && user.approvalStatus === 'rejected') {
+        if (text)   text.textContent = user.status === 'suspended' ? 'تم رفض الطلب أو إيقاف الحساب' : 'في انتظار الموافقة';
+        if (pill && user.status === 'suspended') {
           pill.classList.remove('pending');
-          pill.classList.add('rejected');
           pill.style.background = 'rgba(239,68,68,0.12)';
           pill.style.borderColor = 'rgba(239,68,68,0.25)';
           pill.style.color = 'var(--color-error)';
         }
+      }
+
+      // First-login welcome modal — show once after contractor is activated (backend-driven flag)
+      if (user.role === 'contractor' && localStorage.getItem('elm_showWelcome') === '1') {
+        localStorage.removeItem('elm_showWelcome');
+        showWelcomeModal(firstName || user.name);
       }
 
       try {

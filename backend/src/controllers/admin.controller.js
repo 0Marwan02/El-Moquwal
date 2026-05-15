@@ -39,6 +39,7 @@ const approveContractor = asyncHandler(async (req, res) => {
   contractor.approvedBy = req.user._id;
   contractor.approvedAt = new Date();
   contractor.rejectionReason = null;
+  contractor.firstLoginAfterActivation = true; // 🎉 bybaat el welcome modal 3ala awel login
   await contractor.save();
 
   logger.info({ contractorId: contractor._id.toString(), adminId: req.user._id.toString() }, 'Contractor approved');
@@ -61,4 +62,75 @@ const rejectContractor = asyncHandler(async (req, res) => {
   res.json({ ok: true, user: contractor.toJSON() });
 });
 
-module.exports = { listPending, approveContractor, rejectContractor };
+// =====================================================
+// GET /api/admin/projects — كل المشاريع بفلترة وترقيم
+// =====================================================
+
+const Project = require('../models/Project');
+
+const listAllProjects = asyncHandler(async (req, res) => {
+  const {
+    status, type, governorate,
+    page = 1, limit = 20,
+  } = req.query;
+
+  const filter = {};
+  if (status) filter.status = status;
+  if (type) filter.projectType = type;
+  if (governorate) filter['propertyDetails.governorate'] = governorate;
+
+  const skip = (Number(page) - 1) * Number(limit);
+
+  const [projects, total] = await Promise.all([
+    Project.find(filter)
+      .populate('postedBy', 'name email phone')
+      .populate('awardedTo', 'name email phone specialty')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .lean(),
+    Project.countDocuments(filter),
+  ]);
+
+  res.json({
+    projects,
+    pagination: {
+      total,
+      page: Number(page),
+      pages: Math.ceil(total / Number(limit)),
+    },
+  });
+});
+
+// =====================================================
+// GET /api/admin/stats — إحصائيات سريعة للوحة المدير
+// =====================================================
+
+const User = require('../models/User');
+
+const dashboardStats = asyncHandler(async (req, res) => {
+  const [
+    totalProjects,
+    openProjects,
+    awardedProjects,
+    closedProjects,
+    totalContractors,
+    pendingContractors,
+    totalCustomers,
+  ] = await Promise.all([
+    Project.countDocuments(),
+    Project.countDocuments({ status: 'open' }),
+    Project.countDocuments({ status: 'awarded' }),
+    Project.countDocuments({ status: 'closed' }),
+    User.countDocuments({ role: 'contractor' }),
+    User.countDocuments({ role: 'contractor', status: 'pending' }),
+    User.countDocuments({ role: 'customer' }),
+  ]);
+
+  res.json({
+    projects: { total: totalProjects, open: openProjects, awarded: awardedProjects, closed: closedProjects },
+    users: { contractors: totalContractors, pendingContractors, customers: totalCustomers },
+  });
+});
+
+module.exports = { listPending, approveContractor, rejectContractor, listAllProjects, dashboardStats };

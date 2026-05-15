@@ -535,6 +535,148 @@
 
 
 /* ===========================================
+   TOAST NOTIFICATIONS — إشعارات احترافية
+   =========================================== */
+
+.toast-stack {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--space-3);
+  pointer-events: none;
+  max-width: 380px;
+}
+
+.toast-item {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-lg);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-navy);
+  animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 380px;
+  min-width: 280px;
+}
+
+.toast-item.toast-success {
+  border-color: rgba(16, 185, 129, 0.3);
+  background: #f0fdf9;
+  color: #065f46;
+}
+.toast-item.toast-error {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: #fef2f2;
+  color: #991b1b;
+}
+.toast-item.toast-info {
+  border-color: rgba(59, 130, 246, 0.3);
+  background: #eff6ff;
+  color: #1e40af;
+}
+.toast-item.toast-warning {
+  border-color: rgba(245, 158, 11, 0.3);
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.toast-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 12px;
+  margin-top: 1px;
+}
+.toast-success .toast-icon { background: var(--color-success-bg); }
+.toast-error   .toast-icon { background: var(--color-error-bg); }
+.toast-info    .toast-icon { background: rgba(59,130,246,0.1); }
+.toast-warning .toast-icon { background: var(--color-warning-bg); }
+
+.toast-body { flex: 1; }
+.toast-title {
+  font-weight: 800;
+  margin-bottom: 2px;
+  font-size: var(--font-size-sm);
+}
+.toast-msg {
+  font-size: var(--font-size-xs);
+  opacity: 0.8;
+  line-height: 1.5;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: currentColor;
+  opacity: 0.5;
+  padding: 2px;
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+}
+.toast-close:hover { opacity: 1; }
+
+.toast-exit {
+  animation: toastSlideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateX(-16px) scale(0.95); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes toastSlideOut {
+  from { opacity: 1; transform: translateX(0); max-height: 100px; }
+  to   { opacity: 0; transform: translateX(-16px); max-height: 0; padding: 0; margin: 0; }
+}
+
+/* ===========================================
+   ACTION BUTTONS — قبول ورفض احترافي
+   =========================================== */
+
+.btn-accept {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  border: 1.5px solid rgba(16, 185, 129, 0.3);
+  font-weight: 700;
+}
+.btn-accept:hover {
+  background: var(--color-success);
+  color: #fff;
+  border-color: var(--color-success);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-reject {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  border: 1.5px solid rgba(239, 68, 68, 0.25);
+  font-weight: 700;
+}
+.btn-reject:hover {
+  background: var(--color-error);
+  color: #fff;
+  border-color: var(--color-error);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* ===========================================
    EMPTY STATE — لما مفيش data
    =========================================== */
 

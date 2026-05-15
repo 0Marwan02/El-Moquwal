@@ -208,6 +208,22 @@
             </div>
           </div>
 
+          <div class="info-section" id="creditsSection" style="margin-bottom: var(--space-8); display: none;">
+            <h3>
+              <svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+              رصيد النقاط
+            </h3>
+            <div class="info-item">
+              <span class="lbl">الرصيد الحالي</span>
+              <span class="val" id="creditBalanceVal">—</span>
+            </div>
+            <p style="font-size:var(--font-size-xs);color:var(--text-muted);line-height:1.65;margin:0 0 var(--space-4);">
+              تُخصم نقاط عند كل عرض على مشروع مفتوح. التكلفة أعلى للمشاريع ذات الميزانية «أكثر من مليون» (حسب إعدادات السيرفر).
+            </p>
+            <h4 style="font-size:var(--font-size-sm);margin:0 0 var(--space-3);">آخر الحركات</h4>
+            <div id="ledgerList" style="font-size:var(--font-size-xs);color:var(--text-secondary);"></div>
+          </div>
+
           <div class="info-section" style="margin-bottom: var(--space-8);">
             <h3>وصف تعريفي</h3>
             <div class="bio-box" id="profileBio">
@@ -305,6 +321,46 @@
         'rejected': 'مرفوض ❌'
       };
       statusLbl.textContent = statusMap[status] || status;
+
+      (async function loadWalletLedger() {
+        const token = localStorage.getItem('elm_accessToken');
+        if (!token) return;
+        try {
+          const data = await window.api.fetch('/auth/me');
+          if (!data.wallet) return;
+          const sec = document.getElementById('creditsSection');
+          if (sec) sec.style.display = 'block';
+          const balEl = document.getElementById('creditBalanceVal');
+          if (balEl) balEl.textContent = data.wallet.creditBalance + ' نقطة';
+          const led = await window.api.fetch('/auth/credit-ledger?limit=12');
+          const listEl = document.getElementById('ledgerList');
+          if (!listEl) return;
+          const reasons = {
+            bid_submit: 'تقديم عرض',
+            bid_submit_refund: 'إرجاع نقاط',
+            signup_grant: 'هدية تسجيل',
+            admin_adjust: 'تعديل إداري',
+            purchase: 'شراء',
+            referral: 'إحالة',
+          };
+          if (!led.items || !led.items.length) {
+            listEl.textContent = 'لا توجد حركات مسجّلة بعد.';
+            return;
+          }
+          listEl.innerHTML =
+            '<ul style="margin:0;padding-right:18px;line-height:1.8;">' +
+            led.items
+              .map((row) => {
+                const dt = row.createdAt ? new Date(row.createdAt).toLocaleString('ar-EG') : '';
+                const title = row.project && row.project.title ? row.project.title : '—';
+                const d = row.delta > 0 ? '+' + row.delta : String(row.delta);
+                const lbl = reasons[row.reason] || row.reason;
+                return '<li><strong>' + d + '</strong> — ' + lbl + ' (' + title + ') — ' + dt + '</li>';
+              })
+              .join('') +
+            '</ul>';
+        } catch (_) {}
+      })();
 
       // Logout
       const logoutBtn = document.getElementById('logoutBtnMain');

@@ -79,9 +79,10 @@ function parseNID(nid) {
 
   const year = century + yy;
 
-  if (!isDateValid(year, mm, dd)) {
-    return { ...invalid, reason: 'تاريخ الميلاد غير صحيح' };
-  }
+  // TEMP: strict DOB-sequence matching commented out per implementation plan
+  // if (!isDateValid(year, mm, dd)) {
+  //   return { ...invalid, reason: 'تاريخ الميلاد غير صحيح' };
+  // }
 
   const governorate = GOVERNORATES[govCode];
   if (!governorate) {

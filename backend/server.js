@@ -18,13 +18,14 @@ const healthRoutes = require('./src/routes/health.routes');
 const projectRoutes = require('./src/routes/project.routes');
 const bidRoutes = require('./src/routes/bid.routes');
 const uploadRoutes = require('./src/routes/upload.routes');
+const billingRoutes = require('./src/routes/billing.routes');
+const aiRoutes = require('./src/routes/ai.routes');
 
 const { errorHandler, notFound } = require('./src/middleware/errorHandler');
 const { generalLimiter } = require('./src/middleware/rateLimit');
 
-// ================================================
+
 // APP SETUP
-// ================================================
 
 const app = express();
 
@@ -87,9 +88,7 @@ app.use(
 // general rate limit 3ala el API kolo
 app.use('/api', generalLimiter);
 
-// ================================================
 // ROUTES
-// ================================================
 
 // API routes
 app.use('/api/health', healthRoutes);
@@ -101,13 +100,16 @@ projectRoutes.use('/:id/bids', bidRoutes);
 app.use('/api/projects', projectRoutes);
 
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/billing', billingRoutes);
+app.use('/api/ai', aiRoutes);
 
 // صور المشاريع المخزنة على القرص — للعرض في الواجهة
 app.use('/uploads', express.static(path.resolve(env.UPLOADS_DIR)));
 
-// ================================================
+
+
 // FRONTEND STATIC FILES — serve the whole project from port 4000
-// ================================================
+
 const frontendRoot = path.resolve(__dirname, '..');
 app.use(express.static(frontendRoot));
 
@@ -122,9 +124,7 @@ app.use((req, res, next) => {
 app.use(notFound);
 app.use(errorHandler);
 
-// ================================================
 // STARTUP
-// ================================================
 
 async function start() {
   try {
@@ -133,7 +133,7 @@ async function start() {
       logger.info(`🚀 Server running on http://localhost:${env.PORT} (${env.NODE_ENV})`);
     });
   } catch (err) {
-    logger.error({ err: err.message }, 'Failed to start server');
+    logger.error({ err: err.message }, 'fshl to start server');
     process.exit(1);
   }
 }

@@ -78,6 +78,16 @@
     return /^01[0125]\d{8}$/.test(phone.replace(/\s|-/g, ''));
   }
 
+  /** يدمج wallet في كائن المستخدم المحفوظ للمقاول */
+  function persistSessionUser(data) {
+    const u = { ...(data.user || {}) };
+    if (data.wallet) {
+      u.creditBalance = data.wallet.creditBalance;
+      u._bidCreditCost = data.wallet.bidCreditCost;
+    }
+    localStorage.setItem('elm_user', JSON.stringify(u));
+  }
+
   // byt2kd en el password strong enough lel policy
   function isStrongPassword(pw) { return true; }
 
@@ -199,7 +209,11 @@
 
         // n7ot el access token we ne3ml redirect hasb el role
         localStorage.setItem('elm_accessToken', data.accessToken);
-        localStorage.setItem('elm_user', JSON.stringify(data.user));
+        persistSessionUser(data);
+        // 🎉 law el contractor etfada lel mara el awla ba3d el activation
+        if (data.firstLoginAfterActivation) {
+          localStorage.setItem('elm_showWelcome', '1');
+        }
         showAlert('loginAlert', 'تم تسجيل الدخول بنجاح! جاري التحويل...', 'success');
 
         setTimeout(() => {
@@ -241,7 +255,7 @@
           body: JSON.stringify({ email, password: pass }),
         });
         localStorage.setItem('elm_accessToken', data.accessToken);
-        localStorage.setItem('elm_user', JSON.stringify(data.user));
+        persistSessionUser(data);
         showAlert('adminLoginAlert', 'تم تسجيل الدخول بنجاح!', 'success');
         setTimeout(() => { window.location.href = '../dashboard/manager/index.html'; }, 900);
       } catch (err) {
@@ -338,7 +352,7 @@
           body: JSON.stringify({ name, nationalId, email, phone, password: pass }),
         });
         localStorage.setItem('elm_accessToken', data.accessToken);
-        localStorage.setItem('elm_user', JSON.stringify(data.user));
+        persistSessionUser(data);
         showAlert('registerAlert', 'تم إنشاء الحساب بنجاح! جاري التحويل...', 'success');
         setTimeout(() => { window.location.href = '../dashboard/customer/index.html'; }, 1100);
       } catch (err) {
@@ -508,14 +522,15 @@
       const specialty = document.getElementById('regSpecialty').value;
       const years = document.getElementById('regYears').value;
       const bio = document.getElementById('regBio').value.trim();
-      const cert = document.getElementById('regCertificate').files[0];
-      const card = document.getElementById('regCard').files[0];
+      const nidPhoto = document.getElementById('regNidPhoto')?.files[0];
+      const cert = document.getElementById('regCertificate')?.files[0];
+      const card = document.getElementById('regCard')?.files[0];
+      const avatar = document.getElementById('regAvatar')?.files[0];
       const terms = document.getElementById('agreeTerms').checked;
 
       if (!specialty) return showAlert('registerAlert', 'اختر التخصص');
       if (years === '' || parseInt(years, 10) < 0) return showAlert('registerAlert', 'أدخل سنوات الخبرة');
-      if (!cert) return showAlert('registerAlert', 'ارفع الشهادة');
-      if (!card) return showAlert('registerAlert', 'ارفع كارنيه النقابة');
+      if (!nidPhoto) return showAlert('registerAlert', 'يجب رفع صورة بطاقة الرقم القومي');
       if (!terms) return showAlert('registerAlert', 'يجب الموافقة على الشروط والأحكام');
 
       // n3ml FormData 3ashan el multipart upload
@@ -528,15 +543,17 @@
       fd.append('specialty', specialty);
       fd.append('yearsOfExperience', years);
       fd.append('bio', bio);
-      fd.append('certificate', cert);
-      fd.append('membershipCard', card);
+      fd.append('nationalIdPhoto', nidPhoto);
+      if (cert) fd.append('certificate', cert);
+      if (card) fd.append('membershipCard', card);
+      if (avatar) fd.append('profilePicture', avatar);
 
       setLoading('contractorRegisterBtn', true);
       try {
         const data = await apiCall('/auth/register/contractor', { method: 'POST', body: fd });
         // store tokens so contractor is logged in immediately
         if (data.accessToken) localStorage.setItem('elm_accessToken', data.accessToken);
-        if (data.user) localStorage.setItem('elm_user', JSON.stringify(data.user));
+        if (data.user) persistSessionUser(data);
         showAlert('registerAlert', 'تم إرسال طلبك بنجاح! جاري التحويل...', 'success');
         setTimeout(() => { window.location.href = '../dashboard/professional/profile.html'; }, 900);
       } catch (err) {

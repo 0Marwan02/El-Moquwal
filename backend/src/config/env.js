@@ -18,6 +18,11 @@ const envSchema = z.object({
   UPLOADS_DIR: z.string().default('./uploads'),
   UPLOAD_MAX_SIZE_MB: z.coerce.number().int().positive().default(5),
   ANTHROPIC_API_KEY: z.string().optional().default(''),
+  HF_API_TOKEN: z.string().optional().default(''),
+  HF_MODEL: z.string().optional().default('Qwen/Qwen2.5-72B-Instruct'),
+  CONTRACTOR_INITIAL_CREDITS: z.coerce.number().int().min(0).max(1000).default(5),
+  BID_CREDIT_COST_DEFAULT: z.coerce.number().int().min(1).max(100).default(1),
+  BID_CREDIT_COST_ABOVE_1M: z.coerce.number().int().min(1).max(100).default(5),
 });
 
 // by3mel parse lel process.env we lo feeh errors byktebha we y2fel el app

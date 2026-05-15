@@ -1,6 +1,6 @@
 // el controller bta3 el projects — CRUD + AI estimate
 const { z } = require('zod');
-const Anthropic = require('@anthropic-ai/sdk');
+const { callLLM, parseJsonResponse, isAIAvailable } = require('../utils/ai.service');
 
 const Project = require('../models/Project');
 const { AppError, asyncHandler } = require('../middleware/errorHandler');
@@ -26,6 +26,10 @@ const createProjectSchema = z.object({
     floors: z.number().int().min(1).max(30).optional().default(1),
     rooms: z.number().int().min(0).optional().default(0),
     bathrooms: z.number().int().min(0).optional().default(0),
+    gpsCoords: z.object({
+      lat: z.number().min(-90).max(90),
+      lng: z.number().min(-180).max(180),
+    }).nullable().optional().default(null),
   }),
   requirements: z.record(z.unknown()).optional().default({}),
   budgetRange: z.enum([
@@ -34,7 +38,7 @@ const createProjectSchema = z.object({
   timeline: z.enum([
     'within_week', 'within_month', '1_3_months', '3_6_months', 'flexible',
   ]).optional(),
-  requiredEngineers: z.coerce.number().int().min(1).max(50).optional().default(1),
+  requiredEngineers: z.coerce.number().int().min(0).max(50).optional().default(0), // 0 = يقرر المقاول
 });
 
 // =====================================================
@@ -76,16 +80,19 @@ const TIMELINE_LABELS = {
 // =====================================================
 
 // POST /api/projects — customer bs
+// query ?draft=1 → ينشئ مسودة بدل مشروع مفتوح
 const createProject = asyncHandler(async (req, res) => {
   const parsed = createProjectSchema.safeParse(req.body);
   if (!parsed.success) {
     throw new AppError('بيانات غير صحيحة', 400, 'VALIDATION_ERROR');
   }
 
+  const isDraft = req.query.draft === '1' || req.query.draft === 'true';
+
   const project = await Project.create({
     ...parsed.data,
     postedBy: req.user._id,
-    status: 'open',
+    status: isDraft ? 'draft' : 'open',
   });
 
   res.status(201).json({ project });
@@ -181,9 +188,17 @@ const aiEstimate = asyncHandler(async (req, res) => {
     }
   }
 
-  if (!env.ANTHROPIC_API_KEY || env.ANTHROPIC_API_KEY.includes('YOUR_API_KEY')) {
-    // For dummy implementation returns mock data
-    return res.json({ aiEstimatedPrice: { minEstimate: 50000, maxEstimate: 120000, currency: "EGP", reasoning: "نظرا لعدم توفر مفتاح AI صالح، هذا تقدير تجريبي.", estimatedAt: new Date(), model: "mock-sonnet" }});
+  // التحقق من توافر المفتاح (Mock fallback)
+  if (!isAIAvailable()) {
+    const estimate = {
+      minEstimate: projectData.propertyDetails.area * 500,
+      maxEstimate: projectData.propertyDetails.area * 1200,
+      currency: "EGP",
+      reasoning: "نظرا لعدم توفر مفتاح AI صالح، هذا تقدير تجريبي.",
+      estimatedAt: new Date(),
+      model: "mock-sonnet"
+    };
+    return res.json({ aiEstimatedPrice: estimate });
   }
 
   // بناء الـ prompt من بيانات الفورم
@@ -192,42 +207,43 @@ const aiEstimate = asyncHandler(async (req, res) => {
     .map(([k, v]) => `${k}: ${v}`)
     .join('، ') || 'لم تُحدد';
 
-  const prompt = `أنت خبير تقدير تكاليف مشاريع البناء والتشطيب في مصر. بناءً على المعلومات التالية، قدّم نطاق سعر واقعي بالجنيه المصري.
+  const locationText = propertyDetails.district
+    ? `${propertyDetails.governorate} - ${propertyDetails.district}`
+    : propertyDetails.governorate;
+
+  const prompt = `أنت خبير تقدير تكاليف مشاريع البناء والتشطيب في مصر. بناءً على المعلومات التفصيلية التالية، قدّم نطاق سعر واقعي ودقيق بالجنيه المصري.
 
 نوع المشروع: ${PROJECT_TYPE_LABELS[projectType] || projectType}
-المحافظة: ${propertyDetails.governorate}
+الموقع: ${locationText}
 المساحة: ${propertyDetails.area} متر مربع
-عدد الطوابق: ${propertyDetails.floors}
-عدد الغرف: ${propertyDetails.rooms}
-عدد الحمامات: ${propertyDetails.bathrooms}
-المتطلبات: ${requirementsText}
+عدد الطوابق: ${propertyDetails.floors || 1}
+عدد الغرف: ${propertyDetails.rooms || 'غير محدد'}
+عدد الحمامات: ${propertyDetails.bathrooms || 'غير محدد'}
+المتطلبات المحددة: ${requirementsText}
 الميزانية المفضلة: ${BUDGET_LABELS[budgetRange] || 'غير محددة'}
-الجدول الزمني: ${TIMELINE_LABELS[timeline] || 'غير محدد'}
+الجدول الزمني المطلوب: ${TIMELINE_LABELS[timeline] || 'غير محدد'}
 
-أجب بـ JSON فقط بهذا الشكل، بدون أي نص خارجه:
-{"minEstimate": number, "maxEstimate": number, "currency": "EGP", "reasoning": "شرح مختصر باللغة العربية"}`;
-
-  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+خذ في الاعتبار أسعار مواد البناء والعمالة الحالية في ${propertyDetails.governorate}. أجب بـ JSON فقط بهذا الشكل، بدون أي نص خارجه:
+{"minEstimate": number, "maxEstimate": number, "currency": "EGP", "reasoning": "شرح مختصر باللغة العربية في 2-3 جمل"}`;
 
   let aiResponse;
   try {
-    const message = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 300,
-      messages: [{ role: 'user', content: prompt }],
+    aiResponse = await callLLM(prompt, {
+      maxTokens: 300,
+      systemPrompt: 'أنت خبير تقدير تكاليف مشاريع في مصر وتجاوب فقط بـ JSON صالح بدون أي نص إضافي.'
     });
-    aiResponse = message.content[0].text.trim();
+    
+    if (!aiResponse) {
+      throw new Error('Empty response from AI');
+    }
   } catch (err) {
     logger.error({ err: err.message }, 'AI estimate request failed');
     throw new AppError('خدمة التقدير غير متاحة حالياً', 503, 'AI_ERROR');
   }
 
-  // parse الـ JSON من الـ response — شيل أي code fences لو موجودة
-  let parsed;
-  try {
-    const clean = aiResponse.replace(/```json?\n?/gi, '').replace(/```/g, '').trim();
-    parsed = JSON.parse(clean);
-  } catch {
+  // parse الـ JSON من الـ response
+  const parsed = parseJsonResponse(aiResponse);
+  if (!parsed) {
     logger.warn({ aiResponse }, 'AI returned non-JSON response');
     throw new AppError('خطأ في تقدير السعر، حاول مرة أخرى', 502, 'AI_PARSE_ERROR');
   }
@@ -249,4 +265,172 @@ const aiEstimate = asyncHandler(async (req, res) => {
   res.json({ aiEstimatedPrice: estimate });
 });
 
-module.exports = { createProject, listProjects, getProject, aiEstimate };
+// =====================================================
+// PATCH /api/projects/:id — customer only (owner)
+// يسمح بالتعديل فقط لو المشروع draft أو open بدون عروض
+// =====================================================
+
+const updateProjectSchema = z.object({
+  title: z.string().trim().min(5).max(120).optional(),
+  description: z.string().max(1000).optional(),
+  projectType: z.enum([
+    'new_construction', 'finishing', 'renovation', 'repair',
+    'extension', 'demolition', 'electrical', 'plumbing', 'other',
+  ]).optional(),
+  propertyDetails: z.object({
+    governorate: z.string().min(2).optional(),
+    city: z.string().optional(),
+    district: z.string().optional(),
+    area: z.number().min(10).max(50000).optional(),
+    floors: z.number().int().min(1).max(30).optional(),
+    rooms: z.number().int().min(0).optional(),
+    bathrooms: z.number().int().min(0).optional(),
+    gpsCoords: z.object({
+      lat: z.number().min(-90).max(90),
+      lng: z.number().min(-180).max(180),
+    }).nullable().optional(),
+  }).optional(),
+  requirements: z.record(z.unknown()).optional(),
+  budgetRange: z.enum([
+    'under_50k', '50k_200k', '200k_500k', '500k_1m', 'above_1m', 'flexible',
+  ]).optional(),
+  timeline: z.enum([
+    'within_week', 'within_month', '1_3_months', '3_6_months', 'flexible',
+  ]).optional(),
+  requiredEngineers: z.coerce.number().int().min(0).max(50).optional(),
+});
+
+const updateProject = asyncHandler(async (req, res) => {
+  const project = await Project.findById(req.params.id);
+  if (!project) throw new AppError('المشروع غير موجود', 404, 'NOT_FOUND');
+
+  // لازم يكون صاحب المشروع
+  if (project.postedBy.toString() !== req.user._id.toString()) {
+    throw new AppError('غير مصرح', 403, 'FORBIDDEN');
+  }
+
+  // التعديل فقط لو draft أو open بدون عروض
+  if (project.status === 'awarded' || project.status === 'closed') {
+    throw new AppError('لا يمكن تعديل مشروع مُرسى أو مغلق', 400, 'PROJECT_LOCKED');
+  }
+  if (project.status === 'open' && project.bidsCount > 0) {
+    throw new AppError('لا يمكن تعديل مشروع عليه عروض بالفعل', 400, 'HAS_BIDS');
+  }
+
+  const parsed = updateProjectSchema.safeParse(req.body);
+  if (!parsed.success) {
+    throw new AppError('بيانات غير صحيحة', 400, 'VALIDATION_ERROR');
+  }
+
+  // دمج propertyDetails بذكاء (مش نستبدلهم كلهم)
+  if (parsed.data.propertyDetails) {
+    Object.assign(project.propertyDetails, parsed.data.propertyDetails);
+    delete parsed.data.propertyDetails;
+  }
+
+  Object.assign(project, parsed.data);
+  await project.save();
+
+  res.json({ project });
+});
+
+// =====================================================
+// DELETE /api/projects/:id — customer only (owner)
+// يسمح بالحذف فقط لو المشروع draft أو open بدون عروض
+// =====================================================
+
+const deleteProject = asyncHandler(async (req, res) => {
+  const project = await Project.findById(req.params.id);
+  if (!project) throw new AppError('المشروع غير موجود', 404, 'NOT_FOUND');
+
+  if (project.postedBy.toString() !== req.user._id.toString()) {
+    throw new AppError('غير مصرح', 403, 'FORBIDDEN');
+  }
+
+  if (project.status === 'awarded') {
+    throw new AppError('لا يمكن حذف مشروع مُرسى', 400, 'PROJECT_AWARDED');
+  }
+  if (project.bidsCount > 0) {
+    throw new AppError('لا يمكن حذف مشروع عليه عروض', 400, 'HAS_BIDS');
+  }
+
+  await project.deleteOne();
+  res.json({ ok: true, message: 'تم حذف المشروع بنجاح' });
+});
+
+// =====================================================
+// POST /api/projects/:id/publish — customer only (owner)
+// ينشر مسودة → يحولها لـ open
+// =====================================================
+
+const publishDraft = asyncHandler(async (req, res) => {
+  const project = await Project.findById(req.params.id);
+  if (!project) throw new AppError('المشروع غير موجود', 404, 'NOT_FOUND');
+
+  if (project.postedBy.toString() !== req.user._id.toString()) {
+    throw new AppError('غير مصرح', 403, 'FORBIDDEN');
+  }
+
+  if (project.status !== 'draft') {
+    throw new AppError('المشروع ليس مسودة — لا يمكن نشره', 400, 'NOT_DRAFT');
+  }
+
+  project.status = 'open';
+  await project.save();
+
+  res.json({ project });
+});
+
+// =====================================================
+// POST /api/projects/:id/close — customer only (owner)
+// يغلق المشروع (awarded → closed) ويسمح بتقييم المقاول
+// =====================================================
+
+const closeProjectSchema = z.object({
+  rating: z.number().min(1).max(5).optional(),
+  review: z.string().max(500).optional().default(''),
+});
+
+const closeProject = asyncHandler(async (req, res) => {
+  const project = await Project.findById(req.params.id);
+  if (!project) throw new AppError('المشروع غير موجود', 404, 'NOT_FOUND');
+
+  if (project.postedBy.toString() !== req.user._id.toString()) {
+    throw new AppError('غير مصرح', 403, 'FORBIDDEN');
+  }
+
+  if (project.status !== 'awarded') {
+    throw new AppError('لا يمكن إغلاق مشروع غير مُرسى', 400, 'NOT_AWARDED');
+  }
+
+  const parsed = closeProjectSchema.safeParse(req.body);
+  if (!parsed.success) {
+    throw new AppError('بيانات غير صحيحة', 400, 'VALIDATION_ERROR');
+  }
+
+  project.status = 'closed';
+  project.closedAt = new Date();
+  if (parsed.data.review) project.clientReview = parsed.data.review;
+  if (parsed.data.rating) project.clientRating = parsed.data.rating;
+  await project.save();
+
+  // تحديث إحصائيات المقاول (rating + completedProjects)
+  if (project.awardedTo) {
+    const Contractor = require('../models/ContractorProfile');
+    const contractor = await Contractor.findById(project.awardedTo);
+    if (contractor) {
+      contractor.completedProjects = (contractor.completedProjects || 0) + 1;
+      if (parsed.data.rating) {
+        // متوسط تراكمي بسيط
+        const oldTotal = contractor.rating * Math.max(0, contractor.completedProjects - 1);
+        contractor.rating = Math.round(((oldTotal + parsed.data.rating) / contractor.completedProjects) * 10) / 10;
+      }
+      await contractor.save();
+    }
+  }
+
+  logger.info({ projectId: project._id.toString() }, 'Project closed');
+  res.json({ project });
+});
+
+module.exports = { createProject, listProjects, getProject, aiEstimate, updateProject, deleteProject, publishDraft, closeProject };

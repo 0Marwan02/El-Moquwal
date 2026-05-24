@@ -93,6 +93,10 @@
 
   <script src="../../assets/js/api.js"></script>
   <script>
+    const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:4000/api'
+      : '/api';
+
     function showToast(message, type = 'success') {
       const stack = document.getElementById('toastStack');
       if (!stack) return;
@@ -120,7 +124,7 @@
       
       const sidebarHtml = `
         <div class="sidebar-header">
-          <div class="sidebar-logo-mark"><svg viewBox="0 0 24 24"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg></div>
+          <div class="sidebar-logo-mark"><img src="../../assets/images/logo.png" alt="المقاول"></div>
           <div class="sidebar-logo-text">المقاول</div>
         </div>
         <div class="sidebar-user">
@@ -168,70 +172,144 @@
       const user = JSON.parse(localStorage.getItem('elm_user') || '{}');
       
       try {
-        const data = await window.api.fetch('/projects');
+        const data = await window.api.fetch('/projects?status=awarded&limit=50');
         const awardedProjects = (data.projects || []).filter(p => 
-          p.status === 'awarded' && (p.postedBy._id || p.postedBy) === user._id
+          (p.postedBy._id || p.postedBy) === user._id
         );
         
         if (awardedProjects.length === 0) {
           container.innerHTML = `
             <div style="text-align:center; padding: 60px; background: var(--bg-surface); border-radius: var(--radius-md); border: 1px dashed var(--border-default);">
               <div style="font-size: 48px; margin-bottom: 20px;">📄</div>
-              <h3 style="color: var(--color-navy); margin-bottom: 10px;">لا توجد اتفاقيات مفعلة بعد</h3>
-              <p style="color: var(--text-muted);">بمجرد قبول عرض سعر مشروع، ستظهر تفاصيل الاتفاق هنا.</p>
+              <h3 style="color: var(--color-navy); margin-bottom: 10px;">لا توجد مشاريع مُرساة بعد</h3>
+              <p style="color: var(--text-muted);">بمجرد قبول عرض سعر مشروع، يمكنك إنشاء وتوقيع العقد هنا.</p>
               <a href="proposals.html" class="btn btn-primary" style="margin-top:20px;">مراجعة عروض الأسعار</a>
             </div>
           `;
           return;
         }
         
-        container.innerHTML = awardedProjects.map(p => `
-          <div class="contract-card">
-            <span class="contract-status">اتفاق مفعل ✅</span>
-            <div class="contract-header">
-              <h3 class="contract-title">${p.title}</h3>
-              <div class="contract-date">رقم المشروع: #${p._id.slice(-6).toUpperCase()}</div>
-            </div>
+        let html = '';
+        for (const p of awardedProjects) {
+          // Fetch contract for this project
+          try {
+            const token = localStorage.getItem('elm_accessToken') || localStorage.getItem('token');
+            const res = await fetch(`${API_BASE}/contracts/project/${p._id}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const cData = await res.json();
             
-            <div class="contract-parties">
-              <div class="party-box">
-                <span class="party-label">الطرف الأول (العميل)</span>
-                <div class="party-name">${user.name}</div>
-                <div class="party-contact">${user.phone || '—'}</div>
+            if (!res.ok) {
+              // Not generated yet
+              html += `
+                <div class="contract-card">
+                  <span class="contract-status" style="background:#fef3c7; color:#d97706;">في انتظار توليد العقد ⏳</span>
+                  <div class="contract-header">
+                    <h3 class="contract-title">${p.title}</h3>
+                    <div class="contract-date">رقم المشروع: #${p._id.slice(-6).toUpperCase()}</div>
+                  </div>
+                  <button onclick="generateContract('${p._id}')" class="btn btn-primary">توليد العقد الإلكتروني</button>
+                </div>
+              `;
+              continue;
+            }
+
+            const contract = cData.contract;
+            const customerSigned = contract.customerSignature?.signed;
+            const isFullySigned = contract.status === 'active';
+
+            html += `
+              <div class="contract-card">
+                <span class="contract-status" style="${isFullySigned ? 'background:var(--color-success-bg); color:var(--color-success);' : 'background:#dbeafe; color:#1d4ed8;'}">
+                  ${isFullySigned ? 'اتفاق مفعل ✅' : 'في انتظار التوقيع ✍️'}
+                </span>
+                <div class="contract-header">
+                  <h3 class="contract-title">${contract.projectTitle}</h3>
+                  <div class="contract-date">رقم العقد: #${contract._id.slice(-6).toUpperCase()}</div>
+                </div>
+                
+                <div class="contract-parties">
+                  <div class="party-box">
+                    <span class="party-label">الطرف الأول (العميل)</span>
+                    <div class="party-name">${contract.customer?.name || user.name}</div>
+                    <div class="party-contact" style="${customerSigned ? 'color:#10b981; font-weight:bold;' : 'color:#f59e0b;'}">${customerSigned ? 'وقع ✅' : 'لم يوقع بعد'}</div>
+                  </div>
+                  <div class="party-box">
+                    <span class="party-label">الطرف الثاني (المقاول)</span>
+                    <div class="party-name">${contract.contractor?.name || 'مقاول'}</div>
+                    <div class="party-contact" style="${contract.contractorSignature?.signed ? 'color:#10b981; font-weight:bold;' : 'color:#f59e0b;'}">${contract.contractorSignature?.signed ? 'وقع ✅' : 'لم يوقع بعد'}</div>
+                  </div>
+                </div>
+                
+                <div class="contract-details">
+                  <div class="det-item">
+                    <div class="det-lbl">قيمة التعاقد</div>
+                    <div class="det-val">${(contract.bidAmount || 0).toLocaleString('ar-EG')} ج.م</div>
+                  </div>
+                  <div class="det-item">
+                    <div class="det-lbl">المدة المتوقعة</div>
+                    <div class="det-val">${contract.proposedDuration || '—'} يوم</div>
+                  </div>
+                  <div class="det-item">
+                    <div class="det-lbl">سقف الضمان</div>
+                    <div class="det-val">${(contract.warrantyCapEGP || 0).toLocaleString()} ج.م</div>
+                  </div>
+                </div>
+                
+                <div class="contract-actions" style="margin-top:15px; border-top:1px solid #eee; padding-top:15px;">
+                  <button class="btn btn-outline btn-sm" onclick="window.open(\`${API_BASE}/contracts/${contract._id}/pdf?token=${token}\`, '_blank')">تحميل العقد PDF 📄</button>
+                  ${!customerSigned ? `<button class="btn btn-primary btn-sm" onclick="signContract('${contract._id}')">توقيع إلكتروني ✍️</button>` : ''}
+                  ${isFullySigned ? `<a href="escrow.html?projectId=${p._id}" class="btn btn-sm" style="background:#10b981; color:white; border:none; border-radius:var(--radius-sm); font-weight:bold; padding:7px 14px;">نظام الضمان Escrow 🛡️</a>` : ''}
+                </div>
               </div>
-              <div class="party-box">
-                <span class="party-label">الطرف الثاني (المقاول)</span>
-                <div class="party-name">${p.acceptedBid?.professional?.name || 'مقاول معتمد'}</div>
-                <div class="party-contact">${p.acceptedBid?.professional?.phone || 'تم الكشف عن بيانات التواصل'}</div>
-              </div>
-            </div>
-            
-            <div class="contract-details">
-              <div class="det-item">
-                <div class="det-lbl">قيمة التعاقد</div>
-                <div class="det-val">${(p.acceptedBid?.amount || 0).toLocaleString('ar-EG')} ج.م</div>
-              </div>
-              <div class="det-item">
-                <div class="det-lbl">نوع المشروع</div>
-                <div class="det-val">${p.projectType === 'new_construction' ? 'بناء جديد' : 'تشطيب/تجديد'}</div>
-              </div>
-              <div class="det-item">
-                <div class="det-lbl">الموقع</div>
-                <div class="det-val">${p.propertyDetails?.governorate || '—'}</div>
-              </div>
-            </div>
-            
-            <div class="contract-actions">
-              <button class="btn btn-outline btn-sm" onclick="showToast('جاري تجهيز نسخة PDF...', 'success')">تحميل العقد PDF</button>
-              <button class="btn btn-primary btn-sm" onclick="showToast('ميزة المراسلة المباشرة ستتوفر قريباً', 'success')">مراسلة المقاول</button>
-            </div>
-          </div>
-        `).join('');
+            `;
+          } catch(e) { console.error(e); }
+        }
         
+        container.innerHTML = html;
       } catch (err) {
         container.innerHTML = `<div class="error-msg">خطأ في تحميل الاتفاقيات: ${err.message}</div>`;
       }
     }
+
+    window.generateContract = async function(projectId) {
+      showToast('جاري توليد العقد...', 'success');
+      const token = localStorage.getItem('elm_accessToken') || localStorage.getItem('token');
+      try {
+        const res = await fetch(`${API_BASE}/contracts/generate`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projectId })
+        });
+        if(res.ok) {
+          showToast('تم توليد العقد بنجاح!', 'success');
+          loadContracts();
+        } else {
+          const data = await res.json();
+          showToast(data.message || 'فشل التوليد', 'error');
+        }
+      } catch(e) { showToast('خطأ بالاتصال', 'error'); }
+    };
+
+    window.signContract = async function(contractId) {
+      if(!confirm('هل أنت متأكد من التوقيع؟ يعتبر هذا التوقيع ملزماً قانونياً.')) return;
+      showToast('جاري التوقيع...', 'success');
+      const token = localStorage.getItem('elm_accessToken') || localStorage.getItem('token');
+      try {
+        const res = await fetch(`${API_BASE}/contracts/${contractId}/sign`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ signatureData: 'UserAcceptedViaUI' })
+        });
+        if(res.ok) {
+          showToast('تم توقيع العقد بنجاح! ✅', 'success');
+          loadContracts();
+        } else {
+          const data = await res.json();
+          showToast(data.message || 'فشل التوقيع', 'error');
+        }
+      } catch(e) { showToast('خطأ بالاتصال', 'error'); }
+    };
 
     document.addEventListener('DOMContentLoaded', () => {
       injectLayout();

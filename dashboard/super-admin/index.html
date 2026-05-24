@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة المدير الرئيسي | المقاول</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Tajawal', sans-serif; background: #f1f5f9; }
+    .nav-link { @apply text-gray-300 hover:text-white px-3 py-2 rounded-lg text-sm font-medium transition; }
+    .nav-link.active { @apply bg-white/10 text-white; }
+    .stat-card { @apply bg-white rounded-2xl p-5 shadow-sm border border-gray-100; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .tab-btn.active { @apply bg-blue-900 text-white; }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="flex min-h-screen">
+  <aside class="w-64 bg-gradient-to-b from-blue-950 to-blue-900 text-white flex flex-col shrink-0 fixed h-full z-20">
+    <div class="p-6 border-b border-white/10">
+      <div class="text-xs font-bold text-blue-300 uppercase tracking-widest mb-1">المدير الرئيسي</div>
+      <h1 class="text-xl font-black">منصة المقاول</h1>
+    </div>
+    <nav class="flex-1 p-4 space-y-1">
+      <button onclick="showTab('stats')" class="tab-nav-btn w-full text-right flex items-center gap-3 text-gray-300 hover:text-white px-3 py-2.5 rounded-xl text-sm font-medium transition active">
+        <span class="text-lg">📊</span> الإحصائيات
+      </button>
+      <button onclick="showTab('reviewers')" class="tab-nav-btn w-full text-right flex items-center gap-3 text-gray-300 hover:text-white px-3 py-2.5 rounded-xl text-sm font-medium transition">
+        <span class="text-lg">👥</span> إدارة المراجعين
+      </button>
+      <button onclick="showTab('settings')" class="tab-nav-btn w-full text-right flex items-center gap-3 text-gray-300 hover:text-white px-3 py-2.5 rounded-xl text-sm font-medium transition">
+        <span class="text-lg">⚙️</span> إعدادات المنصة
+      </button>
+      <button onclick="showTab('disputes')" class="tab-nav-btn w-full text-right flex items-center gap-3 text-gray-300 hover:text-white px-3 py-2.5 rounded-xl text-sm font-medium transition">
+        <span class="text-lg">⚖️</span> النزاعات
+      </button>
+      <button onclick="showTab('projects')" class="tab-nav-btn w-full text-right flex items-center gap-3 text-gray-300 hover:text-white px-3 py-2.5 rounded-xl text-sm font-medium transition">
+        <span class="text-lg">🏗️</span> كل المشاريع
+      </button>
+    </nav>
+    <div class="p-4 border-t border-white/10">
+      <p id="sidebarName" class="text-sm text-blue-200 font-medium mb-2"></p>
+      <button onclick="logout()" class="w-full text-right text-xs text-red-300 hover:text-red-100 transition">تسجيل الخروج</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="mr-64 flex-1 p-8">
+
+    <!-- Toast -->
+    <div id="toast" class="hidden fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-6 py-3 rounded-2xl shadow-xl text-sm font-medium"></div>
+
+    <!-- ===== Stats ===== -->
+    <div id="tab-stats" class="tab-panel active">
+      <h2 class="text-2xl font-black text-gray-800 mb-6">الإحصائيات العامة</h2>
+      <div id="statsGrid" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="stat-card animate-pulse"><div class="h-4 bg-gray-200 rounded w-1/2 mb-3"></div><div class="h-8 bg-gray-200 rounded w-1/3"></div></div>
+        <div class="stat-card animate-pulse"><div class="h-4 bg-gray-200 rounded w-1/2 mb-3"></div><div class="h-8 bg-gray-200 rounded w-1/3"></div></div>
+        <div class="stat-card animate-pulse"><div class="h-4 bg-gray-200 rounded w-1/2 mb-3"></div><div class="h-8 bg-gray-200 rounded w-1/3"></div></div>
+        <div class="stat-card animate-pulse"><div class="h-4 bg-gray-200 rounded w-1/2 mb-3"></div><div class="h-8 bg-gray-200 rounded w-1/3"></div></div>
+      </div>
+    </div>
+
+    <!-- ===== Reviewers ===== -->
+    <div id="tab-reviewers" class="tab-panel">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-black text-gray-800">إدارة المراجعين</h2>
+        <button onclick="openAddReviewerModal()" class="bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-blue-800 text-sm">+ إضافة مراجع</button>
+      </div>
+      <div id="reviewersList" class="space-y-3"></div>
+    </div>
+
+    <!-- ===== Settings ===== -->
+    <div id="tab-settings" class="tab-panel">
+      <h2 class="text-2xl font-black text-gray-800 mb-6">إعدادات المنصة</h2>
+      <div id="settingsAlert" class="hidden p-3 rounded-xl text-sm mb-4"></div>
+      <form id="settingsForm" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-5 max-w-2xl">
+        <div id="settingsFields" class="space-y-4">
+          <p class="text-gray-400 text-sm">جاري التحميل...</p>
+        </div>
+        <button type="submit" class="bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-blue-800 text-sm">حفظ الإعدادات</button>
+      </form>
+    </div>
+
+    <!-- ===== Disputes ===== -->
+    <div id="tab-disputes" class="tab-panel">
+      <h2 class="text-2xl font-black text-gray-800 mb-6">النزاعات المفتوحة</h2>
+      <div id="disputesList" class="space-y-3"></div>
+    </div>
+
+    <!-- ===== Projects ===== -->
+    <div id="tab-projects" class="tab-panel">
+      <h2 class="text-2xl font-black text-gray-800 mb-6">كل المشاريع</h2>
+      <div class="flex gap-3 mb-4 flex-wrap">
+        <select id="projStatusFilter" onchange="loadProjects()" class="border rounded-xl px-3 py-2 text-sm">
+          <option value="">كل الحالات</option>
+          <option value="open">مفتوح</option>
+          <option value="awarded">ممنوح</option>
+          <option value="closed">مغلق</option>
+          <option value="draft">مسودة</option>
+        </select>
+      </div>
+      <div id="projectsList" class="space-y-3"></div>
+      <div id="projectsPagination" class="flex justify-center gap-3 mt-6"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Add Reviewer Modal -->
+<div id="addReviewerModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-bold">إضافة مراجع جديد</h3>
+      <button onclick="closeAddReviewerModal()" class="text-gray-400 hover:text-gray-700 text-2xl leading-none">&times;</button>
+    </div>
+    <form id="addReviewerForm" class="space-y-4">
+      <div id="reviewerAlert" class="hidden p-3 rounded-xl text-sm text-center"></div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">الاسم *</label>
+        <input type="text" id="rName" required class="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">البريد الإلكتروني *</label>
+        <input type="email" id="rEmail" required class="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">الرقم القومي *</label>
+        <input type="text" id="rNid" required minlength="14" maxlength="14" placeholder="14 رقم" class="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">كلمة المرور *</label>
+        <input type="password" id="rPass" required minlength="8" class="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <button type="submit" id="rSubmit" class="w-full bg-blue-700 text-white py-2.5 rounded-xl font-bold hover:bg-blue-800 text-sm">إنشاء الحساب</button>
+    </form>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:4000/api';
+const token = localStorage.getItem('token');
+if (!token) window.location.href = '../../auth/login.html';
+
+// Role check
+try {
+  const payload = JSON.parse(atob(token.split('.')[1]));
+  if (payload.role !== 'super_admin') {
+    alert('هذه اللوحة مخصصة للمدير الرئيسي فقط');
+    window.location.href = '../../index.html';
+  }
+} catch { window.location.href = '../../auth/login.html'; }
+
+let projectsPage = 1;
+
+// ===== Tab switching =====
+function showTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-nav-btn').forEach(b => {
+    b.classList.remove('bg-white/10', 'text-white');
+    b.classList.add('text-gray-300');
+  });
+  document.getElementById('tab-' + name).classList.add('active');
+  event.currentTarget.classList.add('bg-white/10', 'text-white');
+  event.currentTarget.classList.remove('text-gray-300');
+
+  const loaders = { stats: loadStats, reviewers: loadReviewers, settings: loadSettings, disputes: loadDisputes, projects: loadProjects };
+  loaders[name]?.();
+}
+
+// ===== Stats =====
+async function loadStats() {
+  try {
+    const r = await apiFetch('/admin/stats');
+    document.getElementById('statsGrid').innerHTML = `
+      <div class="stat-card">
+        <p class="text-sm text-gray-500 mb-1">إجمالي المشاريع</p>
+        <p class="text-3xl font-black text-gray-800">${r.projects.total}</p>
+        <div class="flex gap-3 mt-3 text-xs text-gray-400 flex-wrap">
+          <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full">${r.projects.open} مفتوح</span>
+          <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">${r.projects.awarded} ممنوح</span>
+          <span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">${r.projects.closed} مغلق</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <p class="text-sm text-gray-500 mb-1">المقاولون</p>
+        <p class="text-3xl font-black text-gray-800">${r.users.contractors}</p>
+        <p class="text-xs text-orange-500 mt-2 font-medium">${r.users.pendingContractors} في الانتظار</p>
+      </div>
+      <div class="stat-card">
+        <p class="text-sm text-gray-500 mb-1">العملاء</p>
+        <p class="text-3xl font-black text-gray-800">${r.users.customers}</p>
+      </div>
+      <div class="stat-card">
+        <p class="text-sm text-gray-500 mb-1">إجمالي العمولات</p>
+        <p class="text-3xl font-black text-blue-700">${(r.revenue.totalCommission || 0).toLocaleString()}</p>
+        <p class="text-xs text-gray-400 mt-1">ج.م</p>
+      </div>
+      <div class="stat-card">
+        <p class="text-sm text-gray-500 mb-1">حجم الضمان الكلي</p>
+        <p class="text-3xl font-black text-gray-800">${(r.escrow.totalVolume || 0).toLocaleString()}</p>
+        <p class="text-xs text-gray-400 mt-1">ج.م</p>
+      </div>
+      <div class="stat-card">
+        <p class="text-sm text-gray-500 mb-1">نزاعات مفتوحة</p>
+        <p class="text-3xl font-black ${r.escrow.openDisputes > 0 ? 'text-red-600' : 'text-gray-800'}">${r.escrow.openDisputes}</p>
+      </div>`;
+  } catch (e) { document.getElementById('statsGrid').innerHTML = `<div class="col-span-4 text-red-400 text-center py-8">تعذر تحميل الإحصائيات</div>`; }
+}
+
+// ===== Reviewers =====
+async function loadReviewers() {
+  const el = document.getElementById('reviewersList');
+  el.innerHTML = '<p class="text-gray-400 text-sm">جاري التحميل...</p>';
+  try {
+    const r = await apiFetch('/admin/reviewers');
+    if (!r.reviewers?.length) { el.innerHTML = '<p class="text-gray-400 text-sm text-center py-8">لا يوجد مراجعون حتى الآن</p>'; return; }
+    el.innerHTML = r.reviewers.map(rev => `
+      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex justify-between items-center gap-4">
+        <div>
+          <p class="font-bold text-gray-800">${esc(rev.name)}</p>
+          <p class="text-sm text-gray-500">${esc(rev.email)}</p>
+          <p class="text-xs text-gray-400 mt-1">أنشئ في: ${new Date(rev.createdAt).toLocaleDateString('ar-EG')}</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-xs px-3 py-1 rounded-full font-medium ${rev.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}">${rev.status === 'active' ? 'نشط' : 'موقوف'}</span>
+          <button onclick="deleteReviewer('${rev._id}')" class="text-xs text-red-500 hover:text-red-700 font-medium">حذف</button>
+        </div>
+      </div>`).join('');
+  } catch { el.innerHTML = '<p class="text-red-400 text-sm text-center py-8">تعذر التحميل</p>'; }
+}
+
+async function deleteReviewer(id) {
+  if (!confirm('هل تريد حذف هذا المراجع؟')) return;
+  try {
+    await apiFetch(`/admin/reviewers/${id}`, 'DELETE');
+    showToast('تم حذف المراجع');
+    loadReviewers();
+  } catch (e) { showToast(e.message || 'حدث خطأ', true); }
+}
+
+function openAddReviewerModal() { document.getElementById('addReviewerModal').classList.remove('hidden'); }
+function closeAddReviewerModal() {
+  document.getElementById('addReviewerModal').classList.add('hidden');
+  document.getElementById('addReviewerForm').reset();
+  document.getElementById('reviewerAlert').className = 'hidden';
+}
+
+document.getElementById('addReviewerForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('rSubmit');
+  const alertBox = document.getElementById('reviewerAlert');
+  btn.disabled = true; btn.textContent = 'جاري الإنشاء...';
+
+  try {
+    await apiFetch('/admin/create-reviewer', 'POST', {
+      name: document.getElementById('rName').value,
+      email: document.getElementById('rEmail').value,
+      nationalId: document.getElementById('rNid').value,
+      password: document.getElementById('rPass').value,
+    });
+    alertBox.textContent = 'تم إنشاء حساب المراجع بنجاح!';
+    alertBox.className = 'block p-3 rounded-xl text-sm text-center bg-green-100 text-green-800';
+    setTimeout(() => { closeAddReviewerModal(); loadReviewers(); }, 1500);
+  } catch (err) {
+    alertBox.textContent = err.message || 'حدث خطأ';
+    alertBox.className = 'block p-3 rounded-xl text-sm text-center bg-red-100 text-red-800';
+  } finally { btn.disabled = false; btn.textContent = 'إنشاء الحساب'; }
+});
+
+// ===== Settings =====
+const settingLabels = {
+  commissionRate:              'نسبة عمولة المنصة (مثال: 0.02 = 2%)',
+  warrantyCapPercent:          'سقف الضمان كنسبة من المشروع',
+  warrantyCapMaxEGP:           'الحد الأقصى للضمان (ج.م)',
+  premiumPriceEGP:             'سعر اشتراك Premium (ج.م / شهر)',
+  premiumMonthlyCredits:       'نقاط مجانية لمشتركي Premium',
+  creditPackPriceEGP:          'سعر حزمة النقاط (ج.م)',
+  creditPackAmount:            'عدد النقاط في الحزمة',
+  featuredProjectPriceEGP:     'رسوم تمييز المشروع (ج.م)',
+  featuredProjectDurationDays: 'مدة التمييز (أيام)',
+  referralBonusCredits:        'نقاط مكافأة الإحالة',
+};
+
+async function loadSettings() {
+  const el = document.getElementById('settingsFields');
+  el.innerHTML = '<p class="text-gray-400 text-sm">جاري التحميل...</p>';
+  try {
+    const r = await apiFetch('/admin/settings');
+    el.innerHTML = Object.entries(r.settings).map(([key, val]) => `
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">${settingLabels[key] || key}</label>
+        <input type="number" step="any" name="${key}" value="${val}" class="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>`).join('');
+  } catch { el.innerHTML = '<p class="text-red-400 text-sm">تعذر تحميل الإعدادات</p>'; }
+}
+
+document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const alertBox = document.getElementById('settingsAlert');
+  const inputs = e.target.querySelectorAll('input[name]');
+  const settings = {};
+  inputs.forEach(inp => { settings[inp.name] = parseFloat(inp.value); });
+
+  try {
+    await apiFetch('/admin/settings', 'PATCH', { settings });
+    alertBox.textContent = 'تم حفظ الإعدادات بنجاح!';
+    alertBox.className = 'block p-3 rounded-xl text-sm bg-green-100 text-green-800';
+    setTimeout(() => alertBox.className = 'hidden', 3000);
+  } catch (err) {
+    alertBox.textContent = err.message || 'حدث خطأ';
+    alertBox.className = 'block p-3 rounded-xl text-sm bg-red-100 text-red-800';
+  }
+});
+
+// ===== Disputes =====
+async function loadDisputes() {
+  const el = document.getElementById('disputesList');
+  el.innerHTML = '<p class="text-gray-400 text-sm">جاري التحميل...</p>';
+  try {
+    const r = await apiFetch('/admin/disputes?status=disputed');
+    if (!r.disputes?.length) { el.innerHTML = '<p class="text-gray-400 text-sm text-center py-8">لا توجد نزاعات مفتوحة</p>'; return; }
+    el.innerHTML = r.disputes.map(d => `
+      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+        <div class="flex justify-between items-start gap-4 mb-3">
+          <div>
+            <p class="font-bold text-gray-800">${esc(d.project?.title || 'مشروع غير معروف')}</p>
+            <p class="text-sm text-gray-500 mt-0.5">${esc(d.project?.projectType || '')} · ${esc(d.project?.propertyDetails?.governorate || '')}</p>
+          </div>
+          <span class="bg-red-100 text-red-700 text-xs px-3 py-1 rounded-full font-bold whitespace-nowrap">نزاع</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3 text-sm">
+          <div class="bg-gray-50 rounded-lg p-3">
+            <p class="text-xs text-gray-400 mb-0.5">العميل</p>
+            <p class="font-medium text-gray-700">${esc(d.customer?.name || '—')}</p>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3">
+            <p class="text-xs text-gray-400 mb-0.5">المقاول</p>
+            <p class="font-medium text-gray-700">${esc(d.contractor?.name || '—')}</p>
+          </div>
+        </div>
+        <p class="text-xs text-gray-400 mt-3">فتح النزاع: ${d.disputeOpenedAt ? new Date(d.disputeOpenedAt).toLocaleDateString('ar-EG') : '—'} · بواسطة: ${esc(d.disputeOpenedBy?.name || '—')} (${d.disputeOpenedBy?.role || ''})</p>
+        <div class="mt-4 pt-4 border-t border-gray-100">
+          <p class="text-xs text-gray-500 mb-2 font-medium">حل النزاع:</p>
+          <div class="flex gap-2 flex-wrap">
+            <button onclick="resolveDispute('${d._id}','release_to_contractor')" class="text-xs px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">تحرير للمقاول</button>
+            <button onclick="resolveDispute('${d._id}','refund_to_customer')" class="text-xs px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">استرداد للعميل</button>
+            <button onclick="resolveDispute('${d._id}','split')" class="text-xs px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 font-medium">تقسيم</button>
+          </div>
+        </div>
+      </div>`).join('');
+  } catch { el.innerHTML = '<p class="text-red-400 text-sm text-center py-8">تعذر التحميل</p>'; }
+}
+
+async function resolveDispute(escrowId, decision) {
+  const labels = { release_to_contractor: 'تحرير للمقاول', refund_to_customer: 'استرداد للعميل', split: 'تقسيم' };
+  if (!confirm(`هل تريد اتخاذ قرار "${labels[decision]}"؟`)) return;
+  try {
+    await apiFetch(`/payments/escrow/${escrowId}/resolve`, 'POST', { decision });
+    showToast('تم تنفيذ القرار بنجاح');
+    loadDisputes();
+  } catch (e) { showToast(e.message || 'حدث خطأ', true); }
+}
+
+// ===== Projects =====
+async function loadProjects() {
+  const el = document.getElementById('projectsList');
+  el.innerHTML = '<p class="text-gray-400 text-sm">جاري التحميل...</p>';
+  const status = document.getElementById('projStatusFilter').value;
+  const params = new URLSearchParams({ page: projectsPage, limit: 15 });
+  if (status) params.set('status', status);
+  try {
+    const r = await apiFetch(`/admin/projects?${params}`);
+    if (!r.projects?.length) { el.innerHTML = '<p class="text-gray-400 text-sm text-center py-8">لا توجد مشاريع</p>'; return; }
+
+    const statusMap = { open:'مفتوح', awarded:'ممنوح', closed:'مغلق', draft:'مسودة' };
+    const statusColor = { open:'bg-green-100 text-green-700', awarded:'bg-blue-100 text-blue-700', closed:'bg-gray-100 text-gray-600', draft:'bg-yellow-100 text-yellow-700' };
+
+    el.innerHTML = r.projects.map(p => `
+      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex justify-between items-center gap-4">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-1 flex-wrap">
+            <span class="font-bold text-gray-800 truncate">${esc(p.title || 'مشروع بدون عنوان')}</span>
+            <span class="text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[p.status] || 'bg-gray-100 text-gray-600'}">${statusMap[p.status] || p.status}</span>
+          </div>
+          <p class="text-sm text-gray-500">${esc(p.projectType || '')} · ${esc(p.propertyDetails?.governorate || '')}</p>
+          <p class="text-xs text-gray-400 mt-1">صاحب المشروع: ${esc(p.postedBy?.name || '—')} · ${new Date(p.createdAt).toLocaleDateString('ar-EG')}</p>
+        </div>
+        ${p.awardedTo ? `<div class="text-xs text-gray-500 shrink-0 text-left"><p class="font-medium">المقاول:</p><p>${esc(p.awardedTo.name)}</p></div>` : ''}
+      </div>`).join('');
+
+    const pg = r.pagination;
+    const pag = document.getElementById('projectsPagination');
+    if (pg.pages <= 1) { pag.innerHTML = ''; return; }
+    pag.innerHTML = `
+      ${pg.page > 1 ? `<button onclick="projectsPage=${pg.page-1};loadProjects()" class="px-4 py-2 bg-white border rounded-xl text-sm hover:bg-gray-50">السابق</button>` : ''}
+      <span class="px-4 py-2 text-sm text-gray-500">صفحة ${pg.page} من ${pg.pages}</span>
+      ${pg.page < pg.pages ? `<button onclick="projectsPage=${pg.page+1};loadProjects()" class="px-4 py-2 bg-white border rounded-xl text-sm hover:bg-gray-50">التالي</button>` : ''}`;
+  } catch { el.innerHTML = '<p class="text-red-400 text-sm text-center py-8">تعذر التحميل</p>'; }
+}
+
+// ===== Helpers =====
+async function apiFetch(path, method = 'GET', body = null) {
+  const opts = { method, headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } };
+  if (body && method !== 'GET') opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'خطأ');
+  return data;
+}
+
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl shadow-xl text-sm font-medium ${isError ? 'bg-red-600' : 'bg-gray-900'} text-white`;
+  setTimeout(() => t.className = 'hidden', 3000);
+}
+
+function logout() {
+  localStorage.removeItem('token');
+  window.location.href = '../../auth/login.html';
+}
+
+// ===== Sidebar user name =====
+try {
+  const payload = JSON.parse(atob(token.split('.')[1]));
+  document.getElementById('sidebarName').textContent = payload.name || 'المدير الرئيسي';
+} catch {}
+
+// Init
+loadStats();
+</script>
+</body>
+</html>

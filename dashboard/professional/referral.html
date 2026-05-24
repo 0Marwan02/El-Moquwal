@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>برنامج الإحالة | المقاول</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/variables.css">
+  <link rel="stylesheet" href="../../assets/css/base.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/layout.css">
+  <style>
+    /* ====== Referral Hero ====== */
+    .referral-hero {
+      background: linear-gradient(135deg, var(--color-navy-dark) 0%, var(--color-navy) 60%, #1a3a5c 100%);
+      border-radius: var(--radius-lg);
+      padding: var(--space-10) var(--space-10);
+      display: grid; grid-template-columns: 1fr auto; gap: var(--space-10);
+      align-items: center; margin-bottom: var(--space-8);
+      position: relative; overflow: hidden;
+    }
+    .referral-hero::before {
+      content: '';
+      position: absolute; top: -80px; left: -60px;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(244,166,35,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .referral-hero::after {
+      content: '';
+      position: absolute; bottom: -40px; right: 80px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(244,166,35,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .referral-hero-content { position: relative; z-index: 1; }
+    .referral-hero-badge {
+      display: inline-flex; align-items: center; gap: var(--space-2);
+      background: rgba(244,166,35,0.12); border: 1px solid rgba(244,166,35,0.25);
+      border-radius: var(--radius-full); padding: var(--space-2) var(--space-4);
+      font-size: 11px; font-weight: 700; color: var(--color-gold);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: var(--space-4);
+    }
+    .referral-hero h2 {
+      font-size: 30px; font-weight: 900; color: #fff;
+      line-height: 1.25; margin-bottom: var(--space-3);
+    }
+    .referral-hero p {
+      font-size: var(--font-size-base); color: rgba(255,255,255,0.65);
+      line-height: 1.7; max-width: 520px;
+    }
+    .hero-icon {
+      position: relative; z-index: 1;
+      width: 100px; height: 100px;
+      background: rgba(244,166,35,0.12);
+      border: 1px solid rgba(244,166,35,0.25);
+      border-radius: var(--radius-lg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 48px;
+    }
+
+    /* ====== Code Card ====== */
+    .code-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: var(--space-8) var(--space-8);
+      margin-bottom: var(--space-6);
+      box-shadow: var(--shadow-sm);
+    }
+    .code-card-title {
+      font-size: var(--font-size-sm); font-weight: 800;
+      color: var(--text-muted); text-transform: uppercase;
+      letter-spacing: 1px; margin-bottom: var(--space-5);
+    }
+    .code-display {
+      display: flex; align-items: center; gap: var(--space-4);
+      background: var(--color-gold-subtle);
+      border: 2px dashed var(--color-gold);
+      border-radius: var(--radius-sm);
+      padding: var(--space-6) var(--space-8);
+      margin-bottom: var(--space-5);
+    }
+    .code-value {
+      flex: 1;
+      font-size: 42px; font-weight: 900;
+      color: var(--color-navy-dark);
+      letter-spacing: 0.35em;
+      font-variant-numeric: tabular-nums;
+    }
+    .code-copy-btn {
+      display: flex; align-items: center; gap: var(--space-2);
+      padding: var(--space-3) var(--space-5);
+      background: var(--color-navy); color: #fff;
+      border: none; border-radius: var(--radius-sm);
+      font-family: var(--font-main); font-size: 13px; font-weight: 700;
+      cursor: pointer; transition: all var(--transition-base);
+      white-space: nowrap;
+    }
+    .code-copy-btn:hover { background: var(--color-navy-dark); transform: translateY(-1px); }
+    .code-copy-btn.copied { background: var(--color-success); }
+    .code-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+    .code-share-btn {
+      display: flex; align-items: center; gap: var(--space-2);
+      padding: var(--space-3) var(--space-5);
+      background: transparent;
+      border: 1.5px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-family: var(--font-main); font-size: 13px; font-weight: 700;
+      cursor: pointer; transition: all var(--transition-base);
+    }
+    .code-share-btn:hover { border-color: var(--color-navy); color: var(--color-navy); }
+
+    /* ====== Steps ====== */
+    .steps-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-5); margin-bottom: var(--space-8);
+    }
+    .step-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: var(--space-7) var(--space-6);
+      text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .step-card::before {
+      content: attr(data-step);
+      position: absolute; top: -10px; right: -10px;
+      font-size: 80px; font-weight: 900;
+      color: var(--color-gold); opacity: 0.06;
+      line-height: 1;
+    }
+    .step-emoji { font-size: 36px; margin-bottom: var(--space-4); display: block; }
+    .step-title { font-size: var(--font-size-sm); font-weight: 800; color: var(--color-navy); margin-bottom: var(--space-2); }
+    .step-desc { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+
+    /* ====== Apply Code ====== */
+    .apply-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: var(--space-8);
+      margin-bottom: var(--space-8);
+      box-shadow: var(--shadow-sm);
+    }
+    .apply-card-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: var(--space-4); margin-bottom: var(--space-6);
+    }
+    .apply-card-title { font-size: 18px; font-weight: 800; color: var(--color-navy); }
+    .apply-card-sub { font-size: 13px; color: var(--text-muted); margin-top: var(--space-1); }
+    .apply-input-row { display: flex; gap: var(--space-3); }
+    .apply-input {
+      flex: 1;
+      padding: 14px var(--space-5);
+      border: 1.5px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-main); font-size: 16px; font-weight: 800;
+      color: var(--color-navy); text-transform: uppercase; letter-spacing: 0.3em;
+      background: var(--bg-page); outline: none;
+      transition: border-color var(--transition-fast);
+    }
+    .apply-input:focus { border-color: var(--color-gold); box-shadow: 0 0 0 3px rgba(244,166,35,0.12); }
+    .apply-input::placeholder { text-transform: none; letter-spacing: normal; font-weight: 500; color: var(--text-disabled); }
+    .apply-btn {
+      padding: 14px var(--space-8);
+      background: var(--color-gold); color: var(--color-navy-dark);
+      border: none; border-radius: var(--radius-sm);
+      font-family: var(--font-main); font-size: 14px; font-weight: 900;
+      cursor: pointer; transition: all var(--transition-base); white-space: nowrap;
+    }
+    .apply-btn:hover:not(:disabled) { background: var(--color-gold-dark); box-shadow: var(--shadow-gold); transform: translateY(-2px); }
+    .apply-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* ====== Success applied state ====== */
+    .applied-success {
+      display: flex; align-items: center; gap: var(--space-3);
+      background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25);
+      border-radius: var(--radius-sm); padding: var(--space-4) var(--space-5);
+      color: var(--color-success); font-weight: 700; font-size: 14px;
+    }
+
+    /* ====== Alert ====== */
+    .alert-box {
+      display: none; padding: 12px 16px; border-radius: var(--radius-sm);
+      font-size: 13px; font-weight: 700; margin-bottom: var(--space-4); line-height: 1.6;
+    }
+    .alert-box.success { display: block; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.3); color: var(--color-success); }
+    .alert-box.error   { display: block; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); color: var(--color-error); }
+
+    /* spinner */
+    .spinner-sm {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2.5px solid rgba(15,23,42,0.15);
+      border-top-color: var(--color-navy-dark);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    .spinner-sm.gold { border-color: rgba(244,166,35,0.25); border-top-color: var(--color-gold-dark); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ====== Responsive ====== */
+    @media (max-width: 768px) {
+      .referral-hero { grid-template-columns: 1fr; }
+      .hero-icon { display: none; }
+      .steps-grid { grid-template-columns: 1fr; }
+      .apply-input-row { flex-direction: column; }
+      .code-display { flex-direction: column; align-items: flex-start; gap: var(--space-3); }
+      .code-value { font-size: 30px; }
+    }
+  </style>
+</head>
+<body class="dashboard-page">
+<div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+<div class="dashboard-wrapper">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebarNode"></aside>
+
+  <!-- Main -->
+  <main class="dashboard-main">
+    <div class="dashboard-topbar" id="topbarNode"></div>
+
+    <div class="dashboard-content">
+      <div class="page-head" style="margin-bottom: var(--space-8);">
+        <h2 class="section-title">برنامج الإحالة</h2>
+        <p style="color:var(--text-muted); font-size:var(--font-size-sm);">
+          ادعُ زملاءك وابن شبكتك — كل إحالة تمنحك نقاطاً تستخدمها في تقديم العروض.
+        </p>
+      </div>
+
+      <!-- Hero -->
+      <div class="referral-hero">
+        <div class="referral-hero-content">
+          <div class="referral-hero-badge">🎁 برنامج الإحالة</div>
+          <h2>ادعُ زملاءك واكسب نقاطاً مجاناً</h2>
+          <p>شارك كودك مع أي مقاول تعرفه — عند تسجيله وتطبيق الكود، تحصل تلقائياً على نقاط إضافية تساعدك في تقديم المزيد من العروض والفوز بمشاريع جديدة.</p>
+        </div>
+        <div class="hero-icon">🎁</div>
+      </div>
+
+      <!-- My Code -->
+      <div class="code-card">
+        <div class="code-card-title">كود الإحالة الخاص بك</div>
+        <div id="codeContent">
+          <div style="text-align:center; padding:var(--space-8); color:var(--text-muted);">
+            <div class="spinner-sm gold" style="margin: 0 auto 10px;"></div>
+            جاري تحميل الكود...
+          </div>
+        </div>
+      </div>
+
+      <!-- How It Works -->
+      <div class="steps-grid">
+        <div class="step-card" data-step="1">
+          <span class="step-emoji">📤</span>
+          <div class="step-title">شارك كودك</div>
+          <div class="step-desc">أرسل كودك الشخصي لأي مقاول تعرفه عبر واتساب أو سوشيال ميديا</div>
+        </div>
+        <div class="step-card" data-step="2">
+          <span class="step-emoji">✅</span>
+          <div class="step-title">ينضم بكودك</div>
+          <div class="step-desc">يسجّل زميلك في المنصة ويُطبّق كودك في صفحة الإحالة بعد التسجيل</div>
+        </div>
+        <div class="step-card" data-step="3">
+          <span class="step-emoji">💎</span>
+          <div class="step-title">تكسب نقاطاً</div>
+          <div class="step-desc">تُضاف نقاط مكافأة لرصيدك تلقائياً — تستخدمها فوراً في تقديم العروض</div>
+        </div>
+      </div>
+
+      <!-- Apply Code -->
+      <div class="apply-card">
+        <div class="apply-card-header">
+          <div>
+            <div class="apply-card-title">لديك كود إحالة؟ طبّقه الآن</div>
+            <div class="apply-card-sub">يمكنك تطبيق كود إحالة مرة واحدة فقط. الكود لا يسري إن كنت قد طبّقت كوداً من قبل.</div>
+          </div>
+          <div style="font-size: 28px;">🏷️</div>
+        </div>
+        <div class="alert-box" id="applyAlert"></div>
+        <div id="applyArea">
+          <div class="apply-input-row">
+            <input
+              type="text" id="codeInput"
+              class="apply-input"
+              placeholder="أدخل الكود هنا..." maxlength="6"
+              inputmode="text" autocomplete="off"
+              oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"
+            >
+            <button class="apply-btn" id="applyBtn" onclick="applyCode()">
+              تطبيق الكود
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="../../assets/js/api.js"></script>
+<script>
+/* ============================================================
+   referral.js (inline)
+   ============================================================ */
+
+/* ---- Toast ---- */
+function showToast(message, type = 'success') {
+  const stack = document.getElementById('toastStack');
+  if (!stack) return;
+  const icons = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
+  const t = ['success','error','info','warning'].includes(type) ? type : 'success';
+  const toast = document.createElement('div');
+  toast.className = `toast-item toast-${t}`;
+  toast.innerHTML = `
+    <span class="toast-icon">${icons[t]}</span>
+    <div class="toast-body"><div class="toast-msg">${message}</div></div>
+    <button class="toast-close" onclick="this.closest('.toast-item').remove()">×</button>`;
+  stack.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('toast-exit');
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+
+/* ---- Auth Guard ---- */
+if (!localStorage.getItem('elm_user') || !localStorage.getItem('elm_accessToken')) {
+  window.location.href = '../../auth/login.html';
+}
+
+/* ---- Sidebar / Topbar ---- */
+(function injectLayout() {
+  const user = JSON.parse(localStorage.getItem('elm_user') || '{}');
+  const initial = (user.name || 'م').charAt(0);
+
+  document.getElementById('sidebarNode').innerHTML = `
+    <div class="sidebar-header">
+      <div class="sidebar-logo-mark">
+        <img src="../../assets/images/logo.png" alt="المقاول">
+      </div>
+      <div class="sidebar-logo-text">المقاول</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="sidebar-avatar">${initial}</div>
+      <div class="sidebar-user-info">
+        <div class="name">${user.name || '...'}</div>
+        <div class="role">مقاول</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">الرئيسية</div>
+      <a href="index.html" class="sidebar-item">
+        <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        لوحة التحكم
+      </a>
+      <div class="sidebar-section-label">المشاريع</div>
+      <a href="browse-projects.html" class="sidebar-item">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        تصفح المشاريع
+      </a>
+      <a href="project-detail.html" class="sidebar-item">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1v5h5l-5-5zM6 20V4h6v6h6v10H6z"/></svg>
+        تفاصيل المشروع
+      </a>
+      <div class="sidebar-section-label">حسابي</div>
+      <a href="buy-credits.html" class="sidebar-item">
+        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+        شحن الرصيد
+      </a>
+      <a href="subscription.html" class="sidebar-item">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        الاشتراك المميز
+      </a>
+      <a href="portfolio-upload.html" class="sidebar-item">
+        <svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.07-.44.18-.88.18-1.35C18 2.99 16.01 1 13.65 1c-1.3 0-2.48.56-3.33 1.44L9 3.77l-1.32-1.33C6.83 1.56 5.65 1 4.35 1 1.99 1 0 2.99 0 5.35c0 .47.1.91.18 1.35H0c-1.11 0-2 .89-2 2l.01 11c0 1.11.89 2 2 2h20c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2z"/></svg>
+        معرض الأعمال
+      </a>
+      <a href="materials.html" class="sidebar-item">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        سوق المواد
+      </a>
+      <a href="referral.html" class="sidebar-item active">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        الإحالة
+      </a>
+    </nav>
+    <div class="sidebar-cta">
+      <button class="btn btn-ghost-light btn-full" id="logoutBtn">
+        <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+        تسجيل الخروج
+      </button>
+    </div>`;
+
+  document.getElementById('topbarNode').innerHTML = `
+    <div class="topbar-left">
+      <button class="topbar-menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('open')" aria-label="قائمة">
+        <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+      </button>
+      <div class="topbar-breadcrumb">
+        <span>الرئيسية</span>
+        <svg viewBox="0 0 24 24" style="transform:rotate(180deg)"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
+        <span class="topbar-current">برنامج الإحالة</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-avatar">${initial}</div>
+    </div>`;
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    localStorage.removeItem('elm_user');
+    localStorage.removeItem('elm_accessToken');
+    window.location.href = '../../auth/login.html';
+  });
+})();
+
+/* ---- Load Referral Code ---- */
+async function loadCode() {
+  const container = document.getElementById('codeContent');
+  try {
+    const data = await window.api.fetch('/referral/code');
+    const code = data.referralCode || '------';
+    container.innerHTML = `
+      <div class="code-display">
+        <div class="code-value" id="codeValue">${code}</div>
+        <button class="code-copy-btn" id="copyBtn" onclick="copyCode('${code}')">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+          </svg>
+          نسخ الكود
+        </button>
+      </div>
+      <div class="code-actions">
+        <button class="code-share-btn" onclick="shareCode('${code}')">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
+          </svg>
+          مشاركة
+        </button>
+        <span style="font-size: 12px; color: var(--text-muted); display:flex; align-items:center; gap: var(--space-1);">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="color:var(--color-gold)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          أرسل الكود لزملائك المقاولين وكل إحالة ناجحة تمنحك نقاطاً مجانية
+        </span>
+      </div>`;
+  } catch (e) {
+    container.innerHTML = `
+      <div style="padding: var(--space-5); background: rgba(239,68,68,0.06); border-radius: var(--radius-sm); color: var(--color-error); font-size: 13px; text-align:center;">
+        ⚠️ ${e.message || 'تعذّر تحميل الكود — تحقق من اتصالك وأعد تحميل الصفحة'}
+      </div>`;
+  }
+}
+
+/* ---- Copy Code ---- */
+function copyCode(code) {
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = document.getElementById('copyBtn');
+    if (!btn) return;
+    const orig = btn.innerHTML;
+    btn.classList.add('copied');
+    btn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> تم النسخ!`;
+    showToast('تم نسخ كود الإحالة', 'success');
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = orig;
+    }, 2200);
+  }).catch(() => {
+    showToast(`الكود: ${code}`, 'info');
+  });
+}
+
+/* ---- Share Code ---- */
+function shareCode(code) {
+  const text = `🏗️ انضم إلى منصة المقاول وابدأ في تلقي مشاريع البناء بمصر!\n\nاستخدم كود الإحالة الخاص بي بعد التسجيل: ${code}\n\n🔗 https://el-moquwal.com`;
+  if (navigator.share) {
+    navigator.share({
+      title: 'دعوة لمنصة المقاول 🏗️',
+      text,
+    }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(text)
+      .then(() => showToast('تم نسخ رسالة المشاركة!', 'success'))
+      .catch(() => showToast(text, 'info'));
+  }
+}
+
+/* ---- Apply Code ---- */
+async function applyCode() {
+  const input = document.getElementById('codeInput');
+  const btn = document.getElementById('applyBtn');
+  const alertBox = document.getElementById('applyAlert');
+  const code = (input.value || '').trim().toUpperCase();
+
+  // Reset alert
+  alertBox.className = 'alert-box';
+  alertBox.textContent = '';
+
+  if (!code || code.length !== 6) {
+    alertBox.textContent = 'الكود يجب أن يتكوّن من 6 أحرف وأرقام بالضبط.';
+    alertBox.className = 'alert-box error';
+    input.focus();
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'جاري التطبيق...';
+
+  try {
+    const result = await window.api.fetch('/referral/apply', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    });
+    showToast(result.message || 'تم تطبيق الكود بنجاح!', 'success');
+    document.getElementById('applyArea').innerHTML = `
+      <div class="applied-success">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" style="flex-shrink:0;">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>
+        ${result.message || 'تم تطبيق كود الإحالة بنجاح وأُضيفت النقاط للمُحيل'}
+      </div>`;
+  } catch (err) {
+    alertBox.textContent = err.message || 'حدث خطأ، يُرجى المحاولة مرة أخرى.';
+    alertBox.className = 'alert-box error';
+    btn.disabled = false;
+    btn.textContent = 'تطبيق الكود';
+  }
+}
+
+/* ---- Init ---- */
+loadCode();
+</script>
+</body>
+</html>

@@ -14,6 +14,7 @@ const CreditLedger = require('../src/models/CreditLedger');
 const { connectDB } = require('../src/config/db');
 
 const crypto = require('crypto');
+const SuperAdminProfile = require('../src/models/SuperAdminProfile');
 
 // helper for hashing NID to match auth controller
 function hashNID(nid) {
@@ -42,9 +43,24 @@ async function seed() {
     const password = '123456ABC';
     const passwordHash = await argon2.hash(password);
 
-    console.log('👤 Creating Admin...');
+    console.log('👤 Creating Admins...');
+    const superAdmin = await SuperAdminProfile.create({
+      name: 'المدير الرئيسي',
+      email: 'super@elmoquwal.com',
+      phone: '01000000000',
+      passwordHash,
+      role: 'super_admin',
+      status: 'active',
+      nationalIdHash: hashNID('29001011234500'),
+      nationalIdLast4: '4500',
+      dob: new Date('1990-01-01'),
+      gender: 'male',
+      governorateCode: '01',
+      governorate: 'القاهرة',
+    });
+
     const admin = await AdminProfile.create({
-      name: 'مدير النظام',
+      name: 'أحمد المراجع',
       email: 'admin@elmoquwal.com',
       phone: '01011112222',
       passwordHash,
@@ -52,11 +68,12 @@ async function seed() {
       status: 'active',
       nationalIdHash: hashNID('29001011234567'),
       nationalIdLast4: '4567',
-      dob: new Date('1990-01-01'),
+      dob: new Date('1992-01-01'),
       gender: 'male',
       governorateCode: '01',
       governorate: 'القاهرة',
-      permissions: ['manage_users', 'manage_projects', 'view_reports']
+      permissions: ['review_contractors', 'view_projects', 'view_stats', 'manage_disputes'],
+      createdBySuperAdmin: superAdmin._id,
     });
 
     console.log('👤 Creating Customers...');

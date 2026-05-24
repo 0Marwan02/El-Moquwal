@@ -20,6 +20,12 @@ const bidRoutes = require('./src/routes/bid.routes');
 const uploadRoutes = require('./src/routes/upload.routes');
 const billingRoutes = require('./src/routes/billing.routes');
 const aiRoutes = require('./src/routes/ai.routes');
+const portfolioRoutes = require('./src/routes/portfolio.routes');
+const referralRoutes = require('./src/routes/referral.routes');
+const materialRoutes = require('./src/routes/material.routes');
+const contractRoutes = require('./src/routes/contract.routes');
+const paymentRoutes = require('./src/routes/payment.routes');
+const subscriptionRoutes = require('./src/routes/subscription.routes');
 
 const { errorHandler, notFound } = require('./src/middleware/errorHandler');
 const { generalLimiter } = require('./src/middleware/rateLimit');
@@ -102,6 +108,12 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/portfolio', portfolioRoutes);
+app.use('/api/referral', referralRoutes);
+app.use('/api/materials', materialRoutes);
+app.use('/api/contracts', contractRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
 
 // صور المشاريع المخزنة على القرص — للعرض في الواجهة
 app.use('/uploads', express.static(path.resolve(env.UPLOADS_DIR)));

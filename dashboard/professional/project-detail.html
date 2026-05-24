@@ -227,11 +227,8 @@
 
     <aside class="sidebar">
       <div class="sidebar-header">
-        <div class="sidebar-logo-mark" style="display:flex;align-items:center;justify-content:center;">
-          <svg viewBox="0 0 24 24">
-            <path
-              d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z" />
-          </svg>
+        <div class="sidebar-logo-mark">
+          <img src="../../assets/images/logo.png" alt="المقاول">
         </div>
         <div class="sidebar-logo-text">المقاول</div>
       </div>
@@ -470,7 +467,13 @@
                 </div>
                 <div class="form-field">
                   <label for="bidMessage">رسالة للعميل</label>
-                  <textarea id="bidMessage" name="message" required placeholder="اشرح خبرتك وطريقة التنفيذ..."></textarea>
+                  <div style="margin-bottom:var(--space-2);">
+                    <button type="button" id="aiDraftBtn" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:linear-gradient(135deg,var(--color-navy-dark),var(--color-navy));color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--font-main);font-size:12px;font-weight:700;cursor:pointer;transition:opacity .2s;">
+                      <span>✨</span> صياغة بالذكاء الاصطناعي
+                    </button>
+                  </div>
+                  <textarea id="bidMessage" name="message" required placeholder="اشرح خبرتك وطريقة التنفيذ..." rows="5"></textarea>
+                  <div id="aiDraftTips" style="display:none; margin-top:8px; padding:10px 14px; background:rgba(244,166,35,0.08); border:1px solid rgba(244,166,35,0.25); border-radius:var(--radius-sm); font-size:12px; color:var(--text-muted);"></div>
                 </div>
                 <button type="submit" class="btn btn-primary btn-full" id="bidFormSubmit">إرسال العرض</button>
               </form>
@@ -500,6 +503,39 @@
             </div>
             ${bidPanelHtml}
           </div>`;
+
+        // ===== AI Bid Drafter =====
+        const aiDraftBtn = document.getElementById('aiDraftBtn');
+        if (aiDraftBtn) {
+          aiDraftBtn.addEventListener('click', async () => {
+            aiDraftBtn.disabled = true;
+            aiDraftBtn.innerHTML = '⏳ جاري الصياغة...';
+            try {
+              const res = await window.api.fetch('/ai/bid-draft', {
+                method: 'POST',
+                body: JSON.stringify({ projectId }),
+              });
+              const draft = res.draft;
+              if (draft?.message) {
+                const msgEl = document.getElementById('bidMessage');
+                if (msgEl) msgEl.value = draft.message;
+                const durEl = document.getElementById('bidDuration');
+                if (durEl && draft.suggestedDurationDays) durEl.value = draft.suggestedDurationDays;
+                const tipsEl = document.getElementById('aiDraftTips');
+                if (tipsEl && draft.tips?.length) {
+                  tipsEl.style.display = 'block';
+                  tipsEl.innerHTML = '<strong>💡 نصائح:</strong> ' + draft.tips.map(t => escapeHtml(t)).join(' · ');
+                }
+                showToast('تمت الصياغة بنجاح — راجع الرسالة وعدّلها حسب خبرتك', 'success');
+              }
+            } catch (err) {
+              showToast(err.message || 'تعذر صياغة العرض', 'error');
+            } finally {
+              aiDraftBtn.disabled = false;
+              aiDraftBtn.innerHTML = '<span>✨</span> صياغة بالذكاء الاصطناعي';
+            }
+          });
+        }
 
         const form = document.getElementById('bidForm');
         if (form) {

@@ -33,11 +33,44 @@ async function requireAuth(req, res, next) {
 }
 
 // factory bey3ml guard bel role — mesalan requireRole('admin')
+// super_admin counts as admin too (backward compatible)
 function requireRole(...roles) {
   return (req, res, next) => {
     if (!req.user) return next(new AppError('غير مصرح', 401, 'UNAUTHORIZED'));
-    if (!roles.includes(req.user.role)) {
+    const effectiveRoles = [...roles];
+    if (effectiveRoles.includes('admin')) effectiveRoles.push('super_admin');
+    if (!effectiveRoles.includes(req.user.role)) {
       return next(new AppError('غير مصرح بالوصول', 403, 'FORBIDDEN'));
+    }
+    next();
+  };
+}
+
+// super_admin only — for creating/managing other admins
+function requireSuperAdmin(req, res, next) {
+  if (!req.user) return next(new AppError('غير مصرح', 401, 'UNAUTHORIZED'));
+  if (req.user.role !== 'super_admin') {
+    return next(new AppError('هذا الإجراء متاح فقط للمدير الرئيسي', 403, 'SUPER_ADMIN_ONLY'));
+  }
+  next();
+}
+
+// granular permission guard — super_admin bypasses, admin must have the permission
+// usage: requirePermission('review_contractors') or requirePermission('manage_disputes')
+function requirePermission(...perms) {
+  return (req, res, next) => {
+    if (!req.user) return next(new AppError('غير مصرح', 401, 'UNAUTHORIZED'));
+    // super_admin has unrestricted access — bypass all permission checks
+    if (req.user.role === 'super_admin') return next();
+    // regular admin — verify each required permission exists in the user's permissions array
+    const userPerms = Array.isArray(req.user.permissions) ? req.user.permissions : [];
+    const missing = perms.filter(p => !userPerms.includes(p));
+    if (missing.length > 0) {
+      return next(new AppError(
+        `ليس لديك صلاحية لهذا الإجراء (مطلوب: ${missing.join(', ')})`,
+        403,
+        'INSUFFICIENT_PERMISSIONS',
+      ));
     }
     next();
   };
@@ -72,4 +105,4 @@ async function optionalAuth(req, res, next) {
   }
 }
 
-module.exports = { requireAuth, requireRole, requireApproved, optionalAuth };
+module.exports = { requireAuth, requireRole, requireSuperAdmin, requirePermission, requireApproved, optionalAuth };

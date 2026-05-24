@@ -340,11 +340,8 @@
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <div class="sidebar-logo-mark" style="display:flex;align-items:center;justify-content:center;">
-          <svg viewBox="0 0 24 24">
-            <path
-              d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z" />
-          </svg>
+        <div class="sidebar-logo-mark">
+          <img src="../../assets/images/logo.png" alt="المقاول">
         </div>
         <div class="sidebar-logo-text">المقاول</div>
       </div>
@@ -563,7 +560,10 @@
       <div class="project-block" id="proj-${project._id}">
         <div class="project-header" onclick="toggleBlock('${project._id}')">
           <div>
-            <div class="project-title">${project.title}</div>
+            <div class="project-title">
+              ${project.isFeatured ? '<span style="color:var(--color-gold);margin-left:4px;" title="مشروع مميز">⭐</span>' : ''}
+              ${project.title}
+            </div>
             <div class="project-meta">
               ${TYPE_LABELS[project.projectType] || ''} •
               ${project.propertyDetails?.governorate || ''} •
@@ -574,6 +574,9 @@
           <div class="project-badges">
             <span class="badge-count">${bidsCount} عرض</span>
             <span class="badge-status ${project.status}">${statusLabel}</span>
+            ${!project.isFeatured && project.status === 'open'
+              ? `<button onclick="event.stopPropagation();boostProject('${project._id}')" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#92400e;font-family:inherit;font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;cursor:pointer;" title="تمييز المشروع">⭐ تمييز</button>`
+              : ''}
             <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M6 9l6 6 6-6"/>
             </svg>
@@ -635,12 +638,100 @@
         try {
           const data = await window.api.fetch(`/projects/${project._id}/bids`);
           const bidsDiv = document.getElementById(`bids-${project._id}`);
-          if (bidsDiv) bidsDiv.innerHTML = renderBids(data.bids, project);
+          
+          let aiButtons = '';
+          if (project.status === 'open' && data.bids && data.bids.length > 1) {
+            aiButtons = `
+              <div style="padding: 10px 24px; background: #f0fdf4; border-bottom: 1px solid #d1fae5; display: flex; gap: 10px;">
+                <button onclick="compareBids('${project._id}')" class="btn btn-sm btn-outline" style="border-color:#10b981; color:#047857;">🤖 مقارنة العروض (AI)</button>
+                ${data.bids.length >= 3 ? `<button onclick="detectAnomalies('${project._id}')" class="btn btn-sm btn-outline" style="border-color:#f59e0b; color:#b45309;">🚨 فحص الشذوذ (AI)</button>` : ''}
+              </div>
+            `;
+          }
+
+          if (bidsDiv) bidsDiv.innerHTML = aiButtons + renderBids(data.bids, project);
         } catch (err) {
           const bidsDiv = document.getElementById(`bids-${project._id}`);
           if (bidsDiv) bidsDiv.innerHTML = `<div class="no-bids-msg">❌ فشل تحميل العروض</div>`;
         }
       }
+
+      // ====== AI Compare Bids ======
+      window.compareBids = async function (projectId) {
+        showToast('جاري تحليل العروض بالذكاء الاصطناعي...', 'info');
+        try {
+          const data = await window.api.fetch('/ai/compare-bids', {
+            method: 'POST',
+            body: JSON.stringify({ projectId }),
+          });
+          const rec = data.recommendation || data;
+          // Show inline instead of alert
+          const bidsDiv = document.getElementById(`bids-${projectId}`);
+          if (bidsDiv) {
+            const existing = bidsDiv.querySelector('.ai-comparison-result');
+            if (existing) existing.remove();
+            const div = document.createElement('div');
+            div.className = 'ai-comparison-result';
+            div.style.cssText = 'margin:12px 24px; padding:16px; background:linear-gradient(135deg,var(--color-navy-dark),var(--color-navy)); border-radius:var(--radius-md); color:#fff;';
+            div.innerHTML = `
+              <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.5);margin-bottom:8px;">🤖 توصية الذكاء الاصطناعي</div>
+              <div style="font-weight:700;color:var(--color-gold);margin-bottom:8px;">${rec.recommendedBidder ? 'المقاول الموصى به: ' + rec.recommendedBidder : 'تم التحليل'}</div>
+              <div style="font-size:13px;line-height:1.7;color:rgba(255,255,255,0.85);">${rec.reason || JSON.stringify(rec)}</div>
+            `;
+            bidsDiv.prepend(div);
+          }
+          showToast('تم تحليل العروض بنجاح', 'success');
+        } catch(e) { showToast(e.message || 'فشل التحليل', 'error'); }
+      };
+
+      // ====== AI Detect Anomalies ======
+      window.detectAnomalies = async function (projectId) {
+        showToast('جاري فحص شذوذ الأسعار...', 'info');
+        try {
+          const data = await window.api.fetch('/ai/detect-anomalies', {
+            method: 'POST',
+            body: JSON.stringify({ projectId }),
+          });
+          const bidsDiv = document.getElementById(`bids-${projectId}`);
+          if (bidsDiv) {
+            const existing = bidsDiv.querySelector('.ai-anomaly-result');
+            if (existing) existing.remove();
+            const div = document.createElement('div');
+            div.className = 'ai-anomaly-result';
+            const hasAnomalies = data.hasAnomalies || (data.anomalies?.length > 0);
+            div.style.cssText = `margin:12px 24px; padding:14px; background:${hasAnomalies ? 'rgba(239,68,68,0.08)' : 'rgba(16,185,129,0.08)'}; border:1px solid ${hasAnomalies ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)'}; border-radius:var(--radius-sm); font-size:13px;`;
+            if (hasAnomalies) {
+              let msg = '<strong style="color:var(--color-error);">🚨 تم اكتشاف أسعار شاذة:</strong><ul style="margin-top:8px;padding-right:16px;">';
+              (data.anomalies || []).forEach(a => {
+                msg += `<li>${a.amount ? a.amount.toLocaleString('ar-EG') + ' ج.م — ' : ''}${a.type === 'too_low' ? 'منخفض جداً' : 'مرتفع جداً'}: ${a.explanation || ''}</li>`;
+              });
+              msg += '</ul>';
+              div.innerHTML = msg;
+            } else {
+              div.innerHTML = '<span style="color:var(--color-success);">✅ جميع العروض في النطاق الطبيعي ولا يوجد شذوذ.</span>';
+            }
+            bidsDiv.prepend(div);
+          }
+          showToast(data.hasAnomalies ? 'تم اكتشاف أسعار شاذة!' : 'لا توجد أسعار شاذة', data.hasAnomalies ? 'warning' : 'success');
+        } catch(e) { showToast(e.message || 'فشل الفحص', 'error'); }
+      };
+
+      // ====== Boost Project (Feature) ======
+      window.boostProject = async function (projectId) {
+        const confirmBoost = confirm('تمييز مشروعك سيجعله يظهر في أعلى القائمة لمدة 30 يوماً.\nالرسوم: 99 ج.م (محاكاة — مجاني للاختبار).\n\nهل تريد المتابعة؟');
+        if (!confirmBoost) return;
+        showToast('جاري تمييز المشروع...', 'info');
+        try {
+          await window.api.fetch('/billing/feature-project', {
+            method: 'POST',
+            body: JSON.stringify({ projectId }),
+          });
+          showToast('✅ تم تمييز مشروعك! سيظهر في أعلى القائمة لمدة 30 يوماً.', 'success');
+          await loadAll();
+        } catch (err) {
+          showToast(err.message || 'تعذّر تمييز المشروع', 'error');
+        }
+      };
 
       // ====== Toggle accordion ======
       window.toggleBlock = function (projectId) {

@@ -192,6 +192,49 @@
           <a href="login.html">سجل دخولك</a>
         </p>
 
+        <!-- ===== OTP Verification Step (hidden initially) ===== -->
+        <div id="otpStep" hidden style="text-align:center;">
+          <div style="width:64px; height:64px; background:rgba(244,166,35,0.1); border:1px solid rgba(244,166,35,0.25); border-radius:50%; display:flex; align-items:center; justify-content:center; margin: 0 auto var(--space-5); font-size:28px;">📧</div>
+          <h3 style="font-size:20px; font-weight:800; color:var(--color-navy); margin-bottom:var(--space-2);">تحقق من بريدك الإلكتروني</h3>
+          <p style="font-size:13px; color:var(--text-muted); margin-bottom:var(--space-6); line-height:1.7;">
+            أرسلنا كود مكون من 6 أرقام إلى بريدك
+            <strong id="otpEmailDisplay" style="color:var(--color-navy);"></strong>
+            <br>صالح لمدة <strong>10 دقائق</strong>
+          </p>
+
+          <div class="auth-alert" id="otpAlert" role="alert"></div>
+
+          <div style="margin-bottom:var(--space-5);">
+            <label class="auth-label" style="display:block; margin-bottom:var(--space-2);">كود التفعيل</label>
+            <input
+              class="input"
+              type="text"
+              id="otpCode"
+              maxlength="6"
+              inputmode="numeric"
+              pattern="\d{6}"
+              placeholder="_ _ _ _ _ _"
+              dir="ltr"
+              style="text-align:center; font-size:28px; font-weight:900; letter-spacing:12px; padding: 16px 20px;">
+          </div>
+
+          <button type="button" class="btn btn-primary btn-full btn-lg" id="otpVerifyBtn">
+            <span class="btn-label">تفعيل الحساب</span>
+            <span class="auth-btn-dots" hidden><span></span><span></span><span></span></span>
+          </button>
+
+          <div style="margin-top:var(--space-5);">
+            <p style="font-size:13px; color:var(--text-muted);">
+              لم يصلك الكود؟
+              <button type="button" id="otpResendBtn" style="background:none; border:none; color:var(--color-gold-dark); font-weight:700; cursor:pointer; font-family:var(--font-main); font-size:13px; padding:0;">إعادة الإرسال</button>
+            </p>
+          </div>
+
+          <div style="margin-top:var(--space-4);">
+            <a href="login.html" style="font-size:12px; color:var(--text-muted);">تخطي — تفعيل لاحقاً</a>
+          </div>
+        </div>
+
       </div>
     </div>
 

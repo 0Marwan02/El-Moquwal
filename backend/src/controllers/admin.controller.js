@@ -108,6 +108,9 @@ const listAllProjects = asyncHandler(async (req, res) => {
 
 const User = require('../models/User');
 
+const Escrow = require('../models/Escrow');
+const Transaction = require('../models/Transaction');
+
 const dashboardStats = asyncHandler(async (req, res) => {
   const [
     totalProjects,
@@ -117,6 +120,9 @@ const dashboardStats = asyncHandler(async (req, res) => {
     totalContractors,
     pendingContractors,
     totalCustomers,
+    openDisputes,
+    totalEscrowResult,
+    revenueResult,
   ] = await Promise.all([
     Project.countDocuments(),
     Project.countDocuments({ status: 'open' }),
@@ -125,12 +131,132 @@ const dashboardStats = asyncHandler(async (req, res) => {
     User.countDocuments({ role: 'contractor' }),
     User.countDocuments({ role: 'contractor', status: 'pending' }),
     User.countDocuments({ role: 'customer' }),
+    Escrow.countDocuments({ status: 'disputed' }),
+    Escrow.aggregate([{ $group: { _id: null, total: { $sum: '$totalAmount' } } }]),
+    Transaction.aggregate([
+      { $match: { type: 'commission', status: 'success' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } },
+    ]),
   ]);
 
   res.json({
     projects: { total: totalProjects, open: openProjects, awarded: awardedProjects, closed: closedProjects },
     users: { contractors: totalContractors, pendingContractors, customers: totalCustomers },
+    escrow: {
+      totalVolume: totalEscrowResult[0]?.total || 0,
+      openDisputes,
+    },
+    revenue: {
+      totalCommission: revenueResult[0]?.total || 0,
+    },
   });
 });
 
-module.exports = { listPending, approveContractor, rejectContractor, listAllProjects, dashboardStats };
+// =====================================================
+// SUPER ADMIN — إدارة المراجعين والإعدادات
+// =====================================================
+
+const Admin = require('../models/AdminProfile');
+const PlatformSettings = require('../models/PlatformSettings');
+const { hashPassword } = require('../utils/password');
+
+// POST /api/admin/create-reviewer — super_admin ينشئ أدمن مراجع
+const createReviewer = asyncHandler(async (req, res) => {
+  const { name, email, phone, password, permissions, nationalId } = req.body;
+  if (!name || !email || !password || !nationalId) {
+    throw new AppError('الاسم والبريد وكلمة المرور والرقم القومي مطلوبين', 400, 'VALIDATION_ERROR');
+  }
+
+  const crypto = require('crypto');
+  const nidHash = crypto.createHash('sha256').update(nationalId).digest('hex');
+
+  const existing = await User.findOne({ $or: [{ email }, { nationalIdHash: nidHash }] }).lean();
+  if (existing) throw new AppError('البريد أو الرقم القومي مسجل من قبل', 409, 'DUPLICATE');
+
+  const passwordHash = await hashPassword(password);
+
+  const admin = await Admin.create({
+    name,
+    email: email.toLowerCase().trim(),
+    phone: phone || '01000000000',
+    passwordHash,
+    nationalIdHash: nidHash,
+    nationalIdLast4: nationalId.slice(-4),
+    status: 'active',
+    isEmailVerified: true,
+    permissions: permissions || ['review_contractors', 'view_projects', 'view_stats'],
+    createdBySuperAdmin: req.user._id,
+  });
+
+  logger.info({ adminId: admin._id.toString(), createdBy: req.user._id.toString() }, 'Reviewer admin created');
+  res.status(201).json({ admin: admin.toJSON() });
+});
+
+// GET /api/admin/reviewers — super_admin يشوف كل المراجعين
+const listReviewers = asyncHandler(async (req, res) => {
+  const reviewers = await Admin.find({ role: 'admin' }).sort({ createdAt: -1 }).lean();
+  res.json({ reviewers, total: reviewers.length });
+});
+
+// DELETE /api/admin/reviewers/:id — super_admin يحذف مراجع
+const deleteReviewer = asyncHandler(async (req, res) => {
+  assertValidId(req.params.id);
+  const admin = await Admin.findOne({ _id: req.params.id, role: 'admin' });
+  if (!admin) throw new AppError('المراجع غير موجود', 404, 'NOT_FOUND');
+  await admin.deleteOne();
+  logger.info({ adminId: req.params.id, deletedBy: req.user._id.toString() }, 'Reviewer admin deleted');
+  res.json({ ok: true, message: 'تم حذف المراجع بنجاح' });
+});
+
+// GET /api/admin/settings — عرض إعدادات المنصة
+const getSettings = asyncHandler(async (req, res) => {
+  const settings = await PlatformSettings.getAll();
+  res.json({ settings });
+});
+
+// PATCH /api/admin/settings — تعديل إعدادات المنصة (super_admin فقط)
+const updateSettings = asyncHandler(async (req, res) => {
+  const { settings } = req.body;
+  if (!settings || typeof settings !== 'object') {
+    throw new AppError('الإعدادات مطلوبة', 400, 'VALIDATION_ERROR');
+  }
+
+  const results = {};
+  for (const [key, value] of Object.entries(settings)) {
+    const doc = await PlatformSettings.setSetting(key, value, req.user._id);
+    results[key] = doc.value;
+  }
+
+  logger.info({ adminId: req.user._id.toString(), keys: Object.keys(settings) }, 'Platform settings updated');
+  res.json({ ok: true, settings: results });
+});
+
+// GET /api/admin/disputes — كل النزاعات المفتوحة
+const listDisputes = asyncHandler(async (req, res) => {
+  const { status = 'disputed', page = 1, limit = 20 } = req.query;
+  const filter = {};
+  if (status) filter.status = status;
+
+  const skip = (Number(page) - 1) * Number(limit);
+  const [disputes, total] = await Promise.all([
+    Escrow.find(filter)
+      .populate('project', 'title projectType propertyDetails')
+      .populate('customer', 'name email phone')
+      .populate('contractor', 'name email phone specialty')
+      .populate('disputeOpenedBy', 'name role')
+      .sort({ disputeOpenedAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .lean(),
+    Escrow.countDocuments(filter),
+  ]);
+
+  res.json({ disputes, pagination: { total, page: Number(page), pages: Math.ceil(total / Number(limit)) } });
+});
+
+module.exports = {
+  listPending, approveContractor, rejectContractor,
+  listAllProjects, dashboardStats, listDisputes,
+  createReviewer, listReviewers, deleteReviewer,
+  getSettings, updateSettings,
+};

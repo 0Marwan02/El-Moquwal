@@ -134,6 +134,160 @@
       pointer-events: none;
     }
 
+    /* Contractor detail card enhancements */
+    .doc-preview-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 10px; border-radius: 8px;
+      font-size: 12px; font-weight: 700;
+      cursor: pointer; text-decoration: none;
+      transition: all var(--transition-base);
+      border: 1px solid;
+    }
+    .doc-chip-id {
+      background: rgba(245,158,11,0.08);
+      border-color: rgba(245,158,11,0.25);
+      color: var(--color-gold-dark);
+    }
+    .doc-chip-id:hover { background: rgba(245,158,11,0.16); }
+    .doc-chip-cert {
+      background: rgba(59,130,246,0.08);
+      border-color: rgba(59,130,246,0.2);
+      color: #2563eb;
+    }
+    .doc-chip-cert:hover { background: rgba(59,130,246,0.16); }
+    .doc-chip-card {
+      background: rgba(16,185,129,0.08);
+      border-color: rgba(16,185,129,0.2);
+      color: #059669;
+    }
+    .doc-chip-card:hover { background: rgba(16,185,129,0.16); }
+
+    /* Document viewer modal */
+    .doc-viewer-overlay {
+      position: fixed; inset: 0;
+      background: rgba(2,6,23,0.85);
+      display: none; align-items: center; justify-content: center;
+      z-index: 4000; padding: var(--space-5);
+      backdrop-filter: blur(8px);
+    }
+    .doc-viewer-overlay.visible { display: flex; }
+    .doc-viewer-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      max-width: 720px; width: 100%;
+      max-height: 90vh;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .doc-viewer-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: var(--space-4) var(--space-6);
+      border-bottom: 1px solid var(--border-default);
+      flex-shrink: 0;
+    }
+    .doc-viewer-title { font-size: 15px; font-weight: 800; color: var(--color-navy); }
+    .doc-viewer-close {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--bg-surface-2); border: 1px solid var(--border-default);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: var(--text-muted);
+      transition: all var(--transition-base);
+    }
+    .doc-viewer-close:hover { background: var(--color-error); color: #fff; border-color: var(--color-error); }
+    .doc-viewer-body {
+      flex: 1; overflow: auto;
+      display: flex; align-items: center; justify-content: center;
+      padding: var(--space-4);
+      min-height: 300px;
+    }
+    .doc-viewer-body img {
+      max-width: 100%; max-height: 65vh;
+      border-radius: var(--radius-sm);
+      object-fit: contain;
+    }
+    .doc-viewer-body iframe {
+      width: 100%; height: 60vh;
+      border: none; border-radius: var(--radius-sm);
+    }
+    .doc-viewer-footer {
+      padding: var(--space-4) var(--space-6);
+      border-top: 1px solid var(--border-default);
+      display: flex; gap: var(--space-3); justify-content: flex-end;
+      flex-shrink: 0;
+    }
+
+    /* Contractor detail drawer */
+    .contractor-detail-overlay {
+      position: fixed; inset: 0;
+      background: rgba(2,6,23,0.6);
+      display: none; align-items: center; justify-content: center;
+      z-index: 3500; padding: var(--space-5);
+    }
+    .contractor-detail-overlay.visible { display: flex; }
+    .contractor-detail-box {
+      background: var(--bg-surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      max-width: 640px; width: 100%;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .contractor-detail-head {
+      background: linear-gradient(135deg, var(--color-navy-dark), var(--color-navy));
+      padding: var(--space-6);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      display: flex; align-items: center; gap: var(--space-4);
+    }
+    .detail-avatar {
+      width: 56px; height: 56px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--color-gold), var(--color-gold-dark));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 900; color: var(--color-navy-dark);
+      flex-shrink: 0;
+    }
+    .detail-name { font-size: 18px; font-weight: 900; color: var(--text-on-dark); margin-bottom: 3px; }
+    .detail-specialty { font-size: 13px; color: var(--text-on-dark-muted); }
+    .contractor-detail-body { padding: var(--space-6); }
+    .detail-section { margin-bottom: var(--space-6); }
+    .detail-section-title {
+      font-size: 12px; font-weight: 800;
+      color: var(--text-muted); text-transform: uppercase;
+      letter-spacing: 0.8px; margin-bottom: var(--space-3);
+      display: flex; align-items: center; gap: var(--space-2);
+    }
+    .detail-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border-default); }
+    .detail-row {
+      display: flex; justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid var(--border-default);
+      font-size: 13px;
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row-label { color: var(--text-muted); font-weight: 600; }
+    .detail-row-val { color: var(--color-navy); font-weight: 700; text-align: left; }
+    .detail-docs-grid {
+      display: flex; flex-wrap: wrap; gap: var(--space-3);
+      margin-top: var(--space-3);
+    }
+    .detail-doc-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px;
+      background: var(--bg-surface-2);
+      border: 1.5px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      cursor: pointer; transition: all var(--transition-base);
+      font-size: 13px; font-weight: 700; color: var(--color-navy);
+    }
+    .detail-doc-btn:hover { border-color: var(--color-gold); background: var(--color-gold-subtle); }
+    .detail-doc-btn svg { width: 18px; height: 18px; fill: var(--color-navy); }
+    .detail-doc-btn.missing { opacity: 0.5; cursor: not-allowed; }
+    .detail-actions {
+      display: flex; gap: var(--space-3);
+      padding: var(--space-5) var(--space-6);
+      border-top: 1px solid var(--border-default);
+    }
+
     /* Modal */
     .manager-modal-overlay {
       position: fixed;
@@ -195,8 +349,8 @@
 
     <aside class="sidebar">
       <div class="sidebar-header">
-        <div class="sidebar-logo-mark" style="display:flex;align-items:center;justify-content:center;">
-          <svg viewBox="0 0 24 24"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
+        <div class="sidebar-logo-mark">
+          <img src="../../assets/images/logo.png" alt="المقاول">
         </div>
         <div class="sidebar-logo-text">المقاول</div>
       </div>
@@ -258,6 +412,30 @@
 
   <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 
+  <!-- Document Viewer Modal -->
+  <div class="doc-viewer-overlay" id="docViewerOverlay">
+    <div class="doc-viewer-box">
+      <div class="doc-viewer-header">
+        <span class="doc-viewer-title" id="docViewerTitle">عرض المستند</span>
+        <button class="doc-viewer-close" id="docViewerClose">✕</button>
+      </div>
+      <div class="doc-viewer-body" id="docViewerBody">
+        <div style="color:var(--text-muted);font-size:14px;">جاري التحميل...</div>
+      </div>
+      <div class="doc-viewer-footer">
+        <a id="docViewerOpenLink" href="#" target="_blank" rel="noopener" class="btn btn-outline btn-sm">فتح في تبويب جديد</a>
+        <button class="btn btn-sm" style="background:var(--bg-surface-2);color:var(--color-navy);" id="docViewerCloseBtn">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contractor Detail Drawer -->
+  <div class="contractor-detail-overlay" id="contractorDetailOverlay">
+    <div class="contractor-detail-box" id="contractorDetailBox">
+      <!-- populated by JS -->
+    </div>
+  </div>
+
   <div class="manager-modal-overlay" id="rejectModalOverlay" aria-hidden="true">
     <div class="manager-modal" role="dialog" aria-modal="true" aria-labelledby="rejectModalTitle">
       <h3 id="rejectModalTitle">رفض طلب المقاول</h3>
@@ -273,6 +451,131 @@
   <script src="../../assets/js/api.js"></script>
   <script>
     let pendingContractors = [];
+    const API_BASE = window.__API_BASE__ ||
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:4000'
+        : '');
+
+    // ─── Document viewer ───────────────────────────────────────────
+    function openDocViewer(fileObj, label) {
+      if (!fileObj || !fileObj.filename) return;
+      const url = `${API_BASE}/uploads/${fileObj.filename}`;
+      const isImage = /\.(jpg|jpeg|png|webp)$/i.test(fileObj.filename);
+      const isPdf = /\.pdf$/i.test(fileObj.filename);
+
+      document.getElementById('docViewerTitle').textContent = label;
+      document.getElementById('docViewerOpenLink').href = url;
+
+      const body = document.getElementById('docViewerBody');
+      if (isImage) {
+        body.innerHTML = `<img src="${url}" alt="${label}" loading="lazy">`;
+      } else if (isPdf) {
+        body.innerHTML = `<iframe src="${url}" title="${label}"></iframe>`;
+      } else {
+        body.innerHTML = `<div style="text-align:center;padding:var(--space-8);">
+          <div style="font-size:48px;margin-bottom:var(--space-4);">📄</div>
+          <p style="color:var(--text-muted);">المستند غير قابل للعرض المباشر.</p>
+          <a href="${url}" target="_blank" rel="noopener" class="btn btn-outline btn-sm" style="margin-top:var(--space-4);">تحميل المستند</a>
+        </div>`;
+      }
+
+      document.getElementById('docViewerOverlay').classList.add('visible');
+    }
+
+    function closeDocViewer() {
+      document.getElementById('docViewerOverlay').classList.remove('visible');
+      document.getElementById('docViewerBody').innerHTML = '';
+    }
+
+    document.getElementById('docViewerClose').addEventListener('click', closeDocViewer);
+    document.getElementById('docViewerCloseBtn').addEventListener('click', closeDocViewer);
+    document.getElementById('docViewerOverlay').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('docViewerOverlay')) closeDocViewer();
+    });
+
+    // ─── Contractor detail panel ───────────────────────────────────
+    const SPECIALTY_LABELS = {
+      civil_engineer: 'مهندس مدني', architect: 'مهندس معماري',
+      electrical: 'كهربائي', plumber: 'سباك', carpenter: 'نجار',
+      painter: 'نقّاش', general_contractor: 'مقاول عام',
+      finishing: 'تشطيبات', other: 'أخرى'
+    };
+
+    function openContractorDetail(contractorId) {
+      const c = pendingContractors.find(x => x._id === contractorId);
+      if (!c) return;
+
+      const box = document.getElementById('contractorDetailBox');
+      const regDate = c.createdAt ? new Date(c.createdAt).toLocaleDateString('ar-EG') : '—';
+
+      function docBtnHTML(fileObj, label, icon) {
+        if (!fileObj || !fileObj.filename) {
+          return `<div class="detail-doc-btn missing" title="غير مرفق">
+            ${icon} <span>${label}</span>
+            <span style="font-size:10px;font-weight:600;color:var(--text-light);">(غير مرفق)</span>
+          </div>`;
+        }
+        return `<div class="detail-doc-btn" onclick="openDocViewer(${JSON.stringify(fileObj)}, '${label}')">
+          ${icon} <span>${label}</span>
+        </div>`;
+      }
+
+      box.innerHTML = `
+        <div class="contractor-detail-head">
+          <div class="detail-avatar">${(c.name || '?').charAt(0)}</div>
+          <div>
+            <div class="detail-name">${escapeHtml(c.name || '—')}</div>
+            <div class="detail-specialty">${escapeHtml(SPECIALTY_LABELS[c.specialty] || c.specialty || '—')}</div>
+          </div>
+          <button onclick="closeContractorDetail()" style="margin-right:auto;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);cursor:pointer;color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;">✕</button>
+        </div>
+        <div class="contractor-detail-body">
+          <div class="detail-section">
+            <div class="detail-section-title">البيانات الشخصية</div>
+            <div class="detail-row"><span class="detail-row-label">الاسم</span><span class="detail-row-val">${escapeHtml(c.name || '—')}</span></div>
+            <div class="detail-row"><span class="detail-row-label">البريد الإلكتروني</span><span class="detail-row-val">${escapeHtml(c.email || '—')}</span></div>
+            <div class="detail-row"><span class="detail-row-label">الهاتف</span><span class="detail-row-val">${escapeHtml(c.phone || '—')}</span></div>
+            <div class="detail-row"><span class="detail-row-label">آخر 4 أرقام من الرقم القومي</span><span class="detail-row-val">${escapeHtml(c.nationalIdLast4 || '—')}</span></div>
+            <div class="detail-row"><span class="detail-row-label">التخصص</span><span class="detail-row-val">${escapeHtml(SPECIALTY_LABELS[c.specialty] || c.specialty || '—')}</span></div>
+            <div class="detail-row"><span class="detail-row-label">سنوات الخبرة</span><span class="detail-row-val">${escapeHtml(String(c.yearsOfExperience || 0))} سنة</span></div>
+            <div class="detail-row"><span class="detail-row-label">تاريخ التسجيل</span><span class="detail-row-val">${regDate}</span></div>
+          </div>
+          ${c.bio ? `
+          <div class="detail-section">
+            <div class="detail-section-title">نبذة شخصية</div>
+            <p style="font-size:13px;color:var(--text-muted);line-height:1.8;">${escapeHtml(c.bio)}</p>
+          </div>` : ''}
+          <div class="detail-section">
+            <div class="detail-section-title">المستندات المرفقة</div>
+            <div class="detail-docs-grid">
+              ${docBtnHTML(c.nationalIdPhoto, 'بطاقة الرقم القومي', '🪪')}
+              ${docBtnHTML(c.certificate, 'الشهادة', '🎓')}
+              ${docBtnHTML(c.membershipCard, 'كارنيه النقابة', '🏛️')}
+              ${docBtnHTML(c.profilePicture, 'صورة شخصية', '🖼️')}
+            </div>
+          </div>
+        </div>
+        <div class="detail-actions">
+          <button class="btn btn-primary" onclick="closeContractorDetail(); document.querySelector('.action-btn[data-action=approve][data-id=\\'${c._id}\\']')?.click();">
+            ✓ الموافقة على المقاول
+          </button>
+          <button class="btn btn-outline" style="border-color:var(--color-error);color:var(--color-error);" onclick="closeContractorDetail(); openRejectModal('${c._id}')">
+            ✕ رفض الطلب
+          </button>
+          <button class="btn" style="background:var(--bg-surface-2);color:var(--color-navy);" onclick="closeContractorDetail()">إغلاق</button>
+        </div>
+      `;
+
+      document.getElementById('contractorDetailOverlay').classList.add('visible');
+    }
+
+    function closeContractorDetail() {
+      document.getElementById('contractorDetailOverlay').classList.remove('visible');
+    }
+
+    document.getElementById('contractorDetailOverlay').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('contractorDetailOverlay')) closeContractorDetail();
+    });
 
     function showToast(message, type = 'success') {
       const stack = document.getElementById('toastStack');
@@ -315,60 +618,60 @@
       if (count === 0) {
         body.innerHTML = `<div class="empty-state">
           <div class="empty-state-icon">
-            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            <svg viewBox="0 0 24 24" style="width:32px;height:32px;fill:var(--color-success)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
           </div>
-          <div class="empty-state-text">لا توجد طلبات معلقة الآن</div>
+          <div class="empty-state-text" style="font-size:15px;font-weight:700;color:var(--color-navy);margin-bottom:4px;">
+            لا توجد طلبات معلقة 🎉
+          </div>
+          <div style="font-size:13px;color:var(--text-muted);">جميع طلبات المقاولين تمت مراجعتها</div>
         </div>`;
         return;
       }
 
-      const SPECIALTY_LABELS = {
-        civil_engineer: 'مهندس مدني', architect: 'مهندس معماري',
-        electrical: 'كهربائي', plumber: 'سباك', carpenter: 'نجار',
-        painter: 'نقّاش', general_contractor: 'مقاول عام',
-        finishing: 'تشطيبات', other: 'أخرى'
-      };
-      const API_BASE = window.__API_BASE__ || 'http://localhost:4000';
+      body.innerHTML = pendingContractors.map(c => {
+        const specialty = SPECIALTY_LABELS[c.specialty] || c.specialty || '—';
+        const regDate = c.createdAt ? new Date(c.createdAt).toLocaleDateString('ar-EG') : '—';
+        const hasNID = !!(c.nationalIdPhoto?.filename);
+        const hasCert = !!(c.certificate?.filename);
+        const hasMembership = !!(c.membershipCard?.filename);
+        const docCount = [hasNID, hasCert, hasMembership].filter(Boolean).length;
 
-      function docLink(fileObj, label) {
-        if (!fileObj || !fileObj.filename) return `<span style="color:var(--text-muted);font-size:12px;">—</span>`;
-        const url = `${API_BASE}/uploads/${fileObj.filename}`;
-        return `<a href="${url}" target="_blank" rel="noopener"
-          style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;
-                 color:var(--color-accent);background:rgba(59,130,246,0.08);
-                 border:1px solid rgba(59,130,246,0.2);border-radius:6px;padding:3px 8px;text-decoration:none;">
-          📎 ${label}
-        </a>`;
-      }
-
-      body.innerHTML = pendingContractors.map(c => `
-        <div class="pending-item" style="flex-wrap:wrap;align-items:flex-start;gap:var(--space-3);padding:var(--space-5) var(--space-6);">
-          <div class="pending-item-avatar" style="align-self:center;">${(c.name || '?').charAt(0)}</div>
+        return `
+        <div class="pending-item" style="flex-wrap:wrap;align-items:center;gap:var(--space-3);padding:var(--space-5) var(--space-6);">
+          <div class="pending-item-avatar">${(c.name || '?').charAt(0)}</div>
           <div style="min-width:0;flex:1;">
             <div class="pending-item-name">${escapeHtml(c.name || '—')}</div>
-            <div class="pending-item-meta" style="margin-bottom:var(--space-2);">
-              ${escapeHtml(SPECIALTY_LABELS[c.specialty] || c.specialty || '—')} ·
-              ${escapeHtml(String(c.yearsOfExperience || 0))} سنة خبرة ·
-              ${escapeHtml(c.email || '')} ·
-              ${escapeHtml(c.phone || '')}
+            <div class="pending-item-meta">
+              ${escapeHtml(specialty)} · ${escapeHtml(String(c.yearsOfExperience || 0))} سنة · ${escapeHtml(c.email || '')}
             </div>
-            ${c.bio ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:var(--space-2);">${escapeHtml(c.bio)}</div>` : ''}
-            <div style="display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-2);">
-              ${docLink(c.nationalIdPhoto, 'بطاقة الرقم القومي')}
-              ${c.certificate ? docLink(c.certificate, 'الشهادة') : '<span style="font-size:11px;color:var(--text-muted);">بدون شهادة</span>'}
-              ${c.membershipCard ? docLink(c.membershipCard, 'كارنيه النقابة') : ''}
-              ${c.profilePicture ? docLink(c.profilePicture, 'صورة شخصية') : ''}
-            </div>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:var(--space-2);">
-              آخر 4 أرقام من الرقم القومي: ${escapeHtml(c.nationalIdLast4 || '—')}
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2);margin-top:var(--space-2);">
+              <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;
+                padding:3px 8px;border-radius:6px;
+                background:${hasNID ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)'};
+                color:${hasNID ? 'var(--color-gold-dark)' : 'var(--color-error)'};
+                border:1px solid ${hasNID ? 'rgba(245,158,11,0.25)' : 'rgba(239,68,68,0.25)'};">
+                ${hasNID ? '✓' : '✗'} بطاقة هوية
+              </span>
+              <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;
+                padding:3px 8px;border-radius:6px;
+                background:${hasCert ? 'rgba(59,130,246,0.08)' : 'rgba(148,163,184,0.1)'};
+                color:${hasCert ? '#2563eb' : 'var(--text-light)'};
+                border:1px solid ${hasCert ? 'rgba(59,130,246,0.2)' : 'rgba(148,163,184,0.2)'};">
+                ${hasCert ? '✓' : '—'} شهادة
+              </span>
+              <span style="font-size:11px;color:var(--text-light);">سُجّل: ${regDate}</span>
             </div>
           </div>
-          <div class="pending-item-actions" style="align-self:center;margin-right:0;">
-            <button class="btn btn-sm btn-accept action-btn" data-action="approve" data-id="${c._id}">✓ موافقة</button>
+          <div class="pending-item-actions" style="margin-right:0;flex-wrap:wrap;gap:var(--space-2);">
+            <button class="btn btn-sm" style="background:var(--bg-surface-2);color:var(--color-navy);border:1px solid var(--border-default);"
+              onclick="openContractorDetail('${c._id}')">
+              🔍 مراجعة (${docCount} مستند)
+            </button>
+            <button class="btn btn-sm btn-accept action-btn" data-action="approve" data-id="${c._id}">✓ قبول</button>
             <button class="btn btn-sm btn-reject action-btn" data-action="reject" data-id="${c._id}">✕ رفض</button>
           </div>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
     }
 
     function openRejectModal(contractorId) {
@@ -435,7 +738,7 @@
 
       let user;
       try { user = JSON.parse(userJSON); } catch (_) { window.location.href = '../../auth/admin-login.html'; return; }
-      if (user.role !== 'admin') { window.location.href = '../../auth/login.html'; return; }
+      if (user.role !== 'admin' && user.role !== 'super_admin') { window.location.href = '../../auth/login.html'; return; }
 
       const initial = (user.name || 'أ').charAt(0);
       const sbName = document.getElementById('sidebarUserName');

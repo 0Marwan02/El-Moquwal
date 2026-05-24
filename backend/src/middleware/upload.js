@@ -43,13 +43,34 @@ function fileFilter(req, file, cb) {
   cb(null, true);
 }
 
-// el multer instance el asasy
+// el multer instance el asasy — lel profile/ID uploads (max 4 files)
 const upload = multer({
   storage,
   fileFilter,
   limits: {
     fileSize: env.UPLOAD_MAX_SIZE_MB * 1024 * 1024,
     files: 4, // certificate + membershipCard + nationalIdPhoto + profilePicture
+  },
+});
+
+// Phase 3.1 — Project media upload: max 20 images per project
+const MAX_PROJECT_IMAGES = 20;
+const uploadProjectMedia = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: env.UPLOAD_MAX_SIZE_MB * 1024 * 1024,
+    files: MAX_PROJECT_IMAGES,
+  },
+});
+
+// Project closure photos upload: before (up to 10) + after (up to 10)
+const uploadClosurePhotos = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: env.UPLOAD_MAX_SIZE_MB * 1024 * 1024,
+    files: 20, // 10 before + 10 after max
   },
 });
 
@@ -64,4 +85,4 @@ function cleanupFiles(files) {
   });
 }
 
-module.exports = { upload, cleanupFiles, uploadsDir };
+module.exports = { upload, uploadProjectMedia, uploadClosurePhotos, cleanupFiles, uploadsDir, MAX_PROJECT_IMAGES };

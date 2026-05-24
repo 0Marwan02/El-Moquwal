@@ -1,21 +1,28 @@
-// el admin routes — kolha bte7tag requireAuth + requireRole('admin')
+// Admin routes — review contractors, manage settings, super_admin ops
 const express = require('express');
 const ctrl = require('../controllers/admin.controller');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth, requireRole, requireSuperAdmin, requirePermission } = require('../middleware/auth');
 
 const router = express.Router();
 
-// kol 7aga ta7t dy lazem admin
-router.use(requireAuth, requireRole('admin'));
+// ===== Admin (reviewer) routes =====
+// VIEW routes — any authenticated admin (or super_admin) can read
+router.get('/contractors/pending', requireAuth, requireRole('admin'), ctrl.listPending);
+router.get('/projects',            requireAuth, requireRole('admin'), ctrl.listAllProjects);
+router.get('/stats',               requireAuth, requireRole('admin'), ctrl.dashboardStats);
+router.get('/disputes',            requireAuth, requireRole('admin'), ctrl.listDisputes);
 
-router.get('/contractors/pending', ctrl.listPending);
-router.post('/contractors/:id/approve', ctrl.approveContractor);
-router.post('/contractors/:id/reject', ctrl.rejectContractor);
+// ACTION routes — super_admin always passes; regular admin needs the matching permission
+router.post('/contractors/:id/approve', requireAuth, requireRole('admin'), requirePermission('review_contractors'), ctrl.approveContractor);
+router.post('/contractors/:id/reject',  requireAuth, requireRole('admin'), requirePermission('review_contractors'), ctrl.rejectContractor);
 
-// admin projects — كل المشاريع بفلترة
-router.get('/projects', ctrl.listAllProjects);
+// ===== Platform settings (admin can view, super_admin can edit) =====
+router.get('/settings', requireAuth, requireRole('admin'), ctrl.getSettings);
+router.patch('/settings', requireAuth, requireSuperAdmin, ctrl.updateSettings);
 
-// admin stats — إحصائيات سريعة
-router.get('/stats', ctrl.dashboardStats);
+// ===== Super Admin only — manage reviewer admins =====
+router.post('/create-reviewer', requireAuth, requireSuperAdmin, ctrl.createReviewer);
+router.get('/reviewers', requireAuth, requireSuperAdmin, ctrl.listReviewers);
+router.delete('/reviewers/:id', requireAuth, requireSuperAdmin, ctrl.deleteReviewer);
 
 module.exports = router;

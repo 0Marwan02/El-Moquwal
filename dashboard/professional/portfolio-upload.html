@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>محفظة الأعمال | المقاول</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/variables.css">
+  <link rel="stylesheet" href="../../assets/css/base.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/layout.css">
+  <style>
+    .upload-zone {
+      border: 2px dashed var(--border-strong); border-radius: var(--radius-md);
+      padding: var(--space-10) var(--space-6); text-align: center;
+      background: var(--bg-surface-2); cursor: pointer;
+      transition: all var(--transition-base);
+    }
+    .upload-zone:hover, .upload-zone.drag-over {
+      border-color: var(--color-gold); background: var(--color-gold-subtle);
+    }
+    .upload-zone input { display: none; }
+    .upload-zone .uz-icon { font-size: 40px; margin-bottom: var(--space-3); }
+    .upload-zone .uz-title { font-size: var(--font-size-base); font-weight: 700; color: var(--color-navy); }
+    .upload-zone .uz-sub { font-size: 12px; color: var(--text-muted); margin-top: var(--space-1); }
+
+    .preview-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: var(--space-3); margin-top: var(--space-4);
+    }
+    .preview-item { position: relative; border-radius: var(--radius-sm); overflow: hidden; aspect-ratio: 1; }
+    .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+    .preview-item .rm {
+      position: absolute; top: 4px; right: 4px;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: rgba(0,0,0,0.5); color: #fff; border: none; cursor: pointer;
+      font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    }
+    .preview-item .rm:hover { background: var(--color-error); }
+
+    .form-card {
+      background: var(--bg-surface); border: 1px solid var(--border-default);
+      border-radius: var(--radius-md); padding: var(--space-8) var(--space-8);
+      box-shadow: var(--shadow-sm); max-width: 680px; margin: 0 auto;
+    }
+    .form-field { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-5); }
+    .form-field label { font-size: 13px; font-weight: 700; color: var(--color-navy); }
+    .form-field input, .form-field textarea, .form-field select {
+      width: 100%; padding: 12px 14px; background: var(--bg-surface-2);
+      border: 1.5px solid transparent; border-radius: var(--radius-sm);
+      font-family: var(--font-main); font-size: var(--font-size-base);
+      color: var(--text-primary); transition: all var(--transition-base); box-sizing: border-box;
+    }
+    .form-field input:focus, .form-field textarea:focus, .form-field select:focus {
+      border-color: var(--color-gold); background: var(--bg-surface);
+      box-shadow: 0 0 0 3px var(--color-gold-subtle); outline: none;
+    }
+    .alert-box {
+      display: none; padding: 14px 16px; border-radius: var(--radius-sm);
+      font-size: 13px; font-weight: 700; text-align: center; margin-bottom: var(--space-5);
+    }
+    .alert-box.success { display: block; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.3); color: var(--color-success); }
+    .alert-box.error   { display: block; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); color: var(--color-error); }
+  </style>
+</head>
+<body class="dashboard-page">
+<div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+<div class="dashboard-wrapper">
+
+  <aside class="sidebar" id="sidebarNode"></aside>
+
+  <main class="dashboard-main">
+    <div class="dashboard-topbar" id="topbarNode"></div>
+
+    <div class="dashboard-content">
+      <div style="margin-bottom:var(--space-6);">
+        <a href="profile.html" style="display:inline-flex;align-items:center;gap:6px;font-size:var(--font-size-sm);font-weight:700;color:var(--text-muted);text-decoration:none;" onmouseover="this.style.color='var(--color-navy)'" onmouseout="this.style.color='var(--text-muted)'">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+          العودة للملف الشخصي
+        </a>
+      </div>
+
+      <div class="form-card">
+        <h2 style="font-size:var(--font-size-xl); font-weight:900; color:var(--color-navy); margin-bottom:var(--space-2);">إضافة عمل للمحفظة</h2>
+        <p style="font-size:var(--font-size-sm); color:var(--text-muted); margin-bottom:var(--space-6);">أضف مشاريعك السابقة لتعزيز ثقة العملاء وزيادة فرص الحصول على عروض.</p>
+
+        <div class="alert-box" id="alertBox"></div>
+
+        <form id="portfolioForm">
+          <div class="form-field">
+            <label>عنوان المشروع *</label>
+            <input type="text" id="title" required placeholder="مثال: تشطيب كامل فيلا بالتجمع الخامس">
+          </div>
+
+          <div class="form-field">
+            <label>نوع العمل</label>
+            <select id="projectType">
+              <option value="">اختر...</option>
+              <option value="new_construction">بناء جديد</option>
+              <option value="finishing">تشطيبات</option>
+              <option value="renovation">تجديد</option>
+              <option value="electrical">كهرباء</option>
+              <option value="plumbing">سباكة</option>
+              <option value="other">أخرى</option>
+            </select>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-4);">
+            <div class="form-field" style="margin-bottom:0;">
+              <label>المحافظة</label>
+              <select id="governorate">
+                <option value="">اختر...</option>
+                <option>القاهرة</option><option>الجيزة</option><option>الإسكندرية</option>
+                <option>القليوبية</option><option>الشرقية</option><option>الغربية</option>
+                <option>المنوفية</option><option>البحيرة</option><option>أسيوط</option>
+                <option>سوهاج</option><option>قنا</option><option>الأقصر</option><option>أسوان</option>
+              </select>
+            </div>
+            <div class="form-field" style="margin-bottom:0;">
+              <label>مدة التنفيذ (شهر)</label>
+              <input type="number" id="duration" min="0.5" step="0.5" placeholder="مثال: 3">
+            </div>
+          </div>
+
+          <div class="form-field" style="margin-top:var(--space-5);">
+            <label>وصف العمل</label>
+            <textarea id="description" rows="4" placeholder="اشرح ما تم إنجازه، المواد المستخدمة، التحديات وكيف تم حلها..."></textarea>
+          </div>
+
+          <div class="form-field">
+            <label>صور العمل * (حتى 10 صور)</label>
+            <div class="upload-zone" id="uploadZone">
+              <div class="uz-icon">📸</div>
+              <div class="uz-title">اسحب الصور هنا أو اضغط للاختيار</div>
+              <div class="uz-sub">JPG / PNG / WebP — حتى 5 ميجا لكل صورة</div>
+              <input type="file" id="imageInput" accept="image/*" multiple>
+            </div>
+            <div class="preview-grid" id="previewGrid"></div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full" id="submitBtn" style="margin-top:var(--space-2);">
+            رفع العمل للمحفظة
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../../assets/js/api.js"></script>
+<script>
+function showToast(message, type = 'success') {
+  const stack = document.getElementById('toastStack');
+  if (!stack) return;
+  const icons = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
+  const t = ['success','error','info','warning'].includes(type) ? type : 'success';
+  const toast = document.createElement('div');
+  toast.className = `toast-item toast-${t}`;
+  toast.innerHTML = `<span class="toast-icon">${icons[t]}</span><div class="toast-body"><div class="toast-msg">${message}</div></div><button class="toast-close" onclick="this.closest('.toast-item').remove()">×</button>`;
+  stack.appendChild(toast);
+  setTimeout(() => { toast.classList.add('toast-exit'); setTimeout(() => toast.remove(), 300); }, 3500);
+}
+
+if (!localStorage.getItem('elm_user') || !localStorage.getItem('elm_accessToken')) {
+  window.location.href = '../../auth/login.html';
+}
+
+function injectLayout() {
+  const user = JSON.parse(localStorage.getItem('elm_user') || '{}');
+  const initial = (user.name || 'م').charAt(0);
+  document.getElementById('sidebarNode').innerHTML = `
+    <div class="sidebar-header">
+      <div class="sidebar-logo-mark"><img src="../../assets/images/logo.png" alt="المقاول"></div>
+      <div class="sidebar-logo-text">المقاول</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="sidebar-avatar">${initial}</div>
+      <div class="sidebar-user-info"><div class="name">${user.name || '...'}</div><div class="role">مقاول</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">الرئيسية</div>
+      <a href="index.html" class="sidebar-item"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>لوحة التحكم</a>
+      <div class="sidebar-section-label">حسابي</div>
+      <a href="profile.html" class="sidebar-item active"><svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>ملفي الشخصي</a>
+      <a href="portfolio-upload.html" class="sidebar-item active"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>محفظة الأعمال</a>
+    </nav>
+    <div class="sidebar-cta">
+      <button class="btn btn-ghost-light btn-full" id="logoutBtn">تسجيل الخروج</button>
+    </div>
+  `;
+  document.getElementById('topbarNode').innerHTML = `
+    <div class="topbar-page-title">محفظة الأعمال</div>
+    <div class="topbar-actions"><div class="topbar-user"><div class="topbar-avatar">${initial}</div><div class="topbar-user-name">${user.name || '...'}</div></div></div>
+  `;
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    try { await window.api.fetch('/auth/logout', { method: 'POST' }); } catch (_) {}
+    localStorage.removeItem('elm_accessToken'); localStorage.removeItem('elm_user');
+    window.location.href = '../../index.html';
+  });
+}
+
+// ===== Upload Zone =====
+let uploadedFiles = [];
+const uploadZone = document.getElementById('uploadZone');
+const imageInput = document.getElementById('imageInput');
+const previewGrid = document.getElementById('previewGrid');
+
+uploadZone.addEventListener('click', () => imageInput.click());
+['dragenter','dragover'].forEach(e => uploadZone.addEventListener(e, ev => { ev.preventDefault(); uploadZone.classList.add('drag-over'); }));
+['dragleave','drop'].forEach(e => uploadZone.addEventListener(e, ev => { ev.preventDefault(); uploadZone.classList.remove('drag-over'); }));
+uploadZone.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
+imageInput.addEventListener('change', e => handleFiles(e.target.files));
+
+function handleFiles(files) {
+  [...files].forEach(f => {
+    if (uploadedFiles.length >= 10) { showToast('الحد الأقصى 10 صور', 'error'); return; }
+    if (f.size > 5 * 1024 * 1024) { showToast(`${f.name}: حجم الملف أكبر من 5 ميجا`, 'error'); return; }
+    if (!f.type.startsWith('image/')) return;
+    uploadedFiles.push(f);
+  });
+  renderPreviews();
+}
+
+function renderPreviews() {
+  previewGrid.innerHTML = '';
+  uploadedFiles.forEach((f, i) => {
+    const item = document.createElement('div');
+    item.className = 'preview-item';
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(f);
+    const rm = document.createElement('button');
+    rm.className = 'rm'; rm.type = 'button'; rm.textContent = '×';
+    rm.onclick = () => { uploadedFiles.splice(i, 1); renderPreviews(); };
+    item.append(img, rm);
+    previewGrid.appendChild(item);
+  });
+}
+
+// ===== Form Submit =====
+document.getElementById('portfolioForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const alertBox = document.getElementById('alertBox');
+  const btn = document.getElementById('submitBtn');
+
+  if (uploadedFiles.length === 0) {
+    alertBox.textContent = 'يجب رفع صورة واحدة على الأقل';
+    alertBox.className = 'alert-box error';
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = 'جاري الرفع...';
+  alertBox.className = 'alert-box';
+
+  const fd = new FormData();
+  fd.append('title', document.getElementById('title').value.trim());
+  fd.append('description', document.getElementById('description').value.trim());
+  if (document.getElementById('projectType').value) fd.append('projectType', document.getElementById('projectType').value);
+  if (document.getElementById('governorate').value) fd.append('governorate', document.getElementById('governorate').value);
+  if (document.getElementById('duration').value) fd.append('durationMonths', document.getElementById('duration').value);
+  uploadedFiles.forEach(f => fd.append('images', f));
+
+  try {
+    await window.api.upload('/portfolio', fd);
+    alertBox.textContent = 'تمت إضافة العمل بنجاح! 🎉';
+    alertBox.className = 'alert-box success';
+    showToast('تمت إضافة العمل للمحفظة', 'success');
+    setTimeout(() => { window.location.href = 'profile.html'; }, 1500);
+  } catch (err) {
+    alertBox.textContent = err.message || 'حدث خطأ أثناء الرفع';
+    alertBox.className = 'alert-box error';
+    btn.disabled = false; btn.textContent = 'رفع العمل للمحفظة';
+  }
+});
+
+document.addEventListener('DOMContentLoaded', injectLayout);
+</script>
+</body>
+</html>

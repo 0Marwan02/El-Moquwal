@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>المقاول</title>
+  <title>المقاول — منصة المقاولات الأولى في مصر</title>
+  <meta name="description" content="منصة المقاول: ابني مشروعك مع أفضل المقاولين والمهندسين في مصر. عقود رقمية، ضمان مالي، ذكاء اصطناعي." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -15,10 +16,124 @@
 
   <style>
     /* =============================================
-       styles خاصة بصفحة اللاندينج بس
+       LANDING PAGE — all custom styles
        ============================================= */
 
-    /* Hero Section */
+    /* ---- Reduced Motion ---- */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* =============================================
+       MOBILE NAV DRAWER
+       ============================================= */
+    .navbar-hamburger {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-default);
+      background: transparent;
+      cursor: pointer;
+      margin-right: auto;
+      transition: background var(--transition-base);
+    }
+    .navbar-hamburger:hover { background: var(--bg-surface-2); }
+    .navbar-hamburger span {
+      display: block;
+      width: 20px;
+      height: 2px;
+      background: var(--color-navy);
+      border-radius: 2px;
+      transition: all var(--transition-base);
+    }
+    .navbar-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .navbar-hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .navbar-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    .mobile-nav-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(2,6,23,0.55);
+      z-index: calc(var(--z-navbar) - 1);
+      opacity: 0;
+      transition: opacity var(--transition-base);
+    }
+    .mobile-nav-overlay.open { opacity: 1; }
+
+    .mobile-nav-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 280px;
+      height: 100vh;
+      background: var(--bg-surface);
+      z-index: var(--z-navbar);
+      display: flex;
+      flex-direction: column;
+      padding: var(--space-6);
+      transform: translateX(100%);
+      transition: transform var(--transition-base);
+      box-shadow: var(--shadow-lg);
+    }
+    .mobile-nav-drawer.open { transform: translateX(0); }
+
+    .mobile-nav-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-8);
+      padding-bottom: var(--space-5);
+      border-bottom: 1px solid var(--border-default);
+    }
+    .mobile-nav-close {
+      width: 36px; height: 36px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-default);
+      background: transparent;
+      cursor: pointer;
+      font-size: 20px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted);
+    }
+    .mobile-nav-links {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      flex: 1;
+    }
+    .mobile-nav-links a {
+      display: block;
+      padding: 14px var(--space-4);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-radius: var(--radius-sm);
+      transition: all var(--transition-base);
+    }
+    .mobile-nav-links a:hover {
+      background: var(--bg-surface-2);
+      color: var(--color-navy);
+    }
+    .mobile-nav-actions {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      padding-top: var(--space-5);
+      border-top: 1px solid var(--border-default);
+    }
+
+    /* =============================================
+       HERO SECTION
+       ============================================= */
     .hero {
       min-height: 100vh;
       padding-top: var(--navbar-height);
@@ -31,21 +146,42 @@
     .hero-bg {
       position: absolute;
       inset: 0;
-      background: linear-gradient(150deg, var(--color-navy-dark) 0%, var(--color-navy) 55%, #243659 100%);
+      background: linear-gradient(150deg, var(--color-navy-dark) 0%, var(--color-navy) 55%, #1a2d50 100%);
       z-index: 0;
+    }
+
+    /* Shimmer gradient animation */
+    .hero-shimmer {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        125deg,
+        transparent 0%,
+        rgba(245,158,11,0.03) 30%,
+        rgba(245,158,11,0.06) 50%,
+        rgba(245,158,11,0.03) 70%,
+        transparent 100%
+      );
+      background-size: 200% 200%;
+      animation: shimmerMove 8s ease-in-out infinite;
+      z-index: 1;
+      pointer-events: none;
+    }
+    @keyframes shimmerMove {
+      0%, 100% { background-position: 0% 50%; }
+      50%       { background-position: 100% 50%; }
     }
 
     .hero-orb-1 {
       position: absolute;
       width: 600px; height: 600px;
       top: -150px; right: -100px;
-      background: rgba(244,166,35,0.06);
+      background: rgba(245,158,11,0.07);
       border-radius: 50%;
       filter: blur(100px);
       pointer-events: none;
       z-index: 1;
     }
-
     .hero-orb-2 {
       position: absolute;
       width: 400px; height: 400px;
@@ -68,13 +204,12 @@
       padding-bottom: var(--space-16);
     }
 
-    /* نص الـ hero */
     .hero-live-tag {
       display: inline-flex;
       align-items: center;
       gap: var(--space-2);
-      background: rgba(244,166,35,0.1);
-      border: 1px solid rgba(244,166,35,0.22);
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.22);
       color: var(--color-gold-light);
       padding: 7px 16px;
       border-radius: var(--radius-full);
@@ -82,7 +217,6 @@
       font-weight: 700;
       margin-bottom: var(--space-5);
     }
-
     .hero-live-dot {
       width: 7px; height: 7px;
       background: var(--color-gold);
@@ -93,8 +227,8 @@
     .hero-title {
       color: var(--text-on-dark);
       margin-bottom: var(--space-5);
+      font-size: var(--font-size-hero);
     }
-
     .hero-title .highlight { color: var(--color-gold); }
 
     .hero-subtitle {
@@ -112,14 +246,12 @@
       margin-bottom: var(--space-10);
     }
 
-    /* الـ stats تحت الازرار */
     .hero-stats {
       display: flex;
       gap: var(--space-8);
       padding-top: var(--space-8);
       border-top: 1px solid rgba(255,255,255,0.08);
     }
-
     .hero-stat-val {
       font-size: 26px;
       font-weight: 900;
@@ -130,7 +262,7 @@
     .hero-stat-val span { color: var(--color-gold); }
     .hero-stat-lbl { font-size: 12px; color: var(--text-on-dark-muted); }
 
-    /* الـ visual card في الـ hero */
+    /* Hero visual / mockup */
     .hero-visual {
       position: relative;
       display: flex;
@@ -156,67 +288,54 @@
       margin-bottom: var(--space-5);
     }
     .mockup-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.4); letter-spacing: 1px; text-transform: uppercase; }
+    .mockup-project-title { font-size: 17px; font-weight: 800; color: var(--text-on-dark); margin-bottom: var(--space-2); }
+    .mockup-meta { display: flex; gap: var(--space-4); font-size: 12px; color: rgba(255,255,255,0.45); margin-bottom: var(--space-5); }
 
-    .mockup-project-title {
-      font-size: 17px; font-weight: 800; color: var(--text-on-dark);
-      margin-bottom: var(--space-2);
-    }
-    .mockup-meta {
-      display: flex; gap: var(--space-4);
-      font-size: 12px; color: rgba(255,255,255,0.45);
-      margin-bottom: var(--space-5);
-    }
-
-    .mockup-progress-track {
-      height: 6px;
-      background: rgba(255,255,255,0.08);
-      border-radius: var(--radius-full);
-      margin-bottom: var(--space-2);
-      overflow: hidden;
-    }
-    .mockup-progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--color-gold), var(--color-gold-light));
-      border-radius: var(--radius-full);
-      width: 68%;
-      animation: growBar 1.5s ease forwards;
-    }
+    .mockup-progress-track { height: 6px; background: rgba(255,255,255,0.08); border-radius: var(--radius-full); margin-bottom: var(--space-2); overflow: hidden; }
+    .mockup-progress-fill { height: 100%; background: linear-gradient(90deg, var(--color-gold), var(--color-gold-light)); border-radius: var(--radius-full); width: 68%; animation: growBar 1.5s ease forwards; }
     @keyframes growBar { from { width: 0; } to { width: 68%; } }
-
-    .mockup-progress-labels {
-      display: flex; justify-content: space-between;
-      font-size: 11px; color: rgba(255,255,255,0.35);
-      margin-bottom: var(--space-5);
-    }
+    .mockup-progress-labels { display: flex; justify-content: space-between; font-size: 11px; color: rgba(255,255,255,0.35); margin-bottom: var(--space-5); }
     .mockup-pct { color: var(--color-gold); font-weight: 700; }
 
-    .mockup-bids-title {
-      font-size: 11px; font-weight: 700;
-      color: rgba(255,255,255,0.35);
-      text-transform: uppercase; letter-spacing: 0.8px;
-      margin-bottom: var(--space-3);
-    }
-
-    .mockup-bid {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 12px;
-      background: rgba(255,255,255,0.04);
-      border-radius: var(--radius-sm);
-      margin-bottom: var(--space-2);
-      transition: background var(--transition-base);
-    }
+    .mockup-bids-title { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: var(--space-3); }
+    .mockup-bid { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: rgba(255,255,255,0.04); border-radius: var(--radius-sm); margin-bottom: var(--space-2); transition: background var(--transition-base); }
     .mockup-bid:hover { background: rgba(255,255,255,0.08); }
-
     .mockup-bid-info { display: flex; align-items: center; gap: 10px; }
     .mockup-bid-name { font-size: 13px; font-weight: 600; color: var(--text-on-dark); }
     .mockup-bid-spec { font-size: 11px; color: rgba(255,255,255,0.4); }
     .mockup-bid-price { font-size: 14px; font-weight: 800; color: var(--color-gold); }
 
-    /* الـ floating card */
+    /* AI badge on mockup */
+    .mockup-ai-badge {
+      position: absolute;
+      top: -14px;
+      left: -14px;
+      background: linear-gradient(135deg, #1e3a5f, #0f2a4a);
+      border: 1px solid rgba(245,158,11,0.35);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      animation: floatY2 5s ease-in-out infinite;
+    }
+    .mockup-ai-badge-icon {
+      width: 28px; height: 28px;
+      background: var(--color-gold-subtle);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+    .mockup-ai-badge-text { font-size: 11px; font-weight: 700; color: var(--color-gold-light); line-height: 1.4; }
+    .mockup-ai-badge-sub { font-size: 10px; color: rgba(255,255,255,0.4); display: block; }
+    @keyframes floatY2 { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
+
+    /* Floating card */
     .hero-float {
       position: absolute;
       bottom: -12px;
-      left: -16px;
+      right: -16px;
       background: var(--bg-surface);
       border-radius: var(--radius-md);
       padding: 14px 18px;
@@ -227,72 +346,114 @@
       animation: floatY 4s ease-in-out infinite;
     }
     @keyframes floatY { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
-
-    .hero-float-icon {
-      width: 40px; height: 40px;
-      background: var(--color-gold-subtle);
-      border-radius: var(--radius-sm);
-      display: flex; align-items: center; justify-content: center;
-    }
+    .hero-float-icon { width: 40px; height: 40px; background: var(--color-gold-subtle); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; }
     .hero-float-icon svg { width: 22px; height: 22px; fill: var(--color-gold-dark); }
     .hero-float-num { font-size: 20px; font-weight: 900; color: var(--color-navy); line-height: 1; }
     .hero-float-lbl { font-size: 11px; color: var(--text-muted); }
 
-    /* Stats Strip */
-    .stats-strip {
-      background: var(--color-navy);
-      padding: var(--space-8) 0;
+    /* =============================================
+       TRUST BAR
+       ============================================= */
+    .trust-bar {
+      background: var(--color-navy-mid);
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
     }
-    .stats-strip .container {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
+    .trust-bar .container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-8);
+      flex-wrap: wrap;
     }
-    .strip-item {
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-on-dark-muted);
+      white-space: nowrap;
+    }
+    .trust-item-icon {
+      width: 28px; height: 28px;
+      background: rgba(245,158,11,0.1);
+      border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
-      gap: var(--space-4);
-      padding: var(--space-3) var(--space-6);
-      border-left: 1px solid rgba(255,255,255,0.07);
+      font-size: 14px;
+      flex-shrink: 0;
     }
+    .trust-divider {
+      width: 1px;
+      height: 20px;
+      background: rgba(255,255,255,0.1);
+    }
+
+    /* =============================================
+       STATS STRIP
+       ============================================= */
+    .stats-strip { background: var(--color-navy); padding: var(--space-8) 0; }
+    .stats-strip .container { display: grid; grid-template-columns: repeat(4, 1fr); }
+    .strip-item { display: flex; align-items: center; justify-content: center; gap: var(--space-4); padding: var(--space-3) var(--space-6); border-left: 1px solid rgba(255,255,255,0.07); }
     .strip-item:last-child { border-left: none; }
-    .strip-icon {
-      width: 44px; height: 44px;
-      background: rgba(244,166,35,0.1);
-      border-radius: var(--radius-sm);
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    }
+    .strip-icon { width: 44px; height: 44px; background: rgba(245,158,11,0.1); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .strip-icon svg { width: 22px; height: 22px; fill: var(--color-gold); }
     .strip-val { font-size: 26px; font-weight: 900; color: var(--text-on-dark); line-height: 1; }
     .strip-lbl { font-size: 12px; color: var(--text-on-dark-muted); }
 
-    /* How It Works */
-    .how-section { padding: var(--space-24) 0; }
-    .how-steps {
+    /* =============================================
+       FEATURES GRID
+       ============================================= */
+    .features-section { padding: var(--space-24) 0; background: var(--bg-app); }
+    .features-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0;
-      position: relative;
-      margin-top: var(--space-16);
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-6);
+      margin-top: var(--space-12);
     }
-    .how-steps::before {
+    .feature-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: var(--space-6);
+      transition: all var(--transition-base);
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::before {
       content: '';
       position: absolute;
-      top: 44px;
-      right: 12.5%; left: 12.5%;
-      height: 2px;
-      background: linear-gradient(90deg, var(--color-gold), rgba(244,166,35,0.15));
-      z-index: 0;
+      top: 0; right: 0;
+      width: 80px; height: 80px;
+      background: radial-gradient(circle at top right, rgba(245,158,11,0.07), transparent 70%);
+      pointer-events: none;
     }
-    .how-step {
-      display: flex; flex-direction: column;
-      align-items: center; text-align: center;
-      padding: 0 var(--space-6);
-      position: relative; z-index: 1;
+    .feature-card:hover {
+      border-color: var(--border-gold);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-4px);
     }
-    .how-step-circle {
-      width: 88px; height: 88px; border-radius: 50%;
+    .feature-icon {
+      width: 52px; height: 52px;
+      background: var(--color-gold-subtle);
+      border-radius: var(--radius-sm);
       display: flex; align-items: center; justify-content: center;
-      margin-bottom: var(--space-5); flex-shrink: 0;
+      font-size: 24px;
+      margin-bottom: var(--space-5);
+      transition: transform var(--transition-base);
     }
+    .feature-card:hover .feature-icon { transform: scale(1.08); }
+    .feature-card h4 { font-size: 16px; font-weight: 800; color: var(--color-navy); margin-bottom: var(--space-2); }
+    .feature-card p { font-size: var(--font-size-sm); color: var(--text-muted); line-height: 1.8; }
+
+    /* =============================================
+       HOW IT WORKS
+       ============================================= */
+    .how-section { padding: var(--space-24) 0; }
+    .how-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; position: relative; margin-top: var(--space-16); }
+    .how-steps::before { content: ''; position: absolute; top: 44px; right: 12.5%; left: 12.5%; height: 2px; background: linear-gradient(90deg, var(--color-gold), rgba(245,158,11,0.15)); z-index: 0; }
+    .how-step { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 var(--space-6); position: relative; z-index: 1; }
+    .how-step-circle { width: 88px; height: 88px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-5); flex-shrink: 0; }
     .how-step:first-child .how-step-circle { background: var(--color-navy); }
     .how-step:not(:first-child) .how-step-circle { background: rgba(26,43,74,0.08); }
     .how-step:first-child .how-step-circle svg { fill: var(--color-gold); }
@@ -301,14 +462,55 @@
     .how-step h4 { color: var(--color-navy); margin-bottom: var(--space-2); }
     .how-step p { font-size: var(--font-size-sm); }
 
-    /* Professionals Grid */
-    .pros-section { padding: var(--space-24) 0; background: var(--bg-surface); }
-    .pros-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--space-6);
+    /* =============================================
+       SERVICES CATEGORIES
+       ============================================= */
+    .services-section { padding: var(--space-24) 0; background: var(--bg-app); }
+    .services-scroll {
+      display: flex;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+      justify-content: center;
       margin-top: var(--space-12);
     }
+    .service-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border-default);
+      border-radius: var(--radius-full);
+      padding: 14px 22px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--color-navy);
+      cursor: pointer;
+      transition: all var(--transition-base);
+      text-decoration: none;
+    }
+    .service-pill:hover {
+      border-color: var(--color-gold);
+      background: var(--color-gold-subtle);
+      color: var(--color-gold-dark);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+    .service-pill-icon {
+      width: 32px; height: 32px;
+      background: var(--bg-app);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      transition: background var(--transition-base);
+    }
+    .service-pill:hover .service-pill-icon { background: rgba(245,158,11,0.15); }
+
+    /* =============================================
+       PROFESSIONALS GRID
+       ============================================= */
+    .pros-section { padding: var(--space-24) 0; background: var(--bg-surface); }
+    .pros-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6); margin-top: var(--space-12); }
 
     .pro-card {
       background: var(--bg-surface);
@@ -320,74 +522,152 @@
       position: relative;
       overflow: hidden;
     }
-    .pro-card::after {
-      content: '';
+    .pro-card::after { content: ''; position: absolute; top: 0; right: 0; width: 64px; height: 64px; background: var(--color-gold-subtle); border-radius: 0 var(--radius-md) 0 64px; transition: all var(--transition-slow); }
+    .pro-card:hover { border-color: var(--border-gold); box-shadow: var(--shadow-md); transform: translateY(-4px); }
+
+    .pro-card-head { display: flex; gap: var(--space-3); align-items: flex-start; margin-bottom: var(--space-5); position: relative; z-index: 1; }
+    .pro-avatar-wrap { position: relative; flex-shrink: 0; }
+    .pro-verified-badge {
       position: absolute;
-      top: 0; right: 0;
-      width: 64px; height: 64px;
-      background: var(--color-gold-subtle);
-      border-radius: 0 var(--radius-md) 0 64px;
-      transition: all var(--transition-slow);
+      bottom: -4px;
+      left: -4px;
+      width: 22px; height: 22px;
+      background: var(--color-success);
+      border-radius: 50%;
+      border: 2px solid var(--bg-surface);
+      display: flex; align-items: center; justify-content: center;
     }
-    .pro-card:hover {
-      border-color: var(--border-gold);
-      box-shadow: var(--shadow-md);
-      transform: translateY(-4px);
-    }
-    .pro-card-head {
-      display: flex; gap: var(--space-3);
-      align-items: flex-start;
-      margin-bottom: var(--space-5);
-      position: relative; z-index: 1;
-    }
+    .pro-verified-badge svg { width: 12px; height: 12px; fill: #fff; }
+
     .pro-name { font-size: 16px; font-weight: 800; color: var(--color-navy); margin-bottom: 3px; }
     .pro-title-txt { font-size: 12px; color: var(--text-muted); }
-    .pro-stats-row {
-      display: flex; gap: var(--space-5);
-      padding: var(--space-4);
-      background: var(--bg-app);
-      border-radius: var(--radius-sm);
-      margin-bottom: var(--space-4);
-    }
+    .pro-stats-row { display: flex; gap: var(--space-5); padding: var(--space-4); background: var(--bg-app); border-radius: var(--radius-sm); margin-bottom: var(--space-4); }
     .pro-stat-val { font-size: 17px; font-weight: 800; color: var(--color-navy); line-height: 1; }
     .pro-stat-lbl { font-size: 10px; color: var(--text-muted); }
-    .pro-rating-row {
-      display: flex; align-items: center; gap: var(--space-2);
-      margin-bottom: var(--space-4);
-    }
+    .pro-rating-row { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4); }
     .pro-rating-val { font-size: 14px; font-weight: 800; color: var(--color-navy); }
     .pro-rating-count { font-size: 12px; color: var(--text-muted); }
-    .pro-chips {
-      display: flex; flex-wrap: wrap; gap: var(--space-2);
-      margin-bottom: var(--space-5);
-    }
-    .chip {
-      padding: 4px 10px;
-      background: rgba(26,43,74,0.06);
-      border-radius: var(--radius-full);
-      font-size: 11px; font-weight: 600; color: var(--color-navy);
-    }
+    .pro-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-5); }
+    .chip { padding: 4px 10px; background: rgba(26,43,74,0.06); border-radius: var(--radius-full); font-size: 11px; font-weight: 600; color: var(--color-navy); }
 
-    /* CTA Section */
-    .cta-section {
-      padding: var(--space-24) 0;
-      background: var(--color-navy);
-      position: relative; overflow: hidden;
+    /* =============================================
+       PROJECT SHOWCASE
+       ============================================= */
+    .showcase-section { padding: var(--space-24) 0; background: var(--bg-app); }
+    .showcase-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6); margin-top: var(--space-12); }
+
+    .showcase-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: all var(--transition-base);
     }
-    .cta-section .container { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: var(--space-16); }
+    .showcase-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-5px); border-color: var(--border-gold); }
+
+    .showcase-img {
+      height: 160px;
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      padding: var(--space-4);
+    }
+    .showcase-img-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      transition: transform var(--transition-slow);
+    }
+    .showcase-card:hover .showcase-img-bg { transform: scale(1.05); }
+    .showcase-img-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(2,6,23,0.7) 0%, transparent 60%);
+    }
+    .showcase-type-badge {
+      position: relative;
+      z-index: 1;
+      background: var(--color-gold);
+      color: var(--color-navy-dark);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+    }
+    .showcase-complete-badge {
+      position: absolute;
+      top: var(--space-4);
+      left: var(--space-4);
+      z-index: 1;
+      background: var(--color-success);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 5px 10px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .showcase-body { padding: var(--space-5); }
+    .showcase-title { font-size: 16px; font-weight: 800; color: var(--color-navy); margin-bottom: var(--space-3); }
+    .showcase-meta { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-4); }
+    .showcase-meta-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-muted); }
+    .showcase-footer { display: flex; align-items: center; justify-content: space-between; padding-top: var(--space-3); border-top: 1px solid var(--bg-app); }
+    .showcase-rating { display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 700; color: var(--color-navy); }
+    .showcase-date { font-size: 11px; color: var(--text-light); }
+
+    /* Gradient backgrounds for showcase cards */
+    .sc-bg-1 { background: linear-gradient(135deg, #1a3a5c, #0f2238); }
+    .sc-bg-2 { background: linear-gradient(135deg, #1a3a2c, #0f2218); }
+    .sc-bg-3 { background: linear-gradient(135deg, #3a1a1a, #220f0f); }
+
+    /* =============================================
+       CTA SECTION
+       ============================================= */
+    .cta-section { padding: var(--space-24) 0; background: var(--color-navy); position: relative; overflow: hidden; }
+    .cta-section .container { position: relative; z-index: 2; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: var(--space-16); }
     .cta-title { font-size: clamp(28px, 3vw, 42px); font-weight: 900; color: var(--text-on-dark); line-height: 1.25; margin-bottom: var(--space-4); }
     .cta-title span { color: var(--color-gold); }
     .cta-sub { font-size: var(--font-size-md); color: var(--text-on-dark-muted); line-height: 1.8; max-width: 480px; }
     .cta-note { font-size: 12px; color: rgba(255,255,255,0.3); margin-top: var(--space-3); }
 
-    /* Testimonials */
-    .testimonials-section { padding: var(--space-24) 0; }
-    .testimonials-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--space-6);
-      margin-top: var(--space-12);
+    .cta-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-5);
+      flex-shrink: 0;
     }
+    .cta-feature-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+    .cta-feature-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-on-dark-muted);
+    }
+    .cta-check {
+      width: 22px; height: 22px;
+      background: rgba(245,158,11,0.15);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      color: var(--color-gold);
+      font-size: 13px;
+    }
+
+    /* =============================================
+       TESTIMONIALS
+       ============================================= */
+    .testimonials-section { padding: var(--space-24) 0; }
+    .testimonials-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6); margin-top: var(--space-12); }
     .testimonial-card {
       background: var(--bg-surface);
       border: 1px solid var(--border-default);
@@ -397,68 +677,295 @@
       position: relative;
     }
     .testimonial-card:hover { box-shadow: var(--shadow-md); transform: translateY(-4px); }
-    .quote-icon {
-      position: absolute; top: var(--space-6); left: var(--space-6);
-      width: 38px; height: 38px;
-      background: var(--color-gold-subtle); border-radius: var(--radius-sm);
-      display: flex; align-items: center; justify-content: center;
-    }
+    .quote-icon { position: absolute; top: var(--space-6); left: var(--space-6); width: 38px; height: 38px; background: var(--color-gold-subtle); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; }
     .quote-icon svg { width: 20px; height: 20px; fill: var(--color-gold-dark); }
-    .testimonial-text {
-      font-size: var(--font-size-sm); color: var(--text-muted);
-      line-height: 1.9; margin: var(--space-4) 0 var(--space-6);
-    }
-    .testimonial-author {
-      display: flex; align-items: center; gap: var(--space-3);
-      padding-top: var(--space-5);
-      border-top: 1px solid var(--bg-app);
-    }
+    .testimonial-text { font-size: var(--font-size-sm); color: var(--text-muted); line-height: 1.9; margin: var(--space-4) 0 var(--space-5); }
+    .testimonial-author { display: flex; align-items: center; gap: var(--space-3); padding-top: var(--space-4); border-top: 1px solid var(--bg-app); margin-bottom: var(--space-4); }
     .author-name { font-size: 14px; font-weight: 800; color: var(--color-navy); }
     .author-role { font-size: 12px; color: var(--text-muted); }
 
-    /* SVG stars shorthand */
+    /* Trust score bar */
+    .trust-score-bar-wrap { margin-top: var(--space-3); }
+    .trust-score-label { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 5px; display: flex; justify-content: space-between; }
+    .trust-score-label span { color: var(--color-success); font-weight: 800; }
+    .trust-score-track { height: 5px; background: var(--bg-app); border-radius: var(--radius-full); overflow: hidden; }
+    .trust-score-fill { height: 100%; background: linear-gradient(90deg, var(--color-success), #34d399); border-radius: var(--radius-full); }
+
+    /* SVG stars */
     .star-svg { width:14px; height:14px; fill: var(--color-gold); }
+
+    /* =============================================
+       FAQ SECTION
+       ============================================= */
+    .faq-section { padding: var(--space-24) 0; background: var(--bg-app); }
+    .faq-list { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-12); max-width: 800px; margin-left: auto; margin-right: auto; }
+
+    .faq-item {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: border-color var(--transition-base);
+    }
+    .faq-item.open { border-color: var(--border-gold); }
+
+    .faq-question {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-5) var(--space-6);
+      cursor: pointer;
+      user-select: none;
+      gap: var(--space-4);
+    }
+    .faq-question-text {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--color-navy);
+      flex: 1;
+    }
+    .faq-icon {
+      width: 32px; height: 32px;
+      background: var(--bg-app);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: all var(--transition-base);
+      color: var(--text-muted);
+      font-size: 18px;
+      font-weight: 400;
+      line-height: 1;
+    }
+    .faq-item.open .faq-icon {
+      background: var(--color-gold-subtle);
+      color: var(--color-gold-dark);
+      transform: rotate(45deg);
+    }
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s ease;
+    }
+    .faq-item.open .faq-answer { max-height: 200px; }
+    .faq-answer-inner {
+      padding: 0 var(--space-6) var(--space-5);
+      font-size: var(--font-size-sm);
+      color: var(--text-muted);
+      line-height: 1.9;
+      border-top: 1px solid var(--border-default);
+      padding-top: var(--space-4);
+    }
+
+    /* =============================================
+       FOOTER NEWSLETTER ROW
+       ============================================= */
+    .footer-newsletter {
+      background: var(--color-navy-mid);
+      padding: var(--space-8) 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .footer-newsletter .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-8);
+      flex-wrap: wrap;
+    }
+    .newsletter-text h3 {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text-on-dark);
+      margin-bottom: 4px;
+    }
+    .newsletter-text p {
+      font-size: var(--font-size-sm);
+      color: var(--text-on-dark-muted);
+    }
+    .newsletter-form {
+      display: flex;
+      gap: var(--space-3);
+      flex: 1;
+      max-width: 420px;
+    }
+    .newsletter-input {
+      flex: 1;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.08);
+      border: 1.5px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-main);
+      font-size: 14px;
+      color: var(--text-on-dark);
+      transition: all var(--transition-base);
+    }
+    .newsletter-input::placeholder { color: rgba(255,255,255,0.3); }
+    .newsletter-input:focus {
+      outline: none;
+      border-color: var(--color-gold);
+      background: rgba(255,255,255,0.1);
+      box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+    }
+
+    /* Back to Top */
+    .back-to-top {
+      position: fixed;
+      bottom: 28px;
+      left: 28px;
+      width: 46px;
+      height: 46px;
+      background: var(--color-gold);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--shadow-gold);
+      transition: all var(--transition-base);
+      z-index: var(--z-sticky);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(16px);
+      border: none;
+    }
+    .back-to-top.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+    .back-to-top:hover { background: var(--color-gold-dark); transform: translateY(-3px); box-shadow: 0 12px 30px rgba(245,158,11,0.5); }
+    .back-to-top svg { width: 22px; height: 22px; fill: var(--color-navy-dark); }
+
+    /* =============================================
+       RESPONSIVE — MOBILE
+       ============================================= */
+    @media (max-width: 1024px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .pros-grid { grid-template-columns: repeat(2, 1fr); }
+      .showcase-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+      .navbar-nav,
+      .navbar-actions { display: none; }
+      .navbar-hamburger { display: flex; }
+
+      .hero .container {
+        grid-template-columns: 1fr;
+        text-align: center;
+        padding-top: var(--space-8);
+      }
+      .hero-subtitle { margin-left: auto; margin-right: auto; }
+      .hero-actions { justify-content: center; }
+      .hero-stats { justify-content: center; }
+      .hero-visual { display: none; }
+
+      .trust-bar .container { gap: var(--space-4); }
+      .trust-divider { display: none; }
+
+      .stats-strip .container { grid-template-columns: repeat(2, 1fr); }
+      .strip-item { border-left: none; border-bottom: 1px solid rgba(255,255,255,0.07); }
+      .strip-item:nth-child(even) { border-left: 1px solid rgba(255,255,255,0.07); }
+
+      .how-steps { grid-template-columns: repeat(2, 1fr); gap: var(--space-8); }
+      .how-steps::before { display: none; }
+
+      .features-grid { grid-template-columns: 1fr; }
+      .pros-grid { grid-template-columns: 1fr; }
+      .showcase-grid { grid-template-columns: 1fr; }
+      .testimonials-grid { grid-template-columns: 1fr; }
+
+      .cta-section .container { grid-template-columns: 1fr; text-align: center; }
+      .cta-right { align-items: center; }
+
+      .footer-newsletter .container { flex-direction: column; }
+      .newsletter-form { max-width: 100%; width: 100%; }
+
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: var(--space-8); }
+
+      .services-scroll { gap: var(--space-2); }
+    }
+
+    @media (max-width: 480px) {
+      .footer-grid { grid-template-columns: 1fr; }
+      .how-steps { grid-template-columns: 1fr; }
+      .hero-stats { flex-direction: column; gap: var(--space-5); }
+      .trust-item { font-size: 12px; }
+    }
   </style>
 </head>
 
 <body>
 
-  <!-- ======================================================
-       NAVBAR — الـ nav bar الثابتة في الاعلى
-       ====================================================== -->
+  <!-- ============================================================
+       NAVBAR
+       ============================================================ -->
   <nav class="navbar">
     <div class="navbar-logo">
       <div class="logo-mark">
-        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        <img src="assets/images/logo.png" alt="المقاول">
       </div>
       <span class="logo-text">المقاول</span>
     </div>
 
     <ul class="navbar-nav">
       <li><a href="#how">كيف يعمل؟</a></li>
+      <li><a href="#features">المميزات</a></li>
       <li><a href="#pros">المحترفون</a></li>
-      <li><a href="#about">عن المنصة</a></li>
+      <li><a href="#faq">الأسئلة</a></li>
     </ul>
 
     <div class="navbar-actions">
       <a href="auth/login.html" class="navbar-login">سجل دخول</a>
       <a href="auth/role-select.html" class="btn btn-primary btn-sm">ابدأ مجاناً</a>
     </div>
+
+    <!-- Mobile hamburger -->
+    <button class="navbar-hamburger" id="hamburgerBtn" aria-label="فتح القائمة">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
   </nav>
 
+  <!-- Mobile Nav Overlay + Drawer -->
+  <div class="mobile-nav-overlay" id="mobileOverlay"></div>
+  <div class="mobile-nav-drawer" id="mobileDrawer">
+    <div class="mobile-nav-header">
+      <div class="navbar-logo">
+        <div class="logo-mark">
+          <img src="assets/images/logo.png" alt="المقاول">
+        </div>
+        <span class="logo-text">المقاول</span>
+      </div>
+      <button class="mobile-nav-close" id="mobileClose">✕</button>
+    </div>
+    <nav class="mobile-nav-links">
+      <a href="#how" class="mobile-link">كيف يعمل؟</a>
+      <a href="#features" class="mobile-link">المميزات</a>
+      <a href="#pros" class="mobile-link">المحترفون</a>
+      <a href="#showcase" class="mobile-link">مشاريع مكتملة</a>
+      <a href="#faq" class="mobile-link">الأسئلة الشائعة</a>
+    </nav>
+    <div class="mobile-nav-actions">
+      <a href="auth/login.html" class="btn btn-outline btn-full">سجل دخول</a>
+      <a href="auth/role-select.html" class="btn btn-primary btn-full">ابدأ مجاناً</a>
+    </div>
+  </div>
 
-  <!-- ======================================================
-       HERO — القسم الرئيسي اول ما تفتح الصفحة
-       ====================================================== -->
+
+  <!-- ============================================================
+       HERO
+       ============================================================ -->
   <section class="hero" id="home">
     <div class="hero-bg"></div>
+    <div class="hero-shimmer"></div>
     <div class="grid-overlay"></div>
     <div class="hero-orb-1"></div>
     <div class="hero-orb-2"></div>
 
     <div class="container">
 
-      <!-- الجانب الايسر — النص -->
+      <!-- Left col — text -->
       <div class="hero-content">
         <div class="hero-live-tag">
           <span class="hero-live-dot"></span>
@@ -485,24 +992,34 @@
 
         <div class="hero-stats">
           <div>
-            <div class="hero-stat-val"><span>+</span>١٥٬٠٠٠</div>
+            <div class="hero-stat-val counter-up" data-target="15000" data-suffix="+" data-arabic="true"><span>+</span>١٥٬٠٠٠</div>
             <div class="hero-stat-lbl">مشروع مكتمل</div>
           </div>
           <div>
-            <div class="hero-stat-val"><span>+</span>٥٬٠٠٠</div>
+            <div class="hero-stat-val counter-up" data-target="5000" data-suffix="+" data-arabic="true"><span>+</span>٥٬٠٠٠</div>
             <div class="hero-stat-lbl">محترف معتمد</div>
           </div>
           <div>
-            <div class="hero-stat-val">٩٨<span>٪</span></div>
+            <div class="hero-stat-val counter-up" data-target="98" data-suffix="٪" data-arabic="true">٩٨<span>٪</span></div>
             <div class="hero-stat-lbl">رضا العملاء</div>
           </div>
         </div>
       </div>
 
-      <!-- الجانب الايمن — الـ mockup card -->
+      <!-- Right col — mockup -->
       <div class="hero-visual">
-        <div class="hero-mockup-card">
-          <div class="mockup-topbar">
+        <div class="hero-mockup-card" style="position:relative">
+
+          <!-- AI badge top-left of card -->
+          <div class="mockup-ai-badge">
+            <div class="mockup-ai-badge-icon">🤖</div>
+            <div class="mockup-ai-badge-text">
+              AI يوصي بهذا العرض
+              <span class="mockup-ai-badge-sub">تحليل ٢٤ معيار</span>
+            </div>
+          </div>
+
+          <div class="mockup-topbar" style="margin-top: 8px">
             <span class="mockup-label">مشروع نشط</span>
             <span class="badge badge-success badge-live">قيد التنفيذ</span>
           </div>
@@ -546,7 +1063,7 @@
           </div>
         </div>
 
-        <!-- الكارد الصغير الـ floating -->
+        <!-- Floating card -->
         <div class="hero-float">
           <div class="hero-float-icon">
             <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
@@ -562,34 +1079,126 @@
   </section>
 
 
-  <!-- ======================================================
-       STATS STRIP — الشريط الاحصائي تحت الـ hero
-       ====================================================== -->
+  <!-- ============================================================
+       TRUST BAR
+       ============================================================ -->
+  <div class="trust-bar">
+    <div class="container">
+      <div class="trust-item">
+        <div class="trust-item-icon">🔐</div>
+        <span>مشفر ومؤمّن</span>
+      </div>
+      <div class="trust-divider"></div>
+      <div class="trust-item">
+        <div class="trust-item-icon">🛡️</div>
+        <span>ضمان استرداد</span>
+      </div>
+      <div class="trust-divider"></div>
+      <div class="trust-item">
+        <div class="trust-item-icon">📄</div>
+        <span>عقود موثقة</span>
+      </div>
+      <div class="trust-divider"></div>
+      <div class="trust-item">
+        <div class="trust-item-icon">🕐</div>
+        <span>دعم ٢٤/٧</span>
+      </div>
+      <div class="trust-divider"></div>
+      <div class="trust-item">
+        <div class="trust-item-icon">✅</div>
+        <span>مقاولون موثقون رسمياً</span>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       STATS STRIP
+       ============================================================ -->
   <section class="stats-strip">
     <div class="container">
       <div class="strip-item reveal">
         <div class="strip-icon"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div>
-        <div><div class="strip-val">+١٥,٠٠٠</div><div class="strip-lbl">عميل مسجل</div></div>
+        <div>
+          <div class="strip-val counter-up" data-target="15000" data-prefix="+">+١٥,٠٠٠</div>
+          <div class="strip-lbl">عميل مسجل</div>
+        </div>
       </div>
       <div class="strip-item reveal reveal-delay-1">
         <div class="strip-icon"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
-        <div><div class="strip-val">٥,٢٠٠+</div><div class="strip-lbl">محترف معتمد</div></div>
+        <div>
+          <div class="strip-val counter-up" data-target="5200" data-suffix="+">٥,٢٠٠+</div>
+          <div class="strip-lbl">محترف معتمد</div>
+        </div>
       </div>
       <div class="strip-item reveal reveal-delay-2">
         <div class="strip-icon"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg></div>
-        <div><div class="strip-val">١٢,٨٠٠+</div><div class="strip-lbl">مشروع مكتمل</div></div>
+        <div>
+          <div class="strip-val counter-up" data-target="12800" data-suffix="+">١٢,٨٠٠+</div>
+          <div class="strip-lbl">مشروع مكتمل</div>
+        </div>
       </div>
       <div class="strip-item reveal reveal-delay-3">
         <div class="strip-icon"><svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L12 15.45 7.77 18l1.12-4.81-3.73-3.23 4.92-.42L12 5l1.92 4.53 4.92.42-3.73 3.23L16.23 18z"/></svg></div>
-        <div><div class="strip-val">٩٨٪</div><div class="strip-lbl">رضا العملاء</div></div>
+        <div>
+          <div class="strip-val counter-up" data-target="98" data-suffix="٪">٩٨٪</div>
+          <div class="strip-lbl">رضا العملاء</div>
+        </div>
       </div>
     </div>
   </section>
 
 
-  <!-- ======================================================
-       HOW IT WORKS — قسم "كيف يعمل المقاول"
-       ====================================================== -->
+  <!-- ============================================================
+       FEATURES GRID — لماذا المقاول؟
+       ============================================================ -->
+  <section class="features-section" id="features">
+    <div class="container">
+      <div class="section-header-center reveal">
+        <span class="section-label">لماذا المقاول؟</span>
+        <h2 class="section-title">كل ما تحتاجه في مكان واحد</h2>
+        <p class="section-sub">بنيّا نظام متكامل يحمي حقوقك، يوفر وقتك، ويضمن جودة تنفيذ مشروعك</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-icon">🔒</div>
+          <h4>نظام الضمان الآمن</h4>
+          <p>الدفع محمي في حساب ضمان مستقل حتى اكتمال المشروع وموافقتك على التسليم</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon">🤖</div>
+          <h4>توصيات بالذكاء الاصطناعي</h4>
+          <p>نظام AI يحلل العروض المقدمة ويرتبها بناء على ٢٤ معيار ويوصي بأفضلها لك</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-icon">📄</div>
+          <h4>عقود إلكترونية</h4>
+          <p>توقيع رقمي قانوني معتمد مع PDF رسمي يحفظ حقوق الطرفين ويُلزم بالشروط</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-icon">⭐</div>
+          <h4>مقاولون موثقون</h4>
+          <p>كل مقاول يمر بمراجعة بطاقة الهوية والشهادات قبل القبول في المنصة</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon">📊</div>
+          <h4>متابعة في الوقت الحقيقي</h4>
+          <p>تابع تقدم كل مرحلة من مشروعك لحظة بلحظة من أي مكان عبر الداشبورد</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-icon">💬</div>
+          <h4>دعم فني مستمر</h4>
+          <p>فريق دعم متخصص في المقاولات يساعدك طوال رحلتك من البداية للتسليم</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       HOW IT WORKS
+       ============================================================ -->
   <section class="how-section" id="how">
     <div class="container">
       <div class="section-header-center reveal">
@@ -632,9 +1241,58 @@
   </section>
 
 
-  <!-- ======================================================
-       PROFESSIONALS — قسم "أبرز المحترفين"
-       ====================================================== -->
+  <!-- ============================================================
+       SERVICES CATEGORIES
+       ============================================================ -->
+  <section class="services-section" id="services">
+    <div class="container">
+      <div class="section-header-center reveal">
+        <span class="section-label">تخصصاتنا</span>
+        <h2 class="section-title">اكتشف خدماتنا</h2>
+        <p class="section-sub">من بناء الصفر لأدق التشطيبات — عندنا المحترف المناسب لكل تخصص</p>
+      </div>
+
+      <div class="services-scroll reveal">
+        <a href="auth/role-select.html" class="service-pill">
+          <div class="service-pill-icon">🏰</div>
+          بناء فيلات
+        </a>
+        <a href="auth/role-select.html" class="service-pill">
+          <div class="service-pill-icon">🎨</div>
+          تشطيبات
+        </a>
+        <a href="auth/role-select.html" class="service-pill">
+          <div class="service-pill-icon">⚡</div>
+          كهرباء
+        </a>
+        <a href="auth/role-select.html" class="service-pill">
+          <div class="service-pill-icon">🚿</div>
+          سباكة
+        </a>
+        <a href="auth/role-select.html" class="service-pill">
+          <div class="service-pill-icon">📐</div>
+          تصميم معماري
+        </a>
+        <a href="auth/role-select.html" class="service-pill">
+          <div class="service-pill-icon">🏢</div>
+          عمارات
+        </a>
+        <a href="auth/role-select.html" class="service-pill">
+          <div class="service-pill-icon">🔨</div>
+          تجديد ومرمة
+        </a>
+        <a href="auth/role-select.html" class="service-pill">
+          <div class="service-pill-icon">🏗️</div>
+          مشاريع تجارية
+        </a>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       PROFESSIONALS GRID
+       ============================================================ -->
   <section class="pros-section" id="pros">
     <div class="container">
       <div class="flex-between reveal">
@@ -648,10 +1306,15 @@
 
       <div class="pros-grid">
 
-        <!-- كارد محترف ١ -->
+        <!-- Pro card 1 -->
         <div class="pro-card reveal reveal-delay-1">
           <div class="pro-card-head">
-            <div class="avatar avatar-lg av-navy">أ.م</div>
+            <div class="pro-avatar-wrap">
+              <div class="avatar avatar-lg av-navy">أ.م</div>
+              <div class="pro-verified-badge">
+                <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              </div>
+            </div>
             <div>
               <div class="pro-name">م. أحمد محمود</div>
               <div class="pro-title-txt">مهندس مدني — القاهرة</div>
@@ -682,10 +1345,15 @@
           <button class="btn btn-outline btn-full">عرض الملف الشخصي</button>
         </div>
 
-        <!-- كارد محترف ٢ -->
+        <!-- Pro card 2 -->
         <div class="pro-card reveal reveal-delay-2">
           <div class="pro-card-head">
-            <div class="avatar avatar-lg av-blue">س.أ</div>
+            <div class="pro-avatar-wrap">
+              <div class="avatar avatar-lg av-blue">س.أ</div>
+              <div class="pro-verified-badge">
+                <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              </div>
+            </div>
             <div>
               <div class="pro-name">م. سارة أحمد</div>
               <div class="pro-title-txt">مهندسة معمارية — الجيزة</div>
@@ -716,10 +1384,15 @@
           <button class="btn btn-outline btn-full">عرض الملف الشخصي</button>
         </div>
 
-        <!-- كارد محترف ٣ -->
+        <!-- Pro card 3 -->
         <div class="pro-card reveal reveal-delay-3">
           <div class="pro-card-head">
-            <div class="avatar avatar-lg av-green">خ.ح</div>
+            <div class="pro-avatar-wrap">
+              <div class="avatar avatar-lg av-green">خ.ح</div>
+              <div class="pro-verified-badge">
+                <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              </div>
+            </div>
             <div>
               <div class="pro-name">م. خالد حسين</div>
               <div class="pro-title-txt">مقاول عام — الإسكندرية</div>
@@ -754,9 +1427,108 @@
   </section>
 
 
-  <!-- ======================================================
-       CTA SECTION — قسم الـ call to action الكبير
-       ====================================================== -->
+  <!-- ============================================================
+       PROJECT SHOWCASE
+       ============================================================ -->
+  <section class="showcase-section" id="showcase">
+    <div class="container">
+      <div class="section-header-center reveal">
+        <span class="section-label">أعمالنا</span>
+        <h2 class="section-title">مشاريع مكتملة بنجاح</h2>
+        <p class="section-sub">نماذج حقيقية من مشاريع أتمّها عملاؤنا عبر المنصة بجودة عالية وفي الموعد</p>
+      </div>
+
+      <div class="showcase-grid">
+
+        <!-- Showcase 1 -->
+        <div class="showcase-card reveal reveal-delay-1">
+          <div class="showcase-img">
+            <div class="showcase-img-bg sc-bg-1"></div>
+            <div class="showcase-img-overlay"></div>
+            <div class="showcase-complete-badge">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              مكتمل
+            </div>
+            <span class="showcase-type-badge">فيلا سكنية</span>
+          </div>
+          <div class="showcase-body">
+            <div class="showcase-title">فيلا التجمع الخامس</div>
+            <div class="showcase-meta">
+              <div class="showcase-meta-item">📍 القاهرة الجديدة</div>
+              <div class="showcase-meta-item">📐 ٦٢٠ م²</div>
+            </div>
+            <div class="showcase-footer">
+              <div class="showcase-rating">
+                <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                ٤.٩ / ٥
+              </div>
+              <div class="showcase-date">مارس ٢٠٢٥</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Showcase 2 -->
+        <div class="showcase-card reveal reveal-delay-2">
+          <div class="showcase-img">
+            <div class="showcase-img-bg sc-bg-2"></div>
+            <div class="showcase-img-overlay"></div>
+            <div class="showcase-complete-badge">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              مكتمل
+            </div>
+            <span class="showcase-type-badge">تشطيبات</span>
+          </div>
+          <div class="showcase-body">
+            <div class="showcase-title">تشطيب شقة المعادي</div>
+            <div class="showcase-meta">
+              <div class="showcase-meta-item">📍 المعادي — القاهرة</div>
+              <div class="showcase-meta-item">📐 ١٨٠ م²</div>
+            </div>
+            <div class="showcase-footer">
+              <div class="showcase-rating">
+                <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                ٤.٨ / ٥
+              </div>
+              <div class="showcase-date">يناير ٢٠٢٥</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Showcase 3 -->
+        <div class="showcase-card reveal reveal-delay-3">
+          <div class="showcase-img">
+            <div class="showcase-img-bg sc-bg-3"></div>
+            <div class="showcase-img-overlay"></div>
+            <div class="showcase-complete-badge">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              مكتمل
+            </div>
+            <span class="showcase-type-badge">تجاري</span>
+          </div>
+          <div class="showcase-body">
+            <div class="showcase-title">مبنى تجاري ٦ أكتوبر</div>
+            <div class="showcase-meta">
+              <div class="showcase-meta-item">📍 ٦ أكتوبر — الجيزة</div>
+              <div class="showcase-meta-item">📐 ١٢٠٠ م²</div>
+            </div>
+            <div class="showcase-footer">
+              <div class="showcase-rating">
+                <svg class="star-svg" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                ٤.٧ / ٥
+              </div>
+              <div class="showcase-date">أبريل ٢٠٢٥</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       CTA SECTION
+       ============================================================ -->
   <section class="cta-section">
     <div class="grid-overlay"></div>
     <div class="container">
@@ -764,20 +1536,34 @@
         <h2 class="cta-title">جاهز تبدأ مشروعك؟<br><span>سجّل دلوقتي مجاناً</span></h2>
         <p class="cta-sub">انضم لأكثر من ١٥,٠٠٠ عميل يثقون في المقاول لإدارة مشاريعهم الإنشائية في مصر.</p>
       </div>
-      <div class="reveal reveal-delay-2" style="display:flex;flex-direction:column;align-items:flex-start;gap:12px;flex-shrink:0">
+      <div class="cta-right reveal reveal-delay-2">
+        <div class="cta-feature-list">
+          <div class="cta-feature-item">
+            <div class="cta-check">✓</div>
+            مجاني تماماً للعملاء بدون رسوم خفية
+          </div>
+          <div class="cta-feature-item">
+            <div class="cta-check">✓</div>
+            ضمان استرداد الأموال إذا لم يُنجز العمل
+          </div>
+          <div class="cta-feature-item">
+            <div class="cta-check">✓</div>
+            عقود رقمية قانونية فورية بضغطة زر
+          </div>
+        </div>
         <a href="auth/role-select.html" class="btn btn-primary btn-xl">
           ابدأ مجاناً
           <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M8 5v14l11-7z"/></svg>
         </a>
-         <!-- <span class="cta-note">لا يحتاج بطاقة ائتمانية · مجاني للأبد</span> -->
+        <span class="cta-note">لا يحتاج بطاقة ائتمانية · مجاني للأبد للعملاء</span>
       </div>
     </div>
   </section>
 
 
-  <!-- ======================================================
-       TESTIMONIALS — آراء وتقييمات العملاء
-       ====================================================== -->
+  <!-- ============================================================
+       TESTIMONIALS
+       ============================================================ -->
   <section class="testimonials-section" id="about">
     <div class="container">
       <div class="section-header-center reveal">
@@ -804,6 +1590,10 @@
               <div class="author-role">صاحب فيلا — التجمع الخامس</div>
             </div>
           </div>
+          <div class="trust-score-bar-wrap">
+            <div class="trust-score-label">رضا العميل <span>٩٨٪</span></div>
+            <div class="trust-score-track"><div class="trust-score-fill" style="width:98%"></div></div>
+          </div>
         </div>
 
         <div class="testimonial-card reveal reveal-delay-2">
@@ -822,6 +1612,10 @@
               <div class="author-name">نور يوسف</div>
               <div class="author-role">مهندسة معمارية — الجيزة</div>
             </div>
+          </div>
+          <div class="trust-score-bar-wrap">
+            <div class="trust-score-label">رضا العميل <span>٩٦٪</span></div>
+            <div class="trust-score-track"><div class="trust-score-fill" style="width:96%"></div></div>
           </div>
         </div>
 
@@ -842,28 +1636,115 @@
               <div class="author-role">صاحب شقة — الإسكندرية</div>
             </div>
           </div>
+          <div class="trust-score-bar-wrap">
+            <div class="trust-score-label">رضا العميل <span>١٠٠٪</span></div>
+            <div class="trust-score-track"><div class="trust-score-fill" style="width:100%"></div></div>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
 
-  <!-- ======================================================
-       FOOTER — الفوتر الكامل في اخر الصفحة
-       ====================================================== -->
+  <!-- ============================================================
+       FAQ SECTION
+       ============================================================ -->
+  <section class="faq-section" id="faq">
+    <div class="container">
+      <div class="section-header-center reveal">
+        <span class="section-label">الأسئلة الشائعة</span>
+        <h2 class="section-title">عندك سؤال؟</h2>
+        <p class="section-sub">إجابات على أكثر الأسئلة اللي بتيجي في بالك قبل ما تبدأ</p>
+      </div>
+
+      <div class="faq-list reveal">
+        <div class="faq-item">
+          <div class="faq-question">
+            <span class="faq-question-text">كيف أضمن حقي المالي في حالة الخلاف؟</span>
+            <div class="faq-icon">+</div>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">نظام الضمان (Escrow) يحفظ مبلغك في حساب مستقل آمن ولا يصل للمقاول إلا بعد اكتمال العمل وموافقتك الصريحة. في حالة الخلاف، فريق الدعم يتدخل لحل النزاع بشكل عادل للطرفين.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            <span class="faq-question-text">كيف يتم اختيار المقاول المناسب لمشروعي؟</span>
+            <div class="faq-icon">+</div>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">بعد نشر مشروعك، يتلقى المقاولون المؤهلون إشعاراً ويقدمون عروضهم. نظام الذكاء الاصطناعي يحلل العروض ويرتبها بناء على السعر والتقييمات والخبرة والتخصص، ويوصي بأفضل خيار لك.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            <span class="faq-question-text">هل العقد الإلكتروني معترف به قانونياً؟</span>
+            <div class="faq-icon">+</div>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">نعم، العقود الإلكترونية على المنصة تُوقَّع رقمياً وتُخزَّن بشكل آمن وتُعدّ وثيقة قانونية معتمدة وفقاً لقانون التوقيع الإلكتروني المصري. يصلك نسخة PDF رسمية فور التوقيع.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            <span class="faq-question-text">ما هي تكلفة استخدام المنصة؟</span>
+            <div class="faq-icon">+</div>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">المنصة مجانية تماماً للعملاء أصحاب المشاريع. المقاولون يدفعون عمولة صغيرة نسبية فقط عند إتمام الصفقة بنجاح، مما يعني أن المقاول لا يخسر شيئاً إلا إذا ربح مشروعاً.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            <span class="faq-question-text">كم يستغرق إيجاد مقاول لمشروعي؟</span>
+            <div class="faq-icon">+</div>
+          </div>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">في الغالب تصلك أول العروض خلال ساعات قليلة من نشر المشروع، وتكون لديك عروض كافية لاتخاذ قرار خلال ٢٤ إلى ٤٨ ساعة. المشاريع العاجلة يمكن تمييزها لتصل للمقاولين فوراً.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       FOOTER NEWSLETTER + FOOTER
+       ============================================================ -->
+  <div class="footer-newsletter">
+    <div class="container">
+      <div class="newsletter-text">
+        <h3>اشترك في نشرتنا البريدية</h3>
+        <p>آخر أخبار المنصة ونصائح المقاولات مباشرة لبريدك</p>
+      </div>
+      <div class="newsletter-form">
+        <input type="email" class="newsletter-input" placeholder="بريدك الإلكتروني..." />
+        <button class="btn btn-primary" onclick="handleNewsletterSubmit(this)">اشترك</button>
+      </div>
+    </div>
+  </div>
+
   <footer class="footer">
     <div class="container">
       <div class="footer-grid">
 
-        <!-- الكولم الاول — البراند -->
+        <!-- Brand col -->
         <div>
           <div class="navbar-logo footer-logo-wrap" style="margin-bottom:16px">
             <div class="sidebar-logo-mark">
-              <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+              <img src="assets/images/logo.png" alt="المقاول">
             </div>
             <span class="logo-text" style="color:#fff">المقاول</span>
           </div>
           <p class="footer-brand-desc">المنصة المتكاملة لإدارة المشاريع الإنشائية في مصر. نربطك بأفضل المقاولين والمهندسين لضمان جودة استثنائية وشفافية تامة.</p>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:13px;color:rgba(255,255,255,0.4)">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="rgba(245,158,11,0.6)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            القاهرة، جمهورية مصر العربية
+          </div>
           <div class="footer-socials">
             <div class="social-btn"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></div>
             <div class="social-btn"><svg viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.53A4.48 4.48 0 0016 2.5a4.48 4.48 0 00-4.44 5.28A12.76 12.76 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/></svg></div>
@@ -872,30 +1753,32 @@
           </div>
         </div>
 
-        <!-- كولم ٢ -->
+        <!-- Quick links -->
         <div>
           <div class="footer-col-title">روابط سريعة</div>
           <ul class="footer-links">
             <li><a href="#">الرئيسية</a></li>
             <li><a href="#how">كيف يعمل؟</a></li>
+            <li><a href="#features">المميزات</a></li>
             <li><a href="#pros">المحترفون</a></li>
-            <li><a href="#">الأسئلة الشائعة</a></li>
+            <li><a href="#faq">الأسئلة الشائعة</a></li>
           </ul>
         </div>
 
-        <!-- كولم ٣ -->
+        <!-- Services -->
         <div>
           <div class="footer-col-title">خدماتنا</div>
           <ul class="footer-links">
             <li><a href="#">نشر المشاريع</a></li>
             <li><a href="#">نظام العروض</a></li>
             <li><a href="#">العقود الرقمية</a></li>
-            <li><a href="#">نظام الدفع</a></li>
+            <li><a href="#">نظام الضمان</a></li>
             <li><a href="#">التقييمات</a></li>
+            <li><a href="#">توصيات AI</a></li>
           </ul>
         </div>
 
-        <!-- كولم ٤ -->
+        <!-- Contact -->
         <div>
           <div class="footer-col-title">تواصل معنا</div>
           <ul class="footer-links">
@@ -906,8 +1789,6 @@
         </div>
 
       </div>
-
-
 
       <div class="footer-bottom-bar">
         <div class="footer-copy">© ٢٠٢٥ منصة المقاول. جميع الحقوق محفوظة.</div>
@@ -920,10 +1801,146 @@
     </div>
   </footer>
 
-  <!-- Motion One — mktba el animation el khafeefa (~4KB) -->
+  <!-- Back to Top Button -->
+  <button class="back-to-top" id="backToTop" aria-label="العودة لأعلى">
+    <svg viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
+  </button>
+
+
+  <!-- ============================================================
+       SCRIPTS — all new JS before existing scripts
+       ============================================================ -->
+  <script>
+    /* ---- Mobile Nav Drawer ---- */
+    (function initMobileNav() {
+      const hamburger = document.getElementById('hamburgerBtn');
+      const drawer    = document.getElementById('mobileDrawer');
+      const overlay   = document.getElementById('mobileOverlay');
+      const closeBtn  = document.getElementById('mobileClose');
+      const mobileLinks = document.querySelectorAll('.mobile-link');
+
+      function openDrawer() {
+        hamburger.classList.add('open');
+        drawer.classList.add('open');
+        overlay.style.display = 'block';
+        requestAnimationFrame(() => overlay.classList.add('open'));
+        document.body.style.overflow = 'hidden';
+      }
+      function closeDrawer() {
+        hamburger.classList.remove('open');
+        drawer.classList.remove('open');
+        overlay.classList.remove('open');
+        setTimeout(() => { overlay.style.display = ''; }, 350);
+        document.body.style.overflow = '';
+      }
+
+      hamburger.addEventListener('click', openDrawer);
+      closeBtn.addEventListener('click', closeDrawer);
+      overlay.addEventListener('click', closeDrawer);
+      mobileLinks.forEach(link => link.addEventListener('click', closeDrawer));
+    })();
+
+
+    /* ---- Counter-Up Animation ---- */
+    (function initCounters() {
+      const counters = document.querySelectorAll('.counter-up');
+      if (!counters.length) return;
+
+      // Arabic-Eastern numerals map
+      const toArabicNumerals = (num) => {
+        return num.toString().replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+      };
+
+      const easeOutQuad = (t) => 1 - (1 - t) * (1 - t);
+
+      function animateCounter(el) {
+        const target  = parseInt(el.dataset.target, 10);
+        const suffix  = el.dataset.suffix  || '';
+        const prefix  = el.dataset.prefix  || '';
+        const useAr   = el.dataset.arabic === 'true';
+        const duration = 1800;
+        const start   = performance.now();
+
+        function update(now) {
+          const elapsed  = now - start;
+          const progress = Math.min(elapsed / duration, 1);
+          const eased    = easeOutQuad(progress);
+          const current  = Math.round(eased * target);
+
+          let display = current.toLocaleString('en-US');
+          if (useAr) {
+            display = toArabicNumerals(current.toLocaleString('en-US').replace(/,/g, '٬'));
+          }
+          el.textContent = prefix + display + suffix;
+
+          if (progress < 1) requestAnimationFrame(update);
+        }
+        requestAnimationFrame(update);
+      }
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            animateCounter(entry.target);
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.5 });
+
+      counters.forEach(el => observer.observe(el));
+    })();
+
+
+    /* ---- FAQ Accordion ---- */
+    (function initFAQ() {
+      const items = document.querySelectorAll('.faq-item');
+      items.forEach(item => {
+        const question = item.querySelector('.faq-question');
+        question.addEventListener('click', () => {
+          const isOpen = item.classList.contains('open');
+          // close all
+          items.forEach(i => i.classList.remove('open'));
+          // open clicked unless it was already open
+          if (!isOpen) item.classList.add('open');
+        });
+      });
+    })();
+
+
+    /* ---- Back to Top ---- */
+    (function initBackToTop() {
+      const btn = document.getElementById('backToTop');
+      window.addEventListener('scroll', () => {
+        btn.classList.toggle('visible', window.scrollY > 300);
+      }, { passive: true });
+      btn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    })();
+
+
+    /* ---- Newsletter submit ---- */
+    function handleNewsletterSubmit(btn) {
+      const input = btn.previousElementSibling;
+      const val   = input.value.trim();
+      if (!val || !val.includes('@')) {
+        input.focus();
+        input.style.borderColor = 'var(--color-error)';
+        setTimeout(() => { input.style.borderColor = ''; }, 2000);
+        return;
+      }
+      btn.textContent = '✓ تم الاشتراك';
+      btn.disabled    = true;
+      input.value     = '';
+      btn.style.background = 'var(--color-success)';
+    }
+  </script>
+
+  <!-- Motion One -->
   <script src="https://cdn.jsdelivr.net/npm/motion@10.18.0/dist/motion.min.js"></script>
   <script src="assets/js/main.js"></script>
-  <!-- el guest identity + el scroll-prompt modal 3ashan el user el mesh mosajel -->
   <script src="assets/js/guest.js"></script>
+  <!-- AI Policy Chat Widget (Phase 6.1) -->
+  <script src="assets/js/chat-widget.js"></script>
 </body>
 </html>

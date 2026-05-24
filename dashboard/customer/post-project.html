@@ -274,8 +274,8 @@
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <div class="sidebar-logo-mark" style="display:flex;align-items:center;justify-content:center;">
-          <svg viewBox="0 0 24 24"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
+        <div class="sidebar-logo-mark">
+          <img src="../../assets/images/logo.png" alt="المقاول">
         </div>
         <div class="sidebar-logo-text">المقاول</div>
       </div>
@@ -585,7 +585,7 @@
           <div class="drop-zone" id="dropZone">
             <div class="dz-icon">📷</div>
             <div class="dz-title">اسحب الصور هنا أو اضغط للاختيار</div>
-            <div class="dz-sub">حتى 10 صور — الحد الأقصى 5 ميجا لكل صورة — JPG / PNG / WebP</div>
+            <div class="dz-sub">حتى 20 صورة — الحد الأقصى 5 ميجا لكل صورة — JPG / PNG / WebP</div>
             <input type="file" id="photoInput" accept="image/*" multiple>
           </div>
           <div class="preview-grid" id="previewGrid"></div>
@@ -598,13 +598,50 @@
             </h4>
             <div id="reviewContent"></div>
           </div>
+
+          <!-- Draft / Publish Toggle -->
+          <div style="margin-top: var(--space-6); background: var(--color-gold-subtle); border: 2px solid var(--color-gold); border-radius: var(--radius-md); padding: var(--space-5) var(--space-6);">
+            <p style="font-size: var(--font-size-sm); font-weight: 800; color: var(--color-navy); margin-bottom: var(--space-3);">طريقة النشر</p>
+            <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+              <label style="display: flex; align-items: flex-start; gap: var(--space-3); cursor: pointer;">
+                <input type="radio" name="publishMode" value="open" checked style="margin-top: 3px; accent-color: var(--color-gold); width:16px; height:16px;">
+                <div>
+                  <div style="font-weight: 800; color: var(--color-navy); font-size: var(--font-size-sm);">🚀 نشر فوري</div>
+                  <div style="font-size: 12px; color: var(--text-muted);">يُعرض مشروعك فوراً ويمكن للمقاولين تقديم عروضهم</div>
+                </div>
+              </label>
+              <label style="display: flex; align-items: flex-start; gap: var(--space-3); cursor: pointer;">
+                <input type="radio" name="publishMode" value="draft" style="margin-top: 3px; accent-color: var(--color-gold); width:16px; height:16px;">
+                <div>
+                  <div style="font-weight: 800; color: var(--color-navy); font-size: var(--font-size-sm);">📝 حفظ كمسودة</div>
+                  <div style="font-size: 12px; color: var(--text-muted);">يُحفظ لحين مراجعته ونشره يدوياً من لوحة تحكمك</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Featured Project Add-on -->
+          <div style="margin-top: var(--space-4); background: rgba(244,166,35,0.05); border: 1.5px solid rgba(244,166,35,0.22); border-radius: var(--radius-md); padding: var(--space-5) var(--space-6);">
+            <p style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: var(--space-3);">إضافات اختيارية</p>
+            <label style="display: flex; align-items: flex-start; gap: var(--space-3); cursor: pointer;">
+              <input type="checkbox" id="featuredToggle" name="isFeatured"
+                style="margin-top: 3px; accent-color: var(--color-gold); width:17px; height:17px; flex-shrink:0;">
+              <div>
+                <div style="display:flex; align-items:center; gap: var(--space-2); font-weight: 800; color: var(--color-navy); font-size: var(--font-size-sm);">
+                  ⭐ مشروع مميز
+                  <span style="background: var(--color-gold); color: var(--color-navy-dark); font-size: 11px; font-weight: 900; padding: 2px 10px; border-radius: var(--radius-full);">99 ج.م</span>
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">يُعرض مشروعك في أعلى قائمة المقاولين ويحمل شارة ⭐ لمدة 30 يوماً — تمييز مجاني للاختبار</div>
+              </div>
+            </label>
+          </div>
         </section>
 
         <!-- ============ Navigation Buttons ============ -->
         <div class="nav-buttons">
           <button type="button" class="btn btn-outline" id="prevBtn" disabled>السابق</button>
           <button type="button" class="btn btn-primary" id="nextBtn">التالي</button>
-          <button type="submit" class="btn btn-primary" id="submitBtn" style="display:none;">نشر المشروع</button>
+          <button type="submit" class="btn btn-primary" id="submitBtn" style="display:none;">🚀 نشر المشروع</button>
         </div>
 
       </form>
@@ -804,7 +841,7 @@ function showToastGlobal(message, type) {
 
     // Hooks
     if (n === 3) buildRequirements();
-    if (n === 5) buildReview();
+    if (n === 5) { buildReview(); updateSubmitLabel(); }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -879,7 +916,7 @@ function showToastGlobal(message, type) {
 
   function handleFiles(files) {
     [...files].forEach(f => {
-      if (uploadedFiles.length >= 10) { showToast('الحد الأقصى 10 صور', 'error'); return; }
+      if (uploadedFiles.length >= 20) { showToast('الحد الأقصى 20 صورة', 'error'); return; }
       if (f.size > 5 * 1024 * 1024)   { showToast(`الملف ${f.name} أكبر من 5 ميجا`, 'error'); return; }
       if (!f.type.startsWith('image/')) return;
       uploadedFiles.push(f);
@@ -945,6 +982,16 @@ function showToastGlobal(message, type) {
       `<div class="review-item"><span class="rv-key">${k}</span><span class="rv-val">${v}</span></div>`
     ).join('');
   }
+
+  // ===== Draft/Publish label sync =====
+  function updateSubmitLabel() {
+    const mode = document.querySelector('input[name="publishMode"]:checked')?.value || 'open';
+    const btn = document.getElementById('submitBtn');
+    btn.textContent = mode === 'draft' ? '📝 حفظ كمسودة' : '🚀 نشر المشروع';
+  }
+  document.querySelectorAll('input[name="publishMode"]').forEach(r =>
+    r.addEventListener('change', updateSubmitLabel)
+  );
 
   // ===== AI Estimate button calls backend ======
   document.getElementById('aiEstimateBtn').addEventListener('click', async () => {
@@ -1027,6 +1074,8 @@ function showToastGlobal(message, type) {
       budgetRange: document.querySelector('input[name="budget"]:checked')?.value,
       timeline: document.querySelector('input[name="timeline"]:checked')?.value,
       requiredEngineers: Math.min(50, Math.max(0, engVal)),
+      status: document.querySelector('input[name="publishMode"]:checked')?.value === 'draft' ? 'draft' : 'open',
+      isFeatured: document.getElementById('featuredToggle')?.checked || false,
     };
 
     const submitBtn = document.getElementById('submitBtn');
@@ -1050,7 +1099,8 @@ function showToastGlobal(message, type) {
         method: 'POST',
         body: JSON.stringify(bodyParams)
       });
-      showToast('تم نشر مشروعك بنجاح، جاري التحويل لصفحة العروض', 'success');
+      const isDraft = bodyParams.status === 'draft';
+      showToast(isDraft ? 'تم حفظ مشروعك كمسودة بنجاح' : 'تم نشر مشروعك بنجاح، جاري التحويل لصفحة العروض', 'success');
       window.location.href = 'proposals.html';
     } catch (err) {
       showToast(err.message || 'تعذر نشر المشروع', 'error');

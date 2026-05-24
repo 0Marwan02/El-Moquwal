@@ -44,4 +44,12 @@ router.get('/me', requireAuth, ctrl.me);
 // سجل نقاط المقاول
 router.get('/credit-ledger', requireAuth, requireRole('contractor'), ctrl.listCreditLedger);
 
+// OTP — تفعيل الحساب بالبريد
+router.post('/send-otp', ctrl.sendOTPHandler);
+router.post('/verify-otp', ctrl.verifyOTPHandler);
+
+// Password reset
+router.post('/forgot-password', ctrl.forgotPasswordHandler);
+router.post('/reset-password', ctrl.resetPasswordHandler);
+
 module.exports = router;

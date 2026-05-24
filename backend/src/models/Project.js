@@ -179,6 +179,21 @@ const projectSchema = new mongoose.Schema(
 
     // عدد العروض المقدمة — denormalized للأداء
     bidsCount: { type: Number, default: 0, min: 0 },
+
+    // ===== المشاريع الخاصة =====
+    isPrivate: { type: Boolean, default: false, index: true },
+    invitedContractors: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+
+    // ===== المشاريع المميزة والعاجلة =====
+    isFeatured: { type: Boolean, default: false, index: true },
+    featuredUntil: { type: Date, default: null },
+    isUrgent: { type: Boolean, default: false, index: true },
+
+    // ===== صور الإغلاق (قبل / بعد) =====
+    closurePhotos: {
+      before: { type: [photoSchema], default: [] },
+      after: { type: [photoSchema], default: [] },
+    },
   },
   {
     timestamps: true,

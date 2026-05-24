@@ -1,4 +1,4 @@
-// el controller bta3 el projects — CRUD + AI estimate
+// el controller bta3 el projects — CRUD + AI estimate + private/featured/closure
 const { z } = require('zod');
 const { callLLM, parseJsonResponse, isAIAvailable } = require('../utils/ai.service');
 
@@ -38,7 +38,11 @@ const createProjectSchema = z.object({
   timeline: z.enum([
     'within_week', 'within_month', '1_3_months', '3_6_months', 'flexible',
   ]).optional(),
-  requiredEngineers: z.coerce.number().int().min(0).max(50).optional().default(0), // 0 = يقرر المقاول
+  requiredEngineers: z.coerce.number().int().min(0).max(50).optional().default(0),
+  isPrivate: z.boolean().optional().default(false),
+  invitedContractors: z.array(z.string()).optional().default([]),
+  isUrgent: z.boolean().optional().default(false),
+  isFeatured: z.boolean().optional().default(false),
 });
 
 // =====================================================
@@ -88,11 +92,17 @@ const createProject = asyncHandler(async (req, res) => {
   }
 
   const isDraft = req.query.draft === '1' || req.query.draft === 'true';
+  const { isPrivate, invitedContractors, isUrgent, isFeatured, ...projectData } = parsed.data;
 
   const project = await Project.create({
-    ...parsed.data,
+    ...projectData,
     postedBy: req.user._id,
     status: isDraft ? 'draft' : 'open',
+    isPrivate: isPrivate || false,
+    invitedContractors: isPrivate ? (invitedContractors || []) : [],
+    isUrgent: isUrgent || false,
+    isFeatured: isFeatured || false,
+    featuredUntil: isFeatured ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) : null,
   });
 
   res.status(201).json({ project });
@@ -102,6 +112,7 @@ const createProject = asyncHandler(async (req, res) => {
 const listProjects = asyncHandler(async (req, res) => {
   const {
     type, governorate, budget, status = 'open',
+    featured, urgent,
     page = 1, limit = 20,
   } = req.query;
 
@@ -110,15 +121,23 @@ const listProjects = asyncHandler(async (req, res) => {
   if (type) filter.projectType = type;
   if (governorate) filter['propertyDetails.governorate'] = governorate;
   if (budget) filter.budgetRange = budget;
+  if (featured === 'true') filter.isFeatured = true;
+  if (urgent === 'true') filter.isUrgent = true;
+
+  // hide private projects from public listing
+  if (!req.user || (req.user.role !== 'admin' && req.user.role !== 'super_admin')) {
+    filter.isPrivate = { $ne: true };
+  }
 
   const skip = (Number(page) - 1) * Number(limit);
 
   const [projects, total] = await Promise.all([
     Project.find(filter)
-      .sort({ createdAt: -1 })
+      // featured first, then urgent, then newest
+      .sort({ isFeatured: -1, isUrgent: -1, createdAt: -1 })
       .skip(skip)
       .limit(Number(limit))
-      .select('-requirements') // requirements el detail يجي في GET :id
+      .select('-requirements')
       .lean(),
     Project.countDocuments(filter),
   ]);
@@ -389,6 +408,10 @@ const publishDraft = asyncHandler(async (req, res) => {
 const closeProjectSchema = z.object({
   rating: z.number().min(1).max(5).optional(),
   review: z.string().max(500).optional().default(''),
+  closurePhotos: z.object({
+    before: z.array(z.object({ filename: z.string(), originalName: z.string() })).optional().default([]),
+    after: z.array(z.object({ filename: z.string(), originalName: z.string() })).optional().default([]),
+  }).optional(),
 });
 
 const closeProject = asyncHandler(async (req, res) => {
@@ -403,34 +426,165 @@ const closeProject = asyncHandler(async (req, res) => {
     throw new AppError('لا يمكن إغلاق مشروع غير مُرسى', 400, 'NOT_AWARDED');
   }
 
+  // صور الإغلاق إلزامية — قبل وبعد
+  const beforePhotos = req.files?.closureBefore || [];
+  const afterPhotos = req.files?.closureAfter || [];
+  if (beforePhotos.length === 0 || afterPhotos.length === 0) {
+    throw new AppError('يجب رفع صور قبل وبعد الإنجاز لإغلاق المشروع', 400, 'CLOSURE_PHOTOS_REQUIRED');
+  }
+
   const parsed = closeProjectSchema.safeParse(req.body);
   if (!parsed.success) {
     throw new AppError('بيانات غير صحيحة', 400, 'VALIDATION_ERROR');
   }
 
+  const mapPhoto = (f) => ({ filename: f.filename, originalName: f.originalname, mimetype: f.mimetype, size: f.size });
+
   project.status = 'closed';
   project.closedAt = new Date();
+  project.closurePhotos = {
+    before: beforePhotos.map(mapPhoto),
+    after: afterPhotos.map(mapPhoto),
+  };
   if (parsed.data.review) project.clientReview = parsed.data.review;
   if (parsed.data.rating) project.clientRating = parsed.data.rating;
   await project.save();
 
-  // تحديث إحصائيات المقاول (rating + completedProjects)
+  // تحديث إحصائيات المقاول + إضافة للبورتفوليو تلقائياً
   if (project.awardedTo) {
     const Contractor = require('../models/ContractorProfile');
+    const PortfolioItem = require('../models/PortfolioItem');
+
     const contractor = await Contractor.findById(project.awardedTo);
     if (contractor) {
       contractor.completedProjects = (contractor.completedProjects || 0) + 1;
       if (parsed.data.rating) {
-        // متوسط تراكمي بسيط
         const oldTotal = contractor.rating * Math.max(0, contractor.completedProjects - 1);
         contractor.rating = Math.round(((oldTotal + parsed.data.rating) / contractor.completedProjects) * 10) / 10;
       }
       await contractor.save();
     }
+
+    // إضافة صور الإغلاق للبورتفوليو تلقائياً
+    await PortfolioItem.create({
+      contractor: project.awardedTo,
+      sourceProject: project._id,
+      title: project.title,
+      beforePhotos: beforePhotos.map(mapPhoto),
+      afterPhotos: afterPhotos.map(mapPhoto),
+      images: [...beforePhotos.map(mapPhoto), ...afterPhotos.map(mapPhoto)],
+      isAutoGenerated: true,
+    }).catch((err) => logger.warn({ err: err.message }, 'Portfolio auto-create failed (non-fatal)'));
   }
 
-  logger.info({ projectId: project._id.toString() }, 'Project closed');
+  logger.info({ projectId: project._id.toString() }, 'Project closed with closure photos');
   res.json({ project });
 });
 
-module.exports = { createProject, listProjects, getProject, aiEstimate, updateProject, deleteProject, publishDraft, closeProject };
+// =====================================================
+// POST /api/projects/:id/invite — customer only (owner)
+// يدعو مقاولاً محدداً لمشروع خاص
+// =====================================================
+
+const inviteContractor = asyncHandler(async (req, res) => {
+  const project = await Project.findById(req.params.id);
+  if (!project) throw new AppError('المشروع غير موجود', 404, 'NOT_FOUND');
+
+  if (project.postedBy.toString() !== req.user._id.toString()) {
+    throw new AppError('غير مصرح', 403, 'FORBIDDEN');
+  }
+  if (!project.isPrivate) {
+    throw new AppError('المشروع ليس خاصاً — الدعوة متاحة فقط للمشاريع الخاصة', 400, 'NOT_PRIVATE');
+  }
+
+  const { contractorId } = req.body;
+  if (!contractorId) throw new AppError('معرف المقاول مطلوب', 400, 'MISSING_CONTRACTOR');
+
+  const mongoose = require('mongoose');
+  if (!mongoose.Types.ObjectId.isValid(contractorId)) {
+    throw new AppError('معرف المقاول غير صحيح', 400, 'INVALID_ID');
+  }
+
+  const alreadyInvited = project.invitedContractors.some((id) => id.toString() === contractorId);
+  if (!alreadyInvited) {
+    project.invitedContractors.push(contractorId);
+    await project.save();
+  }
+
+  logger.info({ projectId: project._id.toString(), contractorId }, 'Contractor invited to private project');
+  res.json({ ok: true, invitedContractors: project.invitedContractors });
+});
+
+// =====================================================
+// PUT /api/projects/:id/feature — admin only
+// يضبط isFeatured / isUrgent / featuredUntil
+// =====================================================
+
+const featureProjectSchema = z.object({
+  isFeatured: z.boolean().optional(),
+  isUrgent: z.boolean().optional(),
+  featuredUntil: z.string().datetime().nullable().optional(),
+});
+
+const featureProject = asyncHandler(async (req, res) => {
+  const project = await Project.findById(req.params.id);
+  if (!project) throw new AppError('المشروع غير موجود', 404, 'NOT_FOUND');
+
+  const parsed = featureProjectSchema.safeParse(req.body);
+  if (!parsed.success) throw new AppError('بيانات غير صحيحة', 400, 'VALIDATION_ERROR');
+
+  if (parsed.data.isFeatured !== undefined) project.isFeatured = parsed.data.isFeatured;
+  if (parsed.data.isUrgent !== undefined) project.isUrgent = parsed.data.isUrgent;
+  if (parsed.data.featuredUntil !== undefined) {
+    project.featuredUntil = parsed.data.featuredUntil ? new Date(parsed.data.featuredUntil) : null;
+  }
+
+  await project.save();
+
+  logger.info({ projectId: project._id.toString(), isFeatured: project.isFeatured, isUrgent: project.isUrgent }, 'Project feature flags updated');
+  res.json({ project });
+});
+
+// =====================================================
+// POST /api/projects/:id/media — customer only (owner)
+// رفع صور للمشروع (حد أقصى 20 صورة) — Phase 3.1
+// =====================================================
+
+const uploadProjectMedia = asyncHandler(async (req, res) => {
+  const project = await Project.findById(req.params.id);
+  if (!project) throw new AppError('المشروع غير موجود', 404, 'NOT_FOUND');
+
+  if (project.postedBy.toString() !== req.user._id.toString()) {
+    throw new AppError('غير مصرح', 403, 'FORBIDDEN');
+  }
+
+  if (!req.files || req.files.length === 0) {
+    throw new AppError('لا توجد صور للرفع', 400, 'NO_FILES');
+  }
+
+  const MAX_IMAGES = 20;
+  const currentCount = (project.photos || []).length;
+  if (currentCount + req.files.length > MAX_IMAGES) {
+    throw new AppError(
+      `الحد الأقصى ${MAX_IMAGES} صورة لكل مشروع. لديك ${currentCount} صورة حالياً.`,
+      400, 'MAX_IMAGES_EXCEEDED'
+    );
+  }
+
+  const newImages = req.files.map((f) => ({
+    filename: f.filename,
+    originalName: f.originalname,
+    mimetype: f.mimetype,
+    size: f.size,
+    uploadedAt: new Date(),
+  }));
+
+  if (!project.photos) project.photos = [];
+  project.photos.push(...newImages);
+  await project.save();
+
+  logger.info({ projectId: project._id.toString(), count: req.files.length }, 'Project media uploaded');
+  res.json({ ok: true, images: project.photos, total: project.photos.length });
+});
+
+module.exports = { createProject, listProjects, getProject, aiEstimate, updateProject, deleteProject, publishDraft, closeProject, inviteContractor, featureProject, uploadProjectMedia };

@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>شراء نقاط | المقاول</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/variables.css">
+  <link rel="stylesheet" href="../../assets/css/base.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/layout.css">
+  <style>
+    /* ====== Balance Hero ====== */
+    .balance-hero {
+      background: linear-gradient(135deg, var(--color-navy-dark) 0%, var(--color-navy) 100%);
+      border-radius: var(--radius-lg);
+      padding: var(--space-8) var(--space-10);
+      display: flex; align-items: center; justify-content: space-between; gap: var(--space-6);
+      position: relative; overflow: hidden; margin-bottom: var(--space-8);
+    }
+    .balance-hero::before {
+      content: '';
+      position: absolute; top: -80px; left: -60px;
+      width: 250px; height: 250px;
+      background: radial-gradient(circle, rgba(244,166,35,0.10) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .balance-hero-inner { position: relative; z-index: 1; }
+    .balance-label { font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-2); }
+    .balance-value { font-size: 52px; font-weight: 900; color: var(--color-gold); line-height: 1; margin-bottom: 4px; }
+    .balance-unit { font-size: 16px; font-weight: 600; color: rgba(255,255,255,0.6); }
+    .balance-icon-wrap {
+      width: 80px; height: 80px;
+      background: rgba(244,166,35,0.12);
+      border: 1px solid rgba(244,166,35,0.25);
+      border-radius: var(--radius-lg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px; position: relative; z-index: 1;
+    }
+
+    /* ====== Pack Cards ====== */
+    .packs-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: var(--space-5); margin-bottom: var(--space-8);
+    }
+    .pack-card {
+      background: var(--bg-surface); border: 2px solid var(--border-default);
+      border-radius: var(--radius-md); padding: var(--space-7) var(--space-6);
+      cursor: pointer; transition: all var(--transition-base);
+      position: relative; text-align: center;
+    }
+    .pack-card:hover { border-color: var(--color-gold); transform: translateY(-3px); box-shadow: var(--shadow-md); }
+    .pack-card.selected {
+      border-color: var(--color-gold); background: var(--color-gold-subtle);
+      box-shadow: var(--shadow-gold);
+    }
+    .pack-badge {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      background: var(--color-gold); color: var(--color-navy-dark);
+      font-size: 11px; font-weight: 800; padding: 3px 14px;
+      border-radius: var(--radius-full); white-space: nowrap;
+    }
+    .pack-credits {
+      font-size: 48px; font-weight: 900; color: var(--color-navy);
+      line-height: 1; margin-bottom: var(--space-1);
+    }
+    .pack-credits-unit { font-size: 14px; color: var(--text-muted); font-weight: 600; margin-bottom: var(--space-5); }
+    .pack-price { font-size: 26px; font-weight: 900; color: var(--color-gold-dark); margin-bottom: var(--space-2); }
+    .pack-price span { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+    .pack-savings { font-size: 12px; color: var(--color-success); font-weight: 700; }
+    .pack-per-credit { font-size: 11px; color: var(--text-muted); margin-top: var(--space-2); }
+
+    /* ====== Pay Button ====== */
+    .pay-section { margin-bottom: var(--space-8); }
+    .pay-btn {
+      width: 100%; padding: 18px;
+      background: var(--color-gold); color: var(--color-navy-dark);
+      font-family: var(--font-main); font-size: 17px; font-weight: 900;
+      border: none; border-radius: var(--radius-md);
+      cursor: pointer; transition: all var(--transition-base);
+      display: flex; align-items: center; justify-content: center; gap: var(--space-3);
+    }
+    .pay-btn:hover:not(:disabled) { background: var(--color-gold-dark); box-shadow: var(--shadow-gold); transform: translateY(-2px); }
+    .pay-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .pay-info {
+      text-align: center; font-size: 12px; color: var(--text-muted);
+      margin-top: var(--space-3); display: flex; align-items: center;
+      justify-content: center; gap: var(--space-2);
+    }
+
+    /* ====== Alert ====== */
+    .alert-box {
+      display: none; padding: 14px 16px; border-radius: var(--radius-sm);
+      font-size: 13px; font-weight: 700; text-align: center;
+      margin-bottom: var(--space-5); line-height: 1.6;
+    }
+    .alert-box.success { display: block; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.3); color: var(--color-success); }
+    .alert-box.error   { display: block; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); color: var(--color-error); }
+
+    /* ====== Ledger ====== */
+    .section-divider {
+      display: flex; align-items: center; gap: var(--space-4);
+      margin: var(--space-8) 0 var(--space-6);
+    }
+    .section-divider::before, .section-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border-default);
+    }
+    .section-divider-text {
+      font-size: 11px; font-weight: 800; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 1px; white-space: nowrap;
+    }
+
+    .ledger-table { width: 100%; border-collapse: collapse; }
+    .ledger-table th {
+      text-align: right; padding: var(--space-3) var(--space-4);
+      font-size: 11px; font-weight: 800; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      border-bottom: 2px solid var(--border-default);
+      background: var(--bg-surface-2);
+    }
+    .ledger-table td {
+      padding: var(--space-4);
+      font-size: var(--font-size-sm); color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-default); vertical-align: middle;
+    }
+    .ledger-table tr:last-child td { border-bottom: none; }
+    .ledger-table tr:hover td { background: var(--bg-surface-2); }
+    .ledger-amount {
+      font-weight: 800; font-size: var(--font-size-base);
+    }
+    .ledger-amount.credit { color: var(--color-success); }
+    .ledger-amount.debit  { color: var(--color-error); }
+    .ledger-badge {
+      display: inline-block; padding: 3px 10px;
+      border-radius: var(--radius-full); font-size: 11px; font-weight: 700;
+    }
+    .badge-purchase { background: rgba(16,185,129,0.1); color: var(--color-success); }
+    .badge-bid      { background: rgba(239,68,68,0.1); color: var(--color-error); }
+    .badge-refund   { background: rgba(59,130,246,0.1); color: #1d4ed8; }
+    .badge-other    { background: var(--bg-surface-2); color: var(--text-muted); }
+
+    /* spinner */
+    .spinner-sm {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2.5px solid rgba(15,23,42,0.2);
+      border-top-color: var(--color-navy-dark);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="dashboard-page">
+<div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+<div class="dashboard-wrapper">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebarNode"></aside>
+
+  <!-- Main -->
+  <main class="dashboard-main">
+    <div class="dashboard-topbar" id="topbarNode"></div>
+
+    <div class="dashboard-content">
+      <div class="page-head" style="margin-bottom: var(--space-8);">
+        <h2 class="section-title">شحن رصيد النقاط</h2>
+        <p style="color:var(--text-muted); font-size:var(--font-size-sm);">
+          اشتري نقاطاً لتقديم عروض أسعار على مشاريع جديدة — كل عرض يكلف نقطة واحدة.
+        </p>
+      </div>
+
+      <!-- Balance Hero -->
+      <div class="balance-hero">
+        <div class="balance-hero-inner">
+          <div class="balance-label">رصيدك الحالي</div>
+          <div class="balance-value" id="balanceValue">—</div>
+          <div class="balance-unit">نقطة متاحة</div>
+        </div>
+        <div class="balance-icon-wrap">🪙</div>
+      </div>
+
+      <!-- Alert -->
+      <div class="alert-box" id="alertBox"></div>
+
+      <!-- Pack Selection -->
+      <div class="packs-grid" id="packsGrid">
+        <!-- Pack: Starter -->
+        <div class="pack-card" data-credits="5" data-price="50" onclick="selectPack(this)">
+          <div class="pack-credits">5</div>
+          <div class="pack-credits-unit">نقاط</div>
+          <div class="pack-price">50 <span>ج.م</span></div>
+          <div class="pack-per-credit">10 ج.م / نقطة</div>
+        </div>
+
+        <!-- Pack: Pro (default selected) -->
+        <div class="pack-card selected" data-credits="15" data-price="130" onclick="selectPack(this)">
+          <div class="pack-badge">🔥 الأكثر مبيعاً</div>
+          <div class="pack-credits">15</div>
+          <div class="pack-credits-unit">نقطة</div>
+          <div class="pack-price">130 <span>ج.م</span></div>
+          <div class="pack-savings">وفر 20 ج.م عن الأساسية</div>
+          <div class="pack-per-credit">8.7 ج.م / نقطة</div>
+        </div>
+
+        <!-- Pack: Business -->
+        <div class="pack-card" data-credits="40" data-price="300" onclick="selectPack(this)">
+          <div class="pack-credits">40</div>
+          <div class="pack-credits-unit">نقطة</div>
+          <div class="pack-price">300 <span>ج.م</span></div>
+          <div class="pack-savings">وفر 100 ج.م</div>
+          <div class="pack-per-credit">7.5 ج.م / نقطة</div>
+        </div>
+      </div>
+
+      <!-- Pay Button -->
+      <div class="pay-section">
+        <button class="pay-btn" id="payBtn" onclick="processPayment()">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+          <span id="payBtnLabel">دفع 130 ج.م وشحن 15 نقطة</span>
+        </button>
+        <div class="pay-info">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14" style="color: var(--color-success)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          دفع آمن عبر بوابة مشفرة — محاكاة للاختبار
+        </div>
+      </div>
+
+      <!-- Ledger Section -->
+      <div class="section-divider">
+        <span class="section-divider-text">سجل المعاملات</span>
+      </div>
+
+      <div style="background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-sm);">
+        <div style="padding: var(--space-5) var(--space-6); border-bottom: 1px solid var(--border-default); display:flex; align-items:center; justify-content:space-between;">
+          <span style="font-weight: 800; color: var(--color-navy);">آخر المعاملات</span>
+          <span id="ledgerCount" style="font-size: 12px; color: var(--text-muted);"></span>
+        </div>
+        <div id="ledgerContainer">
+          <div style="text-align:center; padding:40px; color:var(--text-muted);">
+            <div class="spinner-sm" style="margin: 0 auto 12px;"></div>
+            جاري تحميل السجل...
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="../../assets/js/api.js"></script>
+<script>
+/* ============================================================
+   buy-credits.js (inline)
+   ============================================================ */
+function showToast(message, type = 'success') {
+  const stack = document.getElementById('toastStack');
+  if (!stack) return;
+  const icons = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
+  const t = ['success','error','info','warning'].includes(type) ? type : 'success';
+  const toast = document.createElement('div');
+  toast.className = `toast-item toast-${t}`;
+  toast.innerHTML = `
+    <span class="toast-icon">${icons[t]}</span>
+    <div class="toast-body"><div class="toast-msg">${message}</div></div>
+    <button class="toast-close" onclick="this.closest('.toast-item').remove()">×</button>`;
+  stack.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('toast-exit');
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+
+// Auth guard
+if (!localStorage.getItem('elm_user') || !localStorage.getItem('elm_accessToken')) {
+  window.location.href = '../../auth/login.html';
+}
+
+// ===== Sidebar / Topbar =====
+function injectLayout() {
+  const user = JSON.parse(localStorage.getItem('elm_user') || '{}');
+  const initial = (user.name || 'م').charAt(0);
+
+  document.getElementById('sidebarNode').innerHTML = `
+    <div class="sidebar-header">
+      <div class="sidebar-logo-mark"><img src="../../assets/images/logo.png" alt="المقاول"></div>
+      <div class="sidebar-logo-text">المقاول</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="sidebar-avatar">${initial}</div>
+      <div class="sidebar-user-info">
+        <div class="name">${user.name || '...'}</div>
+        <div class="role">مقاول</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">الرئيسية</div>
+      <a href="index.html" class="sidebar-item">
+        <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        لوحة التحكم
+      </a>
+      <div class="sidebar-section-label">المشاريع</div>
+      <a href="browse-projects.html" class="sidebar-item">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        تصفح المشاريع
+      </a>
+      <div class="sidebar-section-label">حسابي</div>
+      <a href="buy-credits.html" class="sidebar-item active">
+        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+        شحن الرصيد
+      </a>
+      <a href="materials.html" class="sidebar-item">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        سوق المواد
+      </a>
+    </nav>
+    <div class="sidebar-cta">
+      <button class="btn btn-ghost-light btn-full" id="logoutBtn">
+        <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+        تسجيل الخروج
+      </button>
+    </div>
+  `;
+
+  document.getElementById('topbarNode').innerHTML = `
+    <div class="topbar-page-title">شحن رصيد النقاط</div>
+    <div class="topbar-actions">
+      <div class="topbar-user">
+        <div class="topbar-avatar">${initial}</div>
+        <div class="topbar-user-name">${user.name || '...'}</div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    try { await window.api.fetch('/auth/logout', { method: 'POST' }); } catch (_) {}
+    localStorage.removeItem('elm_accessToken');
+    localStorage.removeItem('elm_user');
+    window.location.href = '../../index.html';
+  });
+}
+
+// ===== Pack Selection =====
+let selectedCredits = 15;
+let selectedPrice = 130;
+
+function selectPack(card) {
+  document.querySelectorAll('.pack-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  selectedCredits = +card.dataset.credits;
+  selectedPrice   = +card.dataset.price;
+  document.getElementById('payBtnLabel').textContent =
+    `دفع ${selectedPrice.toLocaleString()} ج.م وشحن ${selectedCredits} نقطة`;
+}
+
+// ===== Load Balance =====
+async function loadBalance() {
+  try {
+    const user = JSON.parse(localStorage.getItem('elm_user') || '{}');
+    // Try from server first
+    const data = await window.api.fetch('/auth/me');
+    const balance = data.user?.creditBalance ?? data.creditBalance ?? 0;
+    document.getElementById('balanceValue').textContent = balance.toLocaleString('ar-EG');
+    // Update localStorage
+    if (data.user) {
+      data.user.creditBalance = balance;
+      localStorage.setItem('elm_user', JSON.stringify({ ...user, creditBalance: balance }));
+    }
+  } catch {
+    const user = JSON.parse(localStorage.getItem('elm_user') || '{}');
+    document.getElementById('balanceValue').textContent = (user.creditBalance ?? 0).toLocaleString('ar-EG');
+  }
+}
+
+// ===== Load Ledger =====
+const REASON_LABELS = {
+  purchase:          'شحن رصيد',
+  bid_submit:        'خصم عرض سعر',
+  bid_submit_refund: 'استرداد عرض',
+  admin_adjust:      'تعديل إداري',
+  signup_grant:      'هدية تسجيل',
+  referral:          'مكافأة إحالة',
+};
+
+async function loadLedger() {
+  const container = document.getElementById('ledgerContainer');
+  try {
+    const data = await window.api.fetch('/billing/ledger');
+    const entries = data.items || data.ledger || data.entries || data.transactions || [];
+
+    document.getElementById('ledgerCount').textContent =
+      entries.length ? `${entries.length} معاملة` : '';
+
+    if (!entries.length) {
+      container.innerHTML = `
+        <div style="text-align:center; padding:40px; color:var(--text-muted);">
+          <div style="font-size:40px; margin-bottom:12px;">🪙</div>
+          <p>لا توجد معاملات بعد — ابدأ بشحن رصيدك</p>
+        </div>`;
+      return;
+    }
+
+    const rows = entries.map(e => {
+      const delta = e.delta ?? e.amount ?? 0;
+      const isCredit = delta > 0;
+      const reason = e.reason || e.type || 'other';
+      const typeLabel = REASON_LABELS[reason] || reason;
+      const badgeClass = reason === 'purchase' || reason === 'signup_grant' || reason === 'referral' ? 'badge-purchase'
+        : (reason === 'bid_submit' ? 'badge-bid'
+        : (reason === 'bid_submit_refund' ? 'badge-refund' : 'badge-other'));
+      const dateStr = e.createdAt
+        ? new Date(e.createdAt).toLocaleDateString('ar-EG', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })
+        : '—';
+      const balAfter = e.balanceAfter ?? null;
+      return `
+        <tr>
+          <td>${dateStr}</td>
+          <td><span class="ledger-badge ${badgeClass}">${typeLabel}</span></td>
+          <td>${e.meta || e.description || e.note || (e.project?.title ? 'مشروع: ' + e.project.title : '—')}</td>
+          <td style="text-align:center">
+            <span class="ledger-amount ${isCredit ? 'credit' : 'debit'}">
+              ${isCredit ? '+' : ''}${delta.toLocaleString('ar-EG')}
+            </span>
+          </td>
+          <td style="text-align:center; font-weight:700; color:var(--color-navy);">${balAfter !== null ? balAfter.toLocaleString('ar-EG') : '—'}</td>
+        </tr>`;
+    }).join('');
+
+    container.innerHTML = `
+      <div style="overflow-x:auto;">
+        <table class="ledger-table">
+          <thead>
+            <tr>
+              <th>التاريخ</th>
+              <th>النوع</th>
+              <th>الوصف</th>
+              <th style="text-align:center">المبلغ (نقطة)</th>
+              <th style="text-align:center">الرصيد بعد</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  } catch (err) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:30px; color:var(--color-error);">
+        تعذر تحميل سجل المعاملات: ${err.message}
+      </div>`;
+  }
+}
+
+// ===== Process Payment =====
+async function processPayment() {
+  const btn   = document.getElementById('payBtn');
+  const alert = document.getElementById('alertBox');
+  btn.disabled = true;
+  btn.innerHTML = `<div class="spinner-sm"></div> جاري معالجة الدفع...`;
+  alert.className = 'alert-box';
+
+  try {
+    const data = await window.api.fetch('/billing/purchase-credits', {
+      method: 'POST',
+      body: JSON.stringify({ packs: selectedCredits / 5 }),
+    });
+
+    const newBalance = data.creditBalance ?? data.newBalance;
+    if (newBalance !== undefined) {
+      document.getElementById('balanceValue').textContent = newBalance.toLocaleString('ar-EG');
+      const user = JSON.parse(localStorage.getItem('elm_user') || '{}');
+      localStorage.setItem('elm_user', JSON.stringify({ ...user, creditBalance: newBalance }));
+    }
+
+    alert.textContent = `✅ تم الشحن بنجاح! تمت إضافة ${data.creditsAdded ?? selectedCredits} نقطة لرصيدك.`;
+    alert.className = 'alert-box success';
+    showToast(`تمت إضافة ${data.creditsAdded ?? selectedCredits} نقطة لرصيدك بنجاح`, 'success');
+    loadLedger();
+  } catch (err) {
+    alert.textContent = err.message || 'حدث خطأ أثناء الاتصال بالبوابة';
+    alert.className = 'alert-box error';
+    showToast(err.message || 'فشل الدفع', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+      <span id="payBtnLabel">دفع ${selectedPrice.toLocaleString()} ج.م وشحن ${selectedCredits} نقطة</span>`;
+  }
+}
+
+// ===== Init =====
+document.addEventListener('DOMContentLoaded', () => {
+  injectLayout();
+  loadBalance();
+  loadLedger();
+});
+</script>
+</body>
+</html>

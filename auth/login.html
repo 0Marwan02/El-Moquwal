@@ -53,15 +53,15 @@
         <!-- el form -->
         <form class="auth-form" id="loginForm" novalidate>
 
-          <!-- el identifier — NID ONLY per user request -->
+          <!-- el identifier — email, phone, or NID -->
           <div class="auth-field">
-            <label class="auth-label" for="loginIdentifier">الرقم القومي</label>
+            <label class="auth-label" for="loginIdentifier">البريد، رقم الهاتف، أو الرقم القومي</label>
             <div class="auth-input-wrap">
               <svg class="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <rect x="2" y="5" width="20" height="14" rx="2"/>
                 <path d="M2 10h20M6 15h4"/>
               </svg>
-              <input class="input" type="text" id="loginIdentifier" placeholder="14 رقم" pattern="\d{14}" maxlength="14" inputmode="numeric" required autocomplete="username">
+              <input class="input" type="text" id="loginIdentifier" placeholder="أدخل البريد، الهاتف، أو الرقم القومي" required autocomplete="username">
             </div>
           </div>
 

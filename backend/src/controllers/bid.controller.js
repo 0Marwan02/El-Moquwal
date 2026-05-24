@@ -41,6 +41,12 @@ const submitBid = asyncHandler(async (req, res) => {
   if (!project) throw new AppError('المشروع غير موجود', 404, 'NOT_FOUND');
   if (project.status !== 'open') throw new AppError('المشروع مغلق ولا يقبل عروض', 400, 'PROJECT_CLOSED');
 
+  // private project — check invitation
+  if (project.isPrivate) {
+    const isInvited = project.invitedContractors.some((id) => id.toString() === req.user._id.toString());
+    if (!isInvited) throw new AppError('هذا المشروع خاص ولم تتلق دعوة للتقديم', 403, 'NOT_INVITED');
+  }
+
   const parsed = submitBidSchema.safeParse(req.body);
   if (!parsed.success) throw new AppError('بيانات غير صحيحة', 400, 'VALIDATION_ERROR');
 

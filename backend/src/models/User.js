@@ -34,7 +34,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['customer', 'contractor', 'admin'],
+      enum: ['customer', 'contractor', 'admin', 'super_admin'],
       required: true,
       index: true,
     },
@@ -56,6 +56,20 @@ const userSchema = new mongoose.Schema(
     // 🎉 flag bybaan en el contractor etfada lel mara el awla ba3d el activation
     // betbaan true lama el admin y2bal el account, w betetzabat false ba3d awel login
     firstLoginAfterActivation: { type: Boolean, default: false },
+
+    // ===== Email verification & OTP =====
+    isEmailVerified: { type: Boolean, default: false },
+    otp: {
+      code: { type: String, select: false },
+      expiresAt: { type: Date, select: false },
+    },
+    // ===== Password reset =====
+    resetToken: {
+      hash: { type: String, select: false },
+      expiresAt: { type: Date, select: false },
+    },
+    // ===== Referral =====
+    referralCode: { type: String, unique: true, sparse: true, index: true },
   },
   {
     timestamps: true,
@@ -70,6 +84,8 @@ userSchema.methods.toJSON = function toJSON() {
   delete obj.loginAttempts;
   delete obj.lockUntil;
   delete obj.__v;
+  delete obj.otp;
+  delete obj.resetToken;
   return obj;
 };
 
@@ -81,3 +97,4 @@ userSchema.methods.isLocked = function isLocked() {
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;
+

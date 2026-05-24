@@ -6,8 +6,11 @@
 (function () {
   'use strict';
 
-  // el API base — momken yetzabat men outside
-  const API_BASE = window.__API_BASE__ || 'http://localhost:4000/api';
+  // el API base — dynamic: localhost dev vs. production
+  const API_BASE = window.__API_BASE__ ||
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:4000/api'
+      : '/api');
 
   // ============================================================
   // HELPERS — shared utils lel kol el forms
@@ -220,7 +223,7 @@
           const role = data.user?.role;
           if (role === 'customer') window.location.href = '../dashboard/customer/index.html';
           else if (role === 'contractor') window.location.href = '../dashboard/professional/index.html';
-          else if (role === 'admin') window.location.href = '../dashboard/manager/index.html';
+          else if (role === 'admin' || role === 'super_admin') window.location.href = '../dashboard/manager/index.html';
         }, 900);
       } catch (err) {
         showAlert('loginAlert', err.message);
@@ -353,14 +356,94 @@
         });
         localStorage.setItem('elm_accessToken', data.accessToken);
         persistSessionUser(data);
-        showAlert('registerAlert', 'تم إنشاء الحساب بنجاح! جاري التحويل...', 'success');
-        setTimeout(() => { window.location.href = '../dashboard/customer/index.html'; }, 1100);
+
+        // If backend sent OTP, show verification step
+        if (data.otpRequired) {
+          form.style.display = 'none';
+          const otpStep = document.getElementById('otpStep');
+          const otpEmailDisplay = document.getElementById('otpEmailDisplay');
+          if (otpStep) {
+            otpStep.hidden = false;
+            if (otpEmailDisplay) otpEmailDisplay.textContent = email;
+            initOTPVerification(email);
+          }
+        } else {
+          showAlert('registerAlert', 'تم إنشاء الحساب بنجاح! جاري التحويل...', 'success');
+          setTimeout(() => { window.location.href = '../dashboard/customer/index.html'; }, 1100);
+        }
       } catch (err) {
         showAlert('registerAlert', err.message);
       } finally {
         setLoading('customerRegisterBtn', false);
       }
     });
+  }
+
+  // ============================================================
+  // OTP VERIFICATION — el step el ta2ny ba3d el register
+  // ============================================================
+  function initOTPVerification(email) {
+    const verifyBtn = document.getElementById('otpVerifyBtn');
+    const resendBtn = document.getElementById('otpResendBtn');
+    const otpInput  = document.getElementById('otpCode');
+    const otpAlert  = document.getElementById('otpAlert');
+
+    // auto-submit when 6 digits entered
+    if (otpInput) {
+      otpInput.addEventListener('input', () => {
+        otpInput.value = otpInput.value.replace(/\D/g, '').slice(0, 6);
+        if (otpInput.value.length === 6) verifyBtn?.click();
+      });
+    }
+
+    if (verifyBtn) {
+      verifyBtn.addEventListener('click', async () => {
+        const code = otpInput?.value.trim() || '';
+        if (code.length !== 6) {
+          if (otpAlert) { otpAlert.className = 'auth-alert show alert-error'; otpAlert.textContent = 'أدخل الكود المكون من 6 أرقام'; }
+          return;
+        }
+        setLoading('otpVerifyBtn', true);
+        try {
+          await apiCall('/auth/verify-otp', {
+            method: 'POST',
+            body: JSON.stringify({ email, code }),
+          });
+          if (otpAlert) { otpAlert.className = 'auth-alert show alert-success'; otpAlert.textContent = 'تم تفعيل حسابك بنجاح! 🎉 جاري التحويل...'; }
+          setTimeout(() => { window.location.href = '../dashboard/customer/index.html'; }, 1200);
+        } catch (err) {
+          if (otpAlert) { otpAlert.className = 'auth-alert show alert-error'; otpAlert.textContent = err.message || 'الكود غير صحيح أو منتهي الصلاحية'; }
+        } finally {
+          setLoading('otpVerifyBtn', false);
+        }
+      });
+    }
+
+    // Resend OTP with cooldown
+    let resendCooldown = 0;
+    async function resendOTP() {
+      if (resendCooldown > 0) return;
+      resendBtn.disabled = true;
+      try {
+        await apiCall('/auth/send-otp', { method: 'POST', body: JSON.stringify({ email }) });
+        if (otpAlert) { otpAlert.className = 'auth-alert show alert-success'; otpAlert.textContent = 'تم إعادة إرسال الكود لبريدك الإلكتروني'; }
+        // 60s cooldown
+        resendCooldown = 60;
+        const interval = setInterval(() => {
+          resendCooldown--;
+          if (resendBtn) resendBtn.textContent = resendCooldown > 0 ? `إعادة الإرسال (${resendCooldown}ث)` : 'إعادة الإرسال';
+          if (resendCooldown <= 0) {
+            clearInterval(interval);
+            if (resendBtn) { resendBtn.disabled = false; resendBtn.textContent = 'إعادة الإرسال'; }
+          }
+        }, 1000);
+      } catch (err) {
+        if (otpAlert) { otpAlert.className = 'auth-alert show alert-error'; otpAlert.textContent = err.message || 'تعذر إعادة الإرسال'; }
+        resendBtn.disabled = false;
+      }
+    }
+
+    if (resendBtn) resendBtn.addEventListener('click', resendOTP);
   }
 
   // ============================================================

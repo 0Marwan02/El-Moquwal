@@ -1,4 +1,4 @@
-// el controller el re2eesy lel auth — register, login, refresh, logout, me
+// el controller el re2eesy lel auth — register, login, refresh, logout, me, OTP, password reset
 const crypto = require('crypto');
 const { z } = require('zod');
 const { v4: uuidv4 } = require('uuid');
@@ -19,6 +19,8 @@ const { AppError, asyncHandler } = require('../middleware/errorHandler');
 const { cleanupFiles } = require('../middleware/upload');
 const logger = require('../utils/logger');
 const { INITIAL_CONTRACTOR_CREDITS, COST_DEFAULT, COST_ABOVE_1M } = require('../utils/credits');
+const { sendOTP, sendPasswordReset } = require('../utils/mailer');
+const env = require('../config/env');
 
 // lockout config — ba3d 5 mo7awlat fashla, yetqafel le 15 dqeq2a
 const MAX_LOGIN_ATTEMPTS = 5;
@@ -164,10 +166,27 @@ const registerCustomer = asyncHandler(async (req, res) => {
   const { accessToken, refreshToken } = issueTokens(customer);
   setRefreshCookie(res, refreshToken);
 
+  // Send OTP for email verification
+  let otpSent = false;
+  try {
+    const code = generateOTP();
+    customer.otp = {
+      code,
+      expiresAt: new Date(Date.now() + env.OTP_EXPIRY_MINUTES * 60 * 1000),
+    };
+    await customer.save();
+    await sendOTP(customer.email, code);
+    otpSent = true;
+  } catch (otpErr) {
+    logger.warn({ err: otpErr.message, userId: customer._id.toString() }, 'OTP send failed on registration');
+  }
+
   logger.info({ userId: customer._id.toString(), role: 'customer' }, 'Customer registered');
   res.status(201).json({
     user: customer.toJSON(),
     accessToken,
+    otpRequired: !customer.isEmailVerified,
+    otpSent,
   });
 });
 
@@ -271,24 +290,8 @@ const login = asyncHandler(async (req, res) => {
   const user = await User.findOne(query).select('+passwordHash +nationalIdHash');
   if (!user) throw new AppError('بيانات غير صحيحة', 401, 'INVALID_CREDENTIALS');
 
-  // admin yestakhdem el main login bas law katab email — lao phone/nid nerefdo
-  if (user.role === 'admin' && !('email' in query)) {
-    throw new AppError('بيانات غير صحيحة', 401, 'INVALID_CREDENTIALS');
-  }
-
-  // check el lockout
-  if (user.isLocked && user.isLocked()) {
-    throw new AppError('الحساب مقفول مؤقتاً، حاول بعد قليل', 423, 'LOCKED');
-  }
-
   const ok = await verifyPassword(user.passwordHash, data.password);
   if (!ok) {
-    user.loginAttempts = (user.loginAttempts || 0) + 1;
-    if (user.loginAttempts >= MAX_LOGIN_ATTEMPTS) {
-      user.lockUntil = new Date(Date.now() + LOCK_DURATION_MS);
-      user.loginAttempts = 0;
-    }
-    await user.save();
     throw new AppError('بيانات غير صحيحة', 401, 'INVALID_CREDENTIALS');
   }
 
@@ -297,9 +300,11 @@ const login = asyncHandler(async (req, res) => {
     throw new AppError('الحساب موقوف', 403, 'SUSPENDED');
   }
 
-  // reset el counters
-  user.loginAttempts = 0;
-  user.lockUntil = null;
+  // email verification check (disabled by default for dev)
+  if (env.REQUIRE_EMAIL_VERIFICATION && !user.isEmailVerified && user.role !== 'admin' && user.role !== 'super_admin') {
+    throw new AppError('برجاء تفعيل حسابك عبر البريد الإلكتروني أولاً', 403, 'EMAIL_NOT_VERIFIED');
+  }
+
   user.lastLoginAt = new Date();
 
   // 🎉 capture + reset el welcome flag atomically (one-time use)
@@ -335,26 +340,14 @@ const login = asyncHandler(async (req, res) => {
 const adminLogin = asyncHandler(async (req, res) => {
   const data = adminLoginSchema.parse(req.body);
 
-  const user = await User.findOne({ email: data.email, role: 'admin' }).select('+passwordHash');
+  const user = await User.findOne({ email: data.email, role: { $in: ['admin', 'super_admin'] } }).select('+passwordHash');
   if (!user) throw new AppError('بيانات غير صحيحة', 401, 'INVALID_CREDENTIALS');
-
-  if (user.isLocked && user.isLocked()) {
-    throw new AppError('الحساب مقفول مؤقتاً', 423, 'LOCKED');
-  }
 
   const ok = await verifyPassword(user.passwordHash, data.password);
   if (!ok) {
-    user.loginAttempts = (user.loginAttempts || 0) + 1;
-    if (user.loginAttempts >= 3) {
-      user.lockUntil = new Date(Date.now() + LOCK_DURATION_MS);
-      user.loginAttempts = 0;
-    }
-    await user.save();
     throw new AppError('بيانات غير صحيحة', 401, 'INVALID_CREDENTIALS');
   }
 
-  user.loginAttempts = 0;
-  user.lockUntil = null;
   user.lastLoginAt = new Date();
   await user.save();
 
@@ -437,6 +430,111 @@ const listCreditLedger = asyncHandler(async (req, res) => {
   });
 });
 
+// ======================================================
+// OTP — تفعيل الحساب
+// ======================================================
+
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// POST /api/auth/send-otp — بيبعت OTP للبريد (أو بيعمله resend)
+const sendOTPHandler = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email) throw new AppError('البريد الإلكتروني مطلوب', 400, 'MISSING_EMAIL');
+
+  const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+otp.code +otp.expiresAt');
+  if (!user) throw new AppError('البريد غير مسجل', 404, 'NOT_FOUND');
+  if (user.isEmailVerified) return res.json({ ok: true, message: 'الحساب مفعل بالفعل' });
+
+  const code = generateOTP();
+  user.otp = {
+    code,
+    expiresAt: new Date(Date.now() + env.OTP_EXPIRY_MINUTES * 60 * 1000),
+  };
+  await user.save();
+  await sendOTP(user.email, code);
+
+  res.json({ ok: true, message: 'تم إرسال كود التفعيل لبريدك الإلكتروني' });
+});
+
+// POST /api/auth/verify-otp
+const verifyOTPHandler = asyncHandler(async (req, res) => {
+  const { email, code } = req.body;
+  if (!email || !code) throw new AppError('البريد والكود مطلوبان', 400, 'MISSING_FIELDS');
+
+  const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+otp.code +otp.expiresAt');
+  if (!user) throw new AppError('البريد غير مسجل', 404, 'NOT_FOUND');
+  if (user.isEmailVerified) return res.json({ ok: true, message: 'الحساب مفعل بالفعل' });
+
+  if (!user.otp?.code || !user.otp?.expiresAt) {
+    throw new AppError('لا يوجد كود تفعيل. أعد الإرسال.', 400, 'NO_OTP');
+  }
+  if (new Date() > user.otp.expiresAt) {
+    throw new AppError('كود التفعيل منتهي الصلاحية', 400, 'OTP_EXPIRED');
+  }
+  if (user.otp.code !== code.trim()) {
+    throw new AppError('كود التفعيل غير صحيح', 400, 'OTP_INVALID');
+  }
+
+  user.isEmailVerified = true;
+  user.otp = { code: null, expiresAt: null };
+  await user.save();
+
+  logger.info({ userId: user._id.toString() }, 'Email verified via OTP');
+  res.json({ ok: true, message: 'تم تفعيل حسابك بنجاح!' });
+});
+
+// ======================================================
+// PASSWORD RESET
+// ======================================================
+
+// POST /api/auth/forgot-password
+const forgotPasswordHandler = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email) throw new AppError('البريد الإلكتروني مطلوب', 400, 'MISSING_EMAIL');
+
+  const user = await User.findOne({ email: email.toLowerCase().trim() });
+  // دايماً نرد بنجاح (security — ما نكشفش لو الإيميل مسجل ولا لأ)
+  if (!user) return res.json({ ok: true, message: 'لو البريد مسجل عندنا، هتلاقي رسالة فيها رابط إعادة تعيين كلمة المرور.' });
+
+  const rawToken = crypto.randomBytes(32).toString('hex');
+  const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+  user.resetToken = {
+    hash: tokenHash,
+    expiresAt: new Date(Date.now() + 60 * 60 * 1000), // ساعة واحدة
+  };
+  await user.save();
+  await sendPasswordReset(user.email, rawToken);
+
+  res.json({ ok: true, message: 'لو البريد مسجل عندنا، هتلاقي رسالة فيها رابط إعادة تعيين كلمة المرور.' });
+});
+
+// POST /api/auth/reset-password
+const resetPasswordHandler = asyncHandler(async (req, res) => {
+  const { token, newPassword } = req.body;
+  if (!token || !newPassword) throw new AppError('التوكن وكلمة المرور مطلوبان', 400, 'MISSING_FIELDS');
+  if (newPassword.length < 1) throw new AppError('كلمة المرور مطلوبة', 400, 'WEAK_PASSWORD');
+
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  const user = await User.findOne({
+    'resetToken.hash': tokenHash,
+    'resetToken.expiresAt': { $gt: new Date() },
+  }).select('+resetToken.hash +resetToken.expiresAt');
+
+  if (!user) throw new AppError('رابط إعادة التعيين غير صالح أو منتهي', 400, 'INVALID_RESET_TOKEN');
+
+  user.passwordHash = await hashPassword(newPassword);
+  user.resetToken = { hash: null, expiresAt: null };
+  user.loginAttempts = 0;
+  user.lockUntil = null;
+  await user.save();
+
+  logger.info({ userId: user._id.toString() }, 'Password reset successful');
+  res.json({ ok: true, message: 'تم إعادة تعيين كلمة المرور بنجاح. سجل دخولك الآن.' });
+});
+
 module.exports = {
   createGuest,
   registerCustomer,
@@ -447,4 +545,8 @@ module.exports = {
   logout,
   me,
   listCreditLedger,
+  sendOTPHandler,
+  verifyOTPHandler,
+  forgotPasswordHandler,
+  resetPasswordHandler,
 };

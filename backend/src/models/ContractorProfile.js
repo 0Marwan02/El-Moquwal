@@ -52,6 +52,14 @@ const contractorSchema = new mongoose.Schema({
   completedProjects: { type: Number, default: 0 },
   // نقاط تقديم العروض (MON-CREDITS-01) — هدية تسجيل افتراضية
   creditBalance: { type: Number, default: 5, min: 0, max: 1000000 },
+
+  // ===== Premium Subscription =====
+  isPremium: { type: Boolean, default: false, index: true },
+  subscriptionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Subscription', default: null },
+  premiumUntil: { type: Date, default: null },
+
+  // ===== Referral =====
+  referredBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
 });
 
 const Contractor = User.discriminator('contractor', contractorSchema);

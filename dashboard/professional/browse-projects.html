@@ -152,6 +152,15 @@
       border-color: var(--color-gold-light);
     }
 
+    .project-card--featured {
+      border-color: rgba(245,158,11,0.4);
+      box-shadow: 0 0 0 1px rgba(245,158,11,0.15), var(--shadow-sm);
+    }
+    .project-card--featured:hover {
+      border-color: var(--color-gold);
+      box-shadow: 0 0 0 1px rgba(245,158,11,0.3), var(--shadow-gold);
+    }
+
     .pc-tag {
       display: inline-flex;
       align-items: center;
@@ -317,11 +326,8 @@
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <div class="sidebar-logo-mark" style="display:flex;align-items:center;justify-content:center;">
-          <svg viewBox="0 0 24 24">
-            <path
-              d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z" />
-          </svg>
+        <div class="sidebar-logo-mark">
+          <img src="../../assets/images/logo.png" alt="المقاول">
         </div>
         <div class="sidebar-logo-text">المقاول</div>
       </div>
@@ -550,7 +556,9 @@
             area: p.propertyDetails?.area || 0,
             timeline: p.timeline,
             budget: p.budgetRange,
-            bidsCount: p.bidsCount || 0
+            bidsCount: p.bidsCount || 0,
+            isFeatured: p.isFeatured || false,
+            isUrgent: p.isUrgent || false,
           }));
           await hydrateMyBids();
           renderProjects();
@@ -601,8 +609,12 @@
         grid.innerHTML = filtered.map(p => {
           const bid = myBids[p.id];
           return `
-        <article class="project-card">
-          <span class="pc-tag">${TYPE_LABELS[p.type] || '—'}</span>
+        <article class="project-card${p.isFeatured ? ' project-card--featured' : ''}">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:var(--space-2);">
+            <span class="pc-tag">${TYPE_LABELS[p.type] || '—'}</span>
+            ${p.isFeatured ? `<span style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:11px;font-weight:800;padding:3px 10px;border-radius:var(--radius-full);display:inline-flex;align-items:center;gap:4px;">⭐ مميز</span>` : ''}
+            ${p.isUrgent ? `<span style="background:rgba(239,68,68,0.1);color:var(--color-error);font-size:11px;font-weight:800;padding:3px 10px;border-radius:var(--radius-full);">🔥 عاجل</span>` : ''}
+          </div>
           <h3 class="pc-title">${p.title}</h3>
 
           <div class="pc-meta">

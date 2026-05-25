@@ -95,10 +95,14 @@
       main.scrollTop = 0;
       window.scrollTo({ top: 0, behavior: 'instant' });
 
-      // Sync styles in <head>
-      document.querySelectorAll('head style').forEach(s => s.remove());
+      // Sync page-specific styles in <head>
+      // Only remove styles we previously injected (marked with data-spa-style)
+      // This preserves dynamically-injected widget CSS (e.g. chat-widget)
+      document.querySelectorAll('head style[data-spa-style]').forEach(s => s.remove());
       fetched.head.querySelectorAll('style').forEach(s => {
-        document.head.appendChild(s.cloneNode(true));
+        const clone = s.cloneNode(true);
+        clone.setAttribute('data-spa-style', 'true');
+        document.head.appendChild(clone);
       });
 
       // Sync specific outer elements (Modals, Toasts)
@@ -184,6 +188,12 @@
     document.title,
     window.location.href
   );
+
+  // Mark existing page-specific <style> tags so the first SPA navigation
+  // can properly remove them (widget-injected styles have no data-spa-style)
+  document.querySelectorAll('head style:not([data-spa-style])').forEach(s => {
+    s.setAttribute('data-spa-style', 'true');
+  });
 
   console.log('[Customer Router] Initialized ✓');
 

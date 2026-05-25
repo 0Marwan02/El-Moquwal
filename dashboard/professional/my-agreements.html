@@ -194,10 +194,32 @@
       </div>
     </main>
   </div>
+  
+  <div id="toastStack" style="position:fixed;bottom:20px;left:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none;"></div>
 
   <script src="../../assets/js/api.js"></script>
   <script src="../../assets/js/dashboard-router.js"></script>
   <script>
+    function showToast(message, type = 'success') {
+      const stack = document.getElementById('toastStack');
+      if (!stack) return;
+      const toast = document.createElement('div');
+      toast.textContent = message;
+      toast.style.pointerEvents = 'auto';
+      toast.style.minWidth = '260px';
+      toast.style.maxWidth = '360px';
+      toast.style.padding = '12px 14px';
+      toast.style.borderRadius = '12px';
+      toast.style.border = type === 'error' ? '1px solid rgba(239,68,68,0.35)' : '1px solid rgba(16,185,129,0.35)';
+      toast.style.background = type === 'error' ? 'rgba(239,68,68,0.08)' : 'var(--color-success-bg)';
+      toast.style.color = type === 'error' ? '#991b1b' : '#065f46';
+      toast.style.boxShadow = 'var(--shadow-md)';
+      toast.style.fontSize = 'var(--font-size-sm)';
+      toast.style.fontWeight = '700';
+      stack.appendChild(toast);
+      setTimeout(() => toast.remove(), 3200);
+    }
+
     (() => {
       const TYPE_LABELS = {
         new_construction: 'بناء جديد', renovation: 'تجديد', finishing: 'تشطيبات',
@@ -284,6 +306,16 @@
           const customerName = p.postedBy?.name || 'العميل';
           const customerInitial = customerName.charAt(0);
 
+          let contract = null;
+          let mySig = false;
+          try {
+            const cRes = await window.api.fetch(`/contracts/project/${p._id}`);
+            contract = cRes.contract;
+            if (contract && contract.contractorSignature?.signed) {
+              mySig = true;
+            }
+          } catch (_) {}
+
           return `
             <div class="agreement-card">
               <div class="agreement-header">
@@ -312,7 +344,10 @@
               <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;margin-top:var(--space-3);">
                 <a href="view-bid.html?projectId=${p._id}" class="btn btn-primary" style="font-size:13px;">عرض التفاصيل الكاملة</a>
                 <button onclick="viewContractPDF('${p._id}')" class="btn btn-outline" style="font-size:13px;">📄 عرض العقد PDF</button>
-                <button onclick="openSignModal('${p._id}')" class="btn btn-outline" style="font-size:13px;border-color:var(--color-success);color:var(--color-success);">✍️ توقيع العقد</button>
+                ${mySig 
+                  ? `<button disabled class="btn btn-outline" style="font-size:13px;border-color:var(--color-success);color:var(--color-success);opacity:0.8;cursor:default;">✅ تم توقيعك</button>`
+                  : `<button onclick="openSignModal('${contract ? contract._id : ''}')" class="btn btn-outline" style="font-size:13px;border-color:var(--color-gold-dark);color:var(--color-gold-dark);">✍️ توقيع العقد</button>`
+                }
               </div>
             </div>`;
         }));
@@ -364,7 +399,7 @@
     async function viewContractPDF(projectId) {
       try {
         const token = localStorage.getItem('elm_accessToken');
-        const base = window.api ? window.api.BASE_URL : 'http://localhost:4000/api';
+        const base = window.api ? window.api.API_URL : 'http://localhost:4000/api';
 
         // Step 1: look up the contract object for this project
         const contractRes = await fetch(`${base}/contracts/project/${projectId}`, {
@@ -372,14 +407,14 @@
         });
 
         if (!contractRes.ok) {
-          alert('لا يوجد عقد لهذا المشروع بعد. سيُنشأ تلقائياً عند قبول العرض وتوقيع الطرفين.');
+          showToast('لا يوجد عقد لهذا المشروع بعد. سيُنشأ تلقائياً عند قبول العرض وتوقيع الطرفين.', 'error');
           return;
         }
 
         const contractData = await contractRes.json();
         const contractId = contractData?.contract?._id || contractData?._id;
         if (!contractId) {
-          alert('تعذّر استرجاع معرّف العقد. حاول مرة أخرى.');
+          showToast('تعذّر استرجاع معرّف العقد. حاول مرة أخرى.', 'error');
           return;
         }
 
@@ -393,23 +428,27 @@
           const url = URL.createObjectURL(blob);
           window.open(url, '_blank');
         } else if (pdfRes.status === 404) {
-          alert('ملف العقد PDF غير موجود بعد. تأكد من اكتمال توقيعات الطرفين.');
+          showToast('ملف العقد PDF غير موجود بعد. تأكد من اكتمال توقيعات الطرفين.', 'error');
         } else {
-          alert('تعذّر تحميل ملف العقد. حاول مرة أخرى لاحقاً.');
+          showToast('تعذّر تحميل ملف العقد. حاول مرة أخرى لاحقاً.', 'error');
         }
       } catch (err) {
-        alert('خطأ أثناء تحميل العقد: ' + err.message);
+        showToast('خطأ أثناء تحميل العقد: ' + err.message, 'error');
       }
     }
 
     // ── E-Signature Modal Logic ──
-    let _signProjectId = null;
+    let _signContractId = null;
     let _signMode = 'draw';
     let _isDrawing = false;
     let _ctx = null;
 
-    function openSignModal(projectId) {
-      _signProjectId = projectId;
+    function openSignModal(contractId) {
+      if (!contractId) {
+        showToast('في انتظار توليد العقد من قبل العميل.', 'error');
+        return;
+      }
+      _signContractId = contractId;
       const modal = document.getElementById('signModal');
       modal.style.display = 'flex';
       switchSignTab('draw');
@@ -418,7 +457,7 @@
 
     function closeSignModal() {
       document.getElementById('signModal').style.display = 'none';
-      _signProjectId = null;
+      _signContractId = null;
     }
 
     function switchSignTab(mode) {
@@ -481,23 +520,22 @@
     }
 
     async function submitSignature() {
-      if (!_signProjectId) return;
+      if (!_signContractId) return;
       let signatureData = '';
 
       if (_signMode === 'draw') {
         const canvas = document.getElementById('signCanvas');
-        signatureData = canvas.toDataURL('image/png');
-        // Check if canvas is blank
         const blank = document.createElement('canvas');
         blank.width = canvas.width; blank.height = canvas.height;
         if (canvas.toDataURL() === blank.toDataURL()) {
-          alert('يرجى رسم توقيعك أولاً');
+          showToast('يرجى رسم توقيعك أولاً', 'error');
           return;
         }
+        signatureData = canvas.toDataURL('image/png');
       } else {
         const img = document.getElementById('sigPreview');
         if (!img.src || img.style.display === 'none') {
-          alert('يرجى رفع صورة التوقيع أولاً');
+          showToast('يرجى رفع صورة التوقيع أولاً', 'error');
           return;
         }
         signatureData = img.src;
@@ -509,26 +547,26 @@
 
       try {
         const token = localStorage.getItem('elm_accessToken');
-        const base = window.api ? window.api.BASE_URL : 'http://localhost:4000/api';
-        const res = await fetch(`${base}/contracts/project/${_signProjectId}/sign`, {
+        const base = window.api ? window.api.API_URL : 'http://localhost:4000/api';
+        const res = await fetch(`${base}/contracts/${_signContractId}/sign`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ signatureImage: signatureData })
+          body: JSON.stringify({ signatureData })
         });
 
         if (res.ok) {
-          alert('✅ تم تسجيل توقيعك بنجاح!');
+          showToast('تم تسجيل توقيعك بنجاح! ✅', 'success');
           closeSignModal();
-          window.location.reload();
+          setTimeout(() => window.location.reload(), 1500);
         } else {
           const data = await res.json().catch(() => ({}));
-          alert(data.message || 'تعذّر تسجيل التوقيع. حاول مرة أخرى.');
+          showToast(data.message || 'تعذّر تسجيل التوقيع. حاول مرة أخرى.', 'error');
         }
       } catch (err) {
-        alert('خطأ في الاتصال: ' + err.message);
+        showToast('خطأ في الاتصال: ' + err.message, 'error');
       } finally {
         btn.disabled = false;
         btn.textContent = '✅ تأكيد التوقيع وإرسال';

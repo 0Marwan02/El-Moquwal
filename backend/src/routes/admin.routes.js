@@ -25,4 +25,8 @@ router.post('/create-reviewer', requireAuth, requireSuperAdmin, ctrl.createRevie
 router.get('/reviewers', requireAuth, requireSuperAdmin, ctrl.listReviewers);
 router.delete('/reviewers/:id', requireAuth, requireSuperAdmin, ctrl.deleteReviewer);
 
+// ===== Terms & Conditions =====
+router.get('/terms', ctrl.getTerms); // public
+router.patch('/terms', requireAuth, requireSuperAdmin, ctrl.updateTerms);
+
 module.exports = router;

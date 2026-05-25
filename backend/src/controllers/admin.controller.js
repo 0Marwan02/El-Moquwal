@@ -231,6 +231,25 @@ const updateSettings = asyncHandler(async (req, res) => {
   res.json({ ok: true, settings: results });
 });
 
+// GET /api/admin/terms — public-readable terms
+const getTerms = asyncHandler(async (req, res) => {
+  const terms = await PlatformSettings.getSetting('termsAndConditions');
+  const lastUpdated = await PlatformSettings.getSetting('termsLastUpdated');
+  res.json({ terms: terms || '', lastUpdated });
+});
+
+// PATCH /api/admin/terms — super_admin only
+const updateTerms = asyncHandler(async (req, res) => {
+  const { terms } = req.body;
+  if (typeof terms !== 'string') {
+    throw new AppError('محتوى الشروط مطلوب', 400, 'VALIDATION_ERROR');
+  }
+  await PlatformSettings.setSetting('termsAndConditions', terms, req.user._id);
+  await PlatformSettings.setSetting('termsLastUpdated', new Date().toISOString(), req.user._id);
+  logger.info({ adminId: req.user._id.toString() }, 'Terms and conditions updated');
+  res.json({ ok: true });
+});
+
 // GET /api/admin/disputes — كل النزاعات المفتوحة
 const listDisputes = asyncHandler(async (req, res) => {
   const { status = 'disputed', page = 1, limit = 20 } = req.query;
@@ -259,4 +278,5 @@ module.exports = {
   listAllProjects, dashboardStats, listDisputes,
   createReviewer, listReviewers, deleteReviewer,
   getSettings, updateSettings,
+  getTerms, updateTerms,
 };

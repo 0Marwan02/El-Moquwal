@@ -80,6 +80,65 @@ const TIMELINE_LABELS = {
 };
 
 // =====================================================
+// MARKET CONTEXT — يجيب بيانات مشاريع مشابهة من المنصة عشان يحسن التقدير
+// =====================================================
+
+async function getMarketContext(projectType, governorate, area) {
+  const Bid = require('../models/Bid');
+  const safeArea = Number(area) || 0;
+  if (!safeArea || !projectType) return null;
+
+  // Find similar projects: same type, same governorate, area within ±50%
+  const areaMin = safeArea * 0.5;
+  const areaMax = safeArea * 1.5;
+
+  let similarProjects = await Project.find({
+    projectType,
+    'propertyDetails.governorate': governorate,
+    'propertyDetails.area': { $gte: areaMin, $lte: areaMax },
+    status: { $in: ['awarded', 'closed'] },
+    awardedBidId: { $ne: null },
+  })
+    .select('_id propertyDetails.area awardedBidId')
+    .limit(20)
+    .lean();
+
+  let scope = 'local';
+
+  if (similarProjects.length === 0) {
+    // Broaden: same type, any governorate
+    similarProjects = await Project.find({
+      projectType,
+      status: { $in: ['awarded', 'closed'] },
+      awardedBidId: { $ne: null },
+    })
+      .select('_id propertyDetails.area propertyDetails.governorate awardedBidId')
+      .limit(15)
+      .lean();
+    scope = 'national';
+  }
+
+  if (similarProjects.length === 0) return null;
+
+  const bidIds = similarProjects.map(p => p.awardedBidId).filter(Boolean);
+  if (bidIds.length === 0) return null;
+
+  const bids = await Bid.find({ _id: { $in: bidIds } }).select('amount').lean();
+  if (bids.length === 0) return null;
+
+  const amounts = bids.map(b => b.amount).filter(a => Number.isFinite(a)).sort((a, b) => a - b);
+  if (amounts.length === 0) return null;
+
+  return {
+    count: amounts.length,
+    minPrice: amounts[0],
+    maxPrice: amounts[amounts.length - 1],
+    avgPrice: Math.round(amounts.reduce((s, a) => s + a, 0) / amounts.length),
+    scope,
+  };
+}
+
+// =====================================================
 // CONTROLLERS
 // =====================================================
 
@@ -133,6 +192,7 @@ const listProjects = asyncHandler(async (req, res) => {
 
   const [projects, total] = await Promise.all([
     Project.find(filter)
+      .populate('postedBy', 'name')
       // featured first, then urgent, then newest
       .sort({ isFeatured: -1, isUrgent: -1, createdAt: -1 })
       .skip(skip)
@@ -230,6 +290,24 @@ const aiEstimate = asyncHandler(async (req, res) => {
     ? `${propertyDetails.governorate} - ${propertyDetails.district}`
     : propertyDetails.governorate;
 
+  // Fetch market context from platform data — يحسن دقة التقدير
+  let marketSection = '';
+  try {
+    const ctx = await getMarketContext(projectType, propertyDetails.governorate, propertyDetails.area);
+    if (ctx) {
+      const scopeLabel = ctx.scope === 'local' ? ' في نفس المحافظة' : ' على مستوى الجمهورية';
+      marketSection = `
+
+بيانات من مشاريع مشابهة على المنصة (${ctx.count} مشروع${scopeLabel}):
+- أقل سعر عرض مقبول: ${ctx.minPrice.toLocaleString()} جنيه
+- أعلى سعر عرض مقبول: ${ctx.maxPrice.toLocaleString()} جنيه
+- متوسط الأسعار: ${ctx.avgPrice.toLocaleString()} جنيه
+استخدم هذه البيانات كمرجع واقعي لتقديرك.`;
+    }
+  } catch (err) {
+    logger.warn({ err: err.message }, 'Failed to get market context for AI estimate');
+  }
+
   const prompt = `أنت خبير تقدير تكاليف مشاريع البناء والتشطيب في مصر. بناءً على المعلومات التفصيلية التالية، قدّم نطاق سعر واقعي ودقيق بالجنيه المصري.
 
 نوع المشروع: ${PROJECT_TYPE_LABELS[projectType] || projectType}
@@ -241,6 +319,7 @@ const aiEstimate = asyncHandler(async (req, res) => {
 المتطلبات المحددة: ${requirementsText}
 الميزانية المفضلة: ${BUDGET_LABELS[budgetRange] || 'غير محددة'}
 الجدول الزمني المطلوب: ${TIMELINE_LABELS[timeline] || 'غير محدد'}
+${marketSection}
 
 خذ في الاعتبار أسعار مواد البناء والعمالة الحالية في ${propertyDetails.governorate}. أجب بـ JSON فقط بهذا الشكل، بدون أي نص خارجه:
 {"minEstimate": number, "maxEstimate": number, "currency": "EGP", "reasoning": "شرح مختصر باللغة العربية في 2-3 جمل"}`;
@@ -249,7 +328,7 @@ const aiEstimate = asyncHandler(async (req, res) => {
   try {
     aiResponse = await callLLM(prompt, {
       maxTokens: 300,
-      systemPrompt: 'أنت خبير تقدير تكاليف مشاريع في مصر وتجاوب فقط بـ JSON صالح بدون أي نص إضافي.'
+      systemPrompt: 'أنت خبير تقدير تكاليف مشاريع بناء وتشطيب في مصر بخبرة 20 سنة. تعرف أسعار السوق المصري الحالية (2024-2025): الحديد 40,000-45,000 ج/طن، الأسمنت 2,200-2,800 ج/طن، متر التشطيب 3,000-8,000 ج حسب المستوى. تجاوب فقط بـ JSON صالح بدون أي نص إضافي.'
     });
     
     if (!aiResponse) {

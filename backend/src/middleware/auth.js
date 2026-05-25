@@ -3,10 +3,11 @@ const { verifyAccess } = require('../utils/jwt');
 const { AppError } = require('./errorHandler');
 const User = require('../models/User');
 
-// by-extract el access token men el Authorization header
+// by-extract el access token men el Authorization header aw query
 function extractToken(req) {
   const header = req.headers.authorization || '';
   if (header.startsWith('Bearer ')) return header.slice(7);
+  if (req.query && req.query.token) return req.query.token;
   return null;
 }
 

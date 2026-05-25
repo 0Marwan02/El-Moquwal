@@ -1,14 +1,14 @@
 // el project routes — CRUD + AI estimate + publish + close + media upload
 const express = require('express');
 const ctrl = require('../controllers/project.controller');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth, requireRole, optionalAuth } = require('../middleware/auth');
 const { uploadProjectMedia, uploadClosurePhotos } = require('../middleware/upload');
 
 const router = express.Router();
 
 // public — list + detail
-router.get('/', ctrl.listProjects);
-router.get('/:id', ctrl.getProject);
+router.get('/', optionalAuth, ctrl.listProjects);
+router.get('/:id', optionalAuth, ctrl.getProject);
 
 // customer only — create (query ?draft=1 → مسودة)
 router.post('/', requireAuth, requireRole('customer'), ctrl.createProject);

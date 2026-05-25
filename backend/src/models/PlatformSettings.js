@@ -23,6 +23,15 @@ const DEFAULTS = {
   featuredProjectPriceEGP: { value: 100, description: 'رسوم تمييز المشروع' },
   featuredProjectDurationDays: { value: 7, description: 'مدة تمييز المشروع بالأيام' },
   referralBonusCredits: { value: 2, description: 'نقاط مكافأة الإحالة' },
+  // Bid cost by budget range (credits)
+  bidCostUnder50k: { value: 1, description: 'تكلفة العرض — مشروع أقل من 50,000 (نقاط)' },
+  bidCost50k200k: { value: 1, description: 'تكلفة العرض — 50,000 إلى 200,000 (نقاط)' },
+  bidCost200k500k: { value: 2, description: 'تكلفة العرض — 200,000 إلى 500,000 (نقاط)' },
+  bidCost500k1m: { value: 2, description: 'تكلفة العرض — 500,000 إلى 1 مليون (نقاط)' },
+  bidCostAbove1m: { value: 3, description: 'تكلفة العرض — أكثر من 1 مليون (نقاط)' },
+  // Terms of Service
+  termsAndConditions: { value: '', description: 'نص الشروط والأحكام العامة' },
+  termsLastUpdated: { value: null, description: 'تاريخ آخر تحديث للشروط' },
 };
 
 /**

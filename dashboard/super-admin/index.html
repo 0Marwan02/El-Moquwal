@@ -41,6 +41,9 @@
       <button onclick="showTab('projects')" class="tab-nav-btn w-full text-right flex items-center gap-3 text-gray-300 hover:text-white px-3 py-2.5 rounded-xl text-sm font-medium transition">
         <span class="text-lg">🏗️</span> كل المشاريع
       </button>
+      <button onclick="showTab('terms')" class="tab-nav-btn w-full text-right flex items-center gap-3 text-gray-300 hover:text-white px-3 py-2.5 rounded-xl text-sm font-medium transition">
+        <span class="text-lg">📜</span> الشروط والأحكام
+      </button>
     </nav>
     <div class="p-4 border-t border-white/10">
       <p id="sidebarName" class="text-sm text-blue-200 font-medium mb-2"></p>
@@ -108,6 +111,18 @@
       <div id="projectsPagination" class="flex justify-center gap-3 mt-6"></div>
     </div>
 
+    <!-- ===== Terms ===== -->
+    <div id="tab-terms" class="tab-panel">
+      <h2 class="text-2xl font-black text-gray-800 mb-6">الشروط والأحكام</h2>
+      <div id="termsAlert" class="hidden p-3 rounded-xl text-sm mb-4"></div>
+      <form id="termsForm" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-3xl">
+        <p class="text-sm text-gray-500 mb-4">النص التالي يظهر للمستخدمين في صفحة الشروط والأحكام العامة.</p>
+        <textarea id="termsContent" rows="18" class="w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed" placeholder="اكتب الشروط والأحكام هنا..."></textarea>
+        <p id="termsLastUpdated" class="text-xs text-gray-400 mt-2 mb-4"></p>
+        <button type="submit" class="bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-blue-800 text-sm">حفظ الشروط</button>
+      </form>
+    </div>
+
   </div>
 </div>
 
@@ -168,7 +183,7 @@ function showTab(name) {
   event.currentTarget.classList.add('bg-white/10', 'text-white');
   event.currentTarget.classList.remove('text-gray-300');
 
-  const loaders = { stats: loadStats, reviewers: loadReviewers, settings: loadSettings, disputes: loadDisputes, projects: loadProjects };
+  const loaders = { stats: loadStats, reviewers: loadReviewers, settings: loadSettings, disputes: loadDisputes, projects: loadProjects, terms: loadTerms };
   loaders[name]?.();
 }
 
@@ -284,18 +299,76 @@ const settingLabels = {
   featuredProjectPriceEGP:     'رسوم تمييز المشروع (ج.م)',
   featuredProjectDurationDays: 'مدة التمييز (أيام)',
   referralBonusCredits:        'نقاط مكافأة الإحالة',
+  bidCostUnder50k:             'تكلفة العرض — مشروع أقل من 50,000 (نقاط)',
+  bidCost50k200k:              'تكلفة العرض — 50,000 إلى 200,000 (نقاط)',
+  bidCost200k500k:             'تكلفة العرض — 200,000 إلى 500,000 (نقاط)',
+  bidCost500k1m:               'تكلفة العرض — 500,000 إلى 1 مليون (نقاط)',
+  bidCostAbove1m:              'تكلفة العرض — أكثر من 1 مليون (نقاط)',
 };
+
+// Settings grouped for a cleaner UI
+const settingGroups = [
+  {
+    title: 'العمولة والضمان',
+    keys: ['commissionRate', 'warrantyCapPercent', 'warrantyCapMaxEGP'],
+  },
+  {
+    title: 'الاشتراكات والنقاط',
+    keys: ['premiumPriceEGP', 'premiumMonthlyCredits', 'creditPackPriceEGP', 'creditPackAmount', 'referralBonusCredits'],
+  },
+  {
+    title: 'تمييز المشاريع',
+    keys: ['featuredProjectPriceEGP', 'featuredProjectDurationDays'],
+  },
+  {
+    title: 'تكلفة العرض حسب ميزانية المشروع',
+    keys: ['bidCostUnder50k', 'bidCost50k200k', 'bidCost200k500k', 'bidCost500k1m', 'bidCostAbove1m'],
+  },
+];
+
+// keys we never want to render as numeric inputs in the settings form
+const NON_NUMERIC_KEYS = new Set(['termsAndConditions', 'termsLastUpdated']);
 
 async function loadSettings() {
   const el = document.getElementById('settingsFields');
   el.innerHTML = '<p class="text-gray-400 text-sm">جاري التحميل...</p>';
   try {
     const r = await apiFetch('/admin/settings');
-    el.innerHTML = Object.entries(r.settings).map(([key, val]) => `
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">${settingLabels[key] || key}</label>
-        <input type="number" step="any" name="${key}" value="${val}" class="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-      </div>`).join('');
+    const settings = r.settings || {};
+    const renderedKeys = new Set();
+    const html = settingGroups.map(group => {
+      const fields = group.keys.filter(k => settings[k] !== undefined).map(key => {
+        renderedKeys.add(key);
+        const val = settings[key];
+        return `
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">${settingLabels[key] || key}</label>
+          <input type="number" step="any" name="${key}" value="${val}" class="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>`;
+      }).join('');
+      if (!fields) return '';
+      return `
+        <div class="pb-4 border-b border-gray-100 last:border-0 last:pb-0 space-y-4">
+          <h3 class="text-base font-bold text-gray-800">${group.title}</h3>
+          ${fields}
+        </div>`;
+    }).join('');
+
+    // Render any remaining (unknown) numeric settings under a "Other" group, skipping non-numeric/internal keys
+    const leftover = Object.entries(settings).filter(([k, v]) =>
+      !renderedKeys.has(k) && !NON_NUMERIC_KEYS.has(k) && (typeof v === 'number' || (!isNaN(parseFloat(v)) && v !== ''))
+    );
+    const leftoverHtml = leftover.length === 0 ? '' : `
+      <div class="pb-4 space-y-4">
+        <h3 class="text-base font-bold text-gray-800">إعدادات أخرى</h3>
+        ${leftover.map(([k, v]) => `
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">${settingLabels[k] || k}</label>
+            <input type="number" step="any" name="${k}" value="${v}" class="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>`).join('')}
+      </div>`;
+
+    el.innerHTML = html + leftoverHtml;
   } catch { el.innerHTML = '<p class="text-red-400 text-sm">تعذر تحميل الإعدادات</p>'; }
 }
 
@@ -304,13 +377,48 @@ document.getElementById('settingsForm').addEventListener('submit', async (e) => 
   const alertBox = document.getElementById('settingsAlert');
   const inputs = e.target.querySelectorAll('input[name]');
   const settings = {};
-  inputs.forEach(inp => { settings[inp.name] = parseFloat(inp.value); });
+  inputs.forEach(inp => {
+    const num = parseFloat(inp.value);
+    if (!isNaN(num)) settings[inp.name] = num;
+  });
 
   try {
     await apiFetch('/admin/settings', 'PATCH', { settings });
     alertBox.textContent = 'تم حفظ الإعدادات بنجاح!';
     alertBox.className = 'block p-3 rounded-xl text-sm bg-green-100 text-green-800';
     setTimeout(() => alertBox.className = 'hidden', 3000);
+  } catch (err) {
+    alertBox.textContent = err.message || 'حدث خطأ';
+    alertBox.className = 'block p-3 rounded-xl text-sm bg-red-100 text-red-800';
+  }
+});
+
+// ===== Terms & Conditions =====
+async function loadTerms() {
+  try {
+    const r = await apiFetch('/admin/terms');
+    document.getElementById('termsContent').value = r.terms || '';
+    const lu = document.getElementById('termsLastUpdated');
+    if (r.lastUpdated) {
+      lu.textContent = 'آخر تحديث: ' + new Date(r.lastUpdated).toLocaleDateString('ar-EG', { year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' });
+    } else {
+      lu.textContent = 'لم يتم تحديد الشروط بعد.';
+    }
+  } catch {
+    document.getElementById('termsContent').value = '';
+    document.getElementById('termsLastUpdated').textContent = '';
+  }
+}
+
+document.getElementById('termsForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const alertBox = document.getElementById('termsAlert');
+  try {
+    await apiFetch('/admin/terms', 'PATCH', { terms: document.getElementById('termsContent').value });
+    alertBox.textContent = 'تم حفظ الشروط والأحكام بنجاح!';
+    alertBox.className = 'block p-3 rounded-xl text-sm bg-green-100 text-green-800';
+    setTimeout(() => alertBox.className = 'hidden', 3000);
+    loadTerms();
   } catch (err) {
     alertBox.textContent = err.message || 'حدث خطأ';
     alertBox.className = 'block p-3 rounded-xl text-sm bg-red-100 text-red-800';

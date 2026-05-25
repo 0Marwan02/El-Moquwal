@@ -111,10 +111,14 @@
       // ── Swap content ──
       main.innerHTML = newMain.innerHTML;
 
-      // Sync styles in <head>
-      document.querySelectorAll('head style').forEach(s => s.remove());
+      // Sync page-specific styles in <head>
+      // Only remove styles we previously injected (marked with data-spa-style)
+      // This preserves dynamically-injected widget CSS (e.g. chat-widget)
+      document.querySelectorAll('head style[data-spa-style]').forEach(s => s.remove());
       fetched.head.querySelectorAll('style').forEach(s => {
-        document.head.appendChild(s.cloneNode(true));
+        const clone = s.cloneNode(true);
+        clone.setAttribute('data-spa-style', 'true');
+        document.head.appendChild(clone);
       });
 
       // Sync specific outer elements (Modals, Toasts)
@@ -226,6 +230,14 @@
     document.title,
     window.location.href
   );
+
+  // Mark existing page-specific <style> tags so the first SPA navigation
+  // can properly remove them (widget-injected styles have no data-spa-style)
+  document.querySelectorAll('head style:not([data-spa-style])').forEach(s => {
+    // Only mark styles that look page-specific (not injected by widgets)
+    // Widget styles are appended AFTER this router initializes
+    s.setAttribute('data-spa-style', 'true');
+  });
 
   console.log('[SPA Router] Initialized for professional dashboard ✓');
 

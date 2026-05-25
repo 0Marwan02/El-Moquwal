@@ -35,11 +35,22 @@
 
     .projects-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
       gap: var(--space-5);
     }
     .project-card {
-      background: var(--bg-surface); border-radius: var(--radius-md); border: 1px solid var(--border-default); padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-4); transition: all var(--transition-base); box-shadow: var(--shadow-sm);
+      background: var(--bg-surface);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-default);
+      padding: var(--space-6);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      transition: all var(--transition-base);
+      box-shadow: var(--shadow-sm);
+      min-width: 0;
+      overflow-wrap: break-word;
+      word-break: break-word;
     }
     .project-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--color-gold-light); }
     
@@ -131,7 +142,17 @@
       const grid = document.getElementById('projectsGrid');
       try {
         const data = await window.api.fetch('/projects');
-        grid.innerHTML = (data.projects || []).map(p => `
+        const projects = data.projects || [];
+        if (projects.length === 0) {
+          grid.innerHTML = `
+            <div style="grid-column:1/-1; text-align:center; padding:60px 20px; background:var(--bg-surface); border-radius:var(--radius-md); border:1px dashed var(--border-default);">
+              <div style="font-size:48px; margin-bottom:16px;">📋</div>
+              <h3 style="color:var(--color-navy); margin-bottom:8px; font-weight:800;">لا توجد مشاريع متاحة حالياً</h3>
+              <p style="color:var(--text-muted); font-size:var(--font-size-sm);">عندما يتم نشر مشاريع جديدة ستظهر هنا</p>
+            </div>`;
+          return;
+        }
+        grid.innerHTML = projects.map(p => `
           <article class="project-card">
             <span class="pc-tag">${TYPE_LABELS[p.projectType] || 'مشروع'}</span>
             <h3 class="pc-title">${p.title}</h3>
@@ -145,7 +166,7 @@
             </div>
           </article>
         `).join('');
-      } catch(e) { grid.innerHTML = 'خطأ في التحميل'; }
+      } catch(e) { grid.innerHTML = '<div style="grid-column:1/-1; text-align:center;padding:40px;color:var(--text-muted);">خطأ في التحميل — حاول مرة أخرى</div>'; }
     }
 
     document.addEventListener('DOMContentLoaded', () => { injectLayout(); loadProjects(); });

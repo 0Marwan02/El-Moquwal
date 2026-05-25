@@ -323,6 +323,8 @@ body.dashboard-page {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+  min-width: 0;
 }
 
 /* الـ topbar بتاعة الـ dashboard */
@@ -444,6 +446,8 @@ body.dashboard-page {
   flex: 1;
   padding: var(--space-8);
   max-width: 100%;
+  overflow-x: hidden;
+  min-width: 0;
 }
 
 /* ===========================================
@@ -571,3 +575,29 @@ body.dashboard-page {
   transition: color var(--transition-base);
 }
 .footer-legal-links a:hover { color: rgba(255,255,255,0.55); }
+
+
+/* ===========================================
+   RESPONSIVE — Mobile sidebar + dashboard
+   =========================================== */
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 0;
+    transform: translateX(100%);
+    transition: transform 0.3s ease, width 0.3s ease;
+  }
+  .sidebar.open {
+    width: var(--sidebar-width);
+    transform: translateX(0);
+  }
+  .dashboard-main {
+    margin-right: 0;
+  }
+  .dashboard-topbar {
+    padding: 0 var(--space-4);
+  }
+  .dashboard-content {
+    padding: var(--space-4);
+  }
+}

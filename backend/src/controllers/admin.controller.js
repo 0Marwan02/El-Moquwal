@@ -160,11 +160,44 @@ const Admin = require('../models/AdminProfile');
 const PlatformSettings = require('../models/PlatformSettings');
 const { hashPassword } = require('../utils/password');
 
+// Source of truth — keeps backend/frontend in sync with the AdminProfile enum
+const VALID_PERMISSIONS = [
+  'review_contractors',
+  'view_projects',
+  'view_stats',
+  'manage_disputes',
+  'manage_featured',
+  'manage_materials',
+  'adjust_credits',
+];
+
+// Returns a clean, deduplicated, validated permissions array.
+// Throws AppError on unknown values so we never silently drop a permission.
+function sanitizePermissions(input) {
+  if (!Array.isArray(input)) {
+    throw new AppError('الصلاحيات يجب أن تكون مصفوفة', 400, 'VALIDATION_ERROR');
+  }
+  const cleaned = [...new Set(input.map((p) => String(p).trim()).filter(Boolean))];
+  const unknown = cleaned.filter((p) => !VALID_PERMISSIONS.includes(p));
+  if (unknown.length > 0) {
+    throw new AppError(`صلاحية غير معروفة: ${unknown.join(', ')}`, 400, 'INVALID_PERMISSION');
+  }
+  return cleaned;
+}
+
 // POST /api/admin/create-reviewer — super_admin ينشئ أدمن مراجع
 const createReviewer = asyncHandler(async (req, res) => {
   const { name, email, phone, password, permissions, nationalId } = req.body;
   if (!name || !email || !password || !nationalId) {
     throw new AppError('الاسم والبريد وكلمة المرور والرقم القومي مطلوبين', 400, 'VALIDATION_ERROR');
+  }
+
+  // Validate when caller sends permissions; otherwise fall back to a sensible default.
+  let permsToSave;
+  if (permissions === undefined || permissions === null) {
+    permsToSave = ['review_contractors', 'view_projects', 'view_stats'];
+  } else {
+    permsToSave = sanitizePermissions(permissions);
   }
 
   const crypto = require('crypto');
@@ -184,12 +217,30 @@ const createReviewer = asyncHandler(async (req, res) => {
     nationalIdLast4: nationalId.slice(-4),
     status: 'active',
     isEmailVerified: true,
-    permissions: permissions || ['review_contractors', 'view_projects', 'view_stats'],
+    permissions: permsToSave,
     createdBySuperAdmin: req.user._id,
   });
 
-  logger.info({ adminId: admin._id.toString(), createdBy: req.user._id.toString() }, 'Reviewer admin created');
+  logger.info({ adminId: admin._id.toString(), createdBy: req.user._id.toString(), permissions: permsToSave }, 'Reviewer admin created');
   res.status(201).json({ admin: admin.toJSON() });
+});
+
+// PATCH /api/admin/reviewers/:id/permissions — super_admin يحدث صلاحيات مراجع
+const updateReviewerPermissions = asyncHandler(async (req, res) => {
+  assertValidId(req.params.id);
+  const permissions = sanitizePermissions(req.body.permissions);
+
+  const admin = await Admin.findOne({ _id: req.params.id, role: 'admin' });
+  if (!admin) throw new AppError('المراجع غير موجود', 404, 'NOT_FOUND');
+
+  admin.permissions = permissions;
+  await admin.save();
+
+  logger.info(
+    { adminId: admin._id.toString(), updatedBy: req.user._id.toString(), permissions },
+    'Reviewer permissions updated',
+  );
+  res.json({ ok: true, admin: admin.toJSON() });
 });
 
 // GET /api/admin/reviewers — super_admin يشوف كل المراجعين
@@ -273,10 +324,16 @@ const listDisputes = asyncHandler(async (req, res) => {
   res.json({ disputes, pagination: { total, page: Number(page), pages: Math.ceil(total / Number(limit)) } });
 });
 
+// GET /api/admin/permissions — قائمة الصلاحيات المتاحة (للواجهة)
+const listAvailablePermissions = asyncHandler(async (req, res) => {
+  res.json({ permissions: VALID_PERMISSIONS });
+});
+
 module.exports = {
   listPending, approveContractor, rejectContractor,
   listAllProjects, dashboardStats, listDisputes,
   createReviewer, listReviewers, deleteReviewer,
+  updateReviewerPermissions, listAvailablePermissions,
   getSettings, updateSettings,
   getTerms, updateTerms,
 };

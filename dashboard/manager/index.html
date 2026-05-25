@@ -440,6 +440,12 @@
           <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
           كل المشاريع
         </a>
+        
+        <!-- Only shown via JS for super_admins -->
+        <a href="../super-admin/index.html" class="sidebar-item" id="superAdminLink" style="display:none; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); color: #fcd34d; margin-top: 15px;">
+          <svg viewBox="0 0 24 24" style="fill:#fcd34d;"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+          لوحة المدير الرئيسي (Super Admin)
+        </a>
       </nav>
 
       <div class="sidebar-cta">
@@ -761,6 +767,11 @@
         `);
         setTimeout(() => (window.location.href = '../../auth/login.html'), 900);
         return;
+      }
+
+      if (user.role === 'super_admin') {
+        const link = document.getElementById('superAdminLink');
+        if (link) link.style.display = 'flex';
       }
 
       const initial = (user.name || 'أ').charAt(0);

@@ -44,6 +44,9 @@
       <button onclick="showTab('terms')" class="tab-nav-btn w-full text-right flex items-center gap-3 text-gray-300 hover:text-white px-3 py-2.5 rounded-xl text-sm font-medium transition">
         <span class="text-lg">📜</span> الشروط والأحكام
       </button>
+      <a href="../manager/index.html" class="w-full text-right flex items-center gap-3 text-gray-300 hover:text-white px-3 py-2.5 rounded-xl text-sm font-medium transition mt-4" style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); color: #93c5fd;">
+        <span class="text-lg">⚙️</span> مهام الإدارة (مراجعة المقاولين)
+      </a>
     </nav>
     <div class="p-4 border-t border-white/10">
       <p id="sidebarName" class="text-sm text-blue-200 font-medium mb-2"></p>
@@ -128,7 +131,7 @@
 
 <!-- Add Reviewer Modal -->
 <div id="addReviewerModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
     <div class="flex justify-between items-center mb-4">
       <h3 class="text-xl font-bold">إضافة مراجع جديد</h3>
       <button onclick="closeAddReviewerModal()" class="text-gray-400 hover:text-gray-700 text-2xl leading-none">&times;</button>
@@ -151,14 +154,43 @@
         <label class="block text-sm font-medium text-gray-700 mb-1">كلمة المرور *</label>
         <input type="password" id="rPass" required minlength="8" class="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
       </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">الصلاحيات *</label>
+        <div class="text-xs text-gray-500 mb-2">اختر الصلاحيات التي سيمتلكها هذا المراجع. اختيار افتراضي مفعل ويمكن تعديله.</div>
+        <div id="addPermsGrid" class="grid grid-cols-1 gap-2 bg-gray-50 border border-gray-200 rounded-xl p-3"></div>
+      </div>
+
       <button type="submit" id="rSubmit" class="w-full bg-blue-700 text-white py-2.5 rounded-xl font-bold hover:bg-blue-800 text-sm">إنشاء الحساب</button>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Permissions Modal -->
+<div id="editPermsModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+    <div class="flex justify-between items-center mb-4">
+      <div>
+        <h3 class="text-xl font-bold">تعديل الصلاحيات</h3>
+        <p id="editPermsName" class="text-sm text-gray-500 mt-0.5"></p>
+      </div>
+      <button onclick="closeEditPermsModal()" class="text-gray-400 hover:text-gray-700 text-2xl leading-none">&times;</button>
+    </div>
+    <form id="editPermsForm" class="space-y-4">
+      <div id="editPermsAlert" class="hidden p-3 rounded-xl text-sm text-center"></div>
+      <input type="hidden" id="editPermsId">
+      <div>
+        <div class="text-xs text-gray-500 mb-2">قم بتفعيل أو إلغاء أي صلاحية فوراً. لا يمكن أن تكون كل الصلاحيات معطلة.</div>
+        <div id="editPermsGrid" class="grid grid-cols-1 gap-2 bg-gray-50 border border-gray-200 rounded-xl p-3"></div>
+      </div>
+      <button type="submit" id="editPermsSubmit" class="w-full bg-blue-700 text-white py-2.5 rounded-xl font-bold hover:bg-blue-800 text-sm">حفظ التغييرات</button>
     </form>
   </div>
 </div>
 
 <script>
 const API = 'http://localhost:4000/api';
-const token = localStorage.getItem('token');
+const token = localStorage.getItem('elm_accessToken');
 if (!token) window.location.href = '../../auth/login.html';
 
 // Role check
@@ -228,24 +260,75 @@ async function loadStats() {
 }
 
 // ===== Reviewers =====
+// Arabic labels — must align with backend's VALID_PERMISSIONS enum
+const PERMISSION_LABELS = {
+  review_contractors: 'مراجعة المقاولين',
+  view_projects:      'عرض المشاريع',
+  view_stats:         'عرض الإحصائيات',
+  manage_disputes:    'إدارة النزاعات',
+  manage_featured:    'إدارة المشاريع المميزة',
+  manage_materials:   'إدارة سوق المواد',
+  adjust_credits:     'تعديل رصيد النقاط',
+};
+const DEFAULT_NEW_PERMS = ['review_contractors', 'view_projects', 'view_stats'];
+let AVAILABLE_PERMS = Object.keys(PERMISSION_LABELS); // hydrated from API
+
+async function ensurePermissionsList() {
+  try {
+    const r = await apiFetch('/admin/permissions');
+    if (Array.isArray(r.permissions) && r.permissions.length > 0) {
+      AVAILABLE_PERMS = r.permissions;
+    }
+  } catch { /* keep hardcoded fallback */ }
+}
+
+function renderPermsGrid(containerId, checkedSet) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = AVAILABLE_PERMS.map(p => `
+    <label class="flex items-center gap-2 cursor-pointer text-sm">
+      <input type="checkbox" value="${p}" ${checkedSet.has(p) ? 'checked' : ''} class="w-4 h-4 accent-blue-700">
+      <span class="text-gray-700">${PERMISSION_LABELS[p] || p}</span>
+    </label>`).join('');
+}
+
+function readCheckedPerms(containerId) {
+  return [...document.querySelectorAll(`#${containerId} input[type="checkbox"]:checked`)]
+    .map(c => c.value);
+}
+
 async function loadReviewers() {
   const el = document.getElementById('reviewersList');
   el.innerHTML = '<p class="text-gray-400 text-sm">جاري التحميل...</p>';
+  await ensurePermissionsList();
   try {
     const r = await apiFetch('/admin/reviewers');
     if (!r.reviewers?.length) { el.innerHTML = '<p class="text-gray-400 text-sm text-center py-8">لا يوجد مراجعون حتى الآن</p>'; return; }
-    el.innerHTML = r.reviewers.map(rev => `
-      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex justify-between items-center gap-4">
-        <div>
-          <p class="font-bold text-gray-800">${esc(rev.name)}</p>
-          <p class="text-sm text-gray-500">${esc(rev.email)}</p>
-          <p class="text-xs text-gray-400 mt-1">أنشئ في: ${new Date(rev.createdAt).toLocaleDateString('ar-EG')}</p>
+    el.innerHTML = r.reviewers.map(rev => {
+      const perms = Array.isArray(rev.permissions) ? rev.permissions : [];
+      const chips = perms.length === 0
+        ? '<span class="text-xs text-gray-400 italic">لا توجد صلاحيات</span>'
+        : perms.map(p => `<span class="text-[11px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">${PERMISSION_LABELS[p] || p}</span>`).join('');
+      return `
+      <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+        <div class="flex justify-between items-start gap-4 mb-3">
+          <div class="min-w-0 flex-1">
+            <p class="font-bold text-gray-800">${esc(rev.name)}</p>
+            <p class="text-sm text-gray-500">${esc(rev.email)}</p>
+            <p class="text-xs text-gray-400 mt-1">أنشئ في: ${new Date(rev.createdAt).toLocaleDateString('ar-EG')}</p>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <span class="text-xs px-3 py-1 rounded-full font-medium ${rev.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}">${rev.status === 'active' ? 'نشط' : 'موقوف'}</span>
+          </div>
         </div>
-        <div class="flex items-center gap-3">
-          <span class="text-xs px-3 py-1 rounded-full font-medium ${rev.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}">${rev.status === 'active' ? 'نشط' : 'موقوف'}</span>
-          <button onclick="deleteReviewer('${rev._id}')" class="text-xs text-red-500 hover:text-red-700 font-medium">حذف</button>
+        <div class="flex flex-wrap gap-1.5 mb-3 pt-3 border-t border-gray-100">
+          ${chips}
         </div>
-      </div>`).join('');
+        <div class="flex justify-end gap-3">
+          <button onclick='openEditPermsModal(${JSON.stringify({ id: rev._id, name: rev.name, permissions: perms }).replace(/'/g, "&#39;")})' class="text-xs px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg font-bold">تعديل الصلاحيات</button>
+          <button onclick="deleteReviewer('${rev._id}')" class="text-xs px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg font-bold">حذف</button>
+        </div>
+      </div>`;
+    }).join('');
   } catch { el.innerHTML = '<p class="text-red-400 text-sm text-center py-8">تعذر التحميل</p>'; }
 }
 
@@ -258,7 +341,11 @@ async function deleteReviewer(id) {
   } catch (e) { showToast(e.message || 'حدث خطأ', true); }
 }
 
-function openAddReviewerModal() { document.getElementById('addReviewerModal').classList.remove('hidden'); }
+async function openAddReviewerModal() {
+  await ensurePermissionsList();
+  renderPermsGrid('addPermsGrid', new Set(DEFAULT_NEW_PERMS));
+  document.getElementById('addReviewerModal').classList.remove('hidden');
+}
 function closeAddReviewerModal() {
   document.getElementById('addReviewerModal').classList.add('hidden');
   document.getElementById('addReviewerForm').reset();
@@ -269,6 +356,14 @@ document.getElementById('addReviewerForm').addEventListener('submit', async (e) 
   e.preventDefault();
   const btn = document.getElementById('rSubmit');
   const alertBox = document.getElementById('reviewerAlert');
+  const permissions = readCheckedPerms('addPermsGrid');
+
+  if (permissions.length === 0) {
+    alertBox.textContent = 'يجب اختيار صلاحية واحدة على الأقل';
+    alertBox.className = 'block p-3 rounded-xl text-sm text-center bg-red-100 text-red-800';
+    return;
+  }
+
   btn.disabled = true; btn.textContent = 'جاري الإنشاء...';
 
   try {
@@ -277,6 +372,7 @@ document.getElementById('addReviewerForm').addEventListener('submit', async (e) 
       email: document.getElementById('rEmail').value,
       nationalId: document.getElementById('rNid').value,
       password: document.getElementById('rPass').value,
+      permissions,
     });
     alertBox.textContent = 'تم إنشاء حساب المراجع بنجاح!';
     alertBox.className = 'block p-3 rounded-xl text-sm text-center bg-green-100 text-green-800';
@@ -285,6 +381,43 @@ document.getElementById('addReviewerForm').addEventListener('submit', async (e) 
     alertBox.textContent = err.message || 'حدث خطأ';
     alertBox.className = 'block p-3 rounded-xl text-sm text-center bg-red-100 text-red-800';
   } finally { btn.disabled = false; btn.textContent = 'إنشاء الحساب'; }
+});
+
+// ===== Edit Permissions =====
+function openEditPermsModal(rev) {
+  document.getElementById('editPermsId').value = rev.id;
+  document.getElementById('editPermsName').textContent = rev.name || '';
+  renderPermsGrid('editPermsGrid', new Set(rev.permissions || []));
+  document.getElementById('editPermsAlert').className = 'hidden';
+  document.getElementById('editPermsModal').classList.remove('hidden');
+}
+function closeEditPermsModal() {
+  document.getElementById('editPermsModal').classList.add('hidden');
+}
+
+document.getElementById('editPermsForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const id = document.getElementById('editPermsId').value;
+  const btn = document.getElementById('editPermsSubmit');
+  const alertBox = document.getElementById('editPermsAlert');
+  const permissions = readCheckedPerms('editPermsGrid');
+
+  if (permissions.length === 0) {
+    alertBox.textContent = 'يجب أن تكون هناك صلاحية واحدة على الأقل';
+    alertBox.className = 'block p-3 rounded-xl text-sm text-center bg-red-100 text-red-800';
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  try {
+    await apiFetch(`/admin/reviewers/${id}/permissions`, 'PATCH', { permissions });
+    alertBox.textContent = 'تم تحديث الصلاحيات';
+    alertBox.className = 'block p-3 rounded-xl text-sm text-center bg-green-100 text-green-800';
+    setTimeout(() => { closeEditPermsModal(); loadReviewers(); }, 800);
+  } catch (err) {
+    alertBox.textContent = err.message || 'حدث خطأ';
+    alertBox.className = 'block p-3 rounded-xl text-sm text-center bg-red-100 text-red-800';
+  } finally { btn.disabled = false; btn.textContent = 'حفظ التغييرات'; }
 });
 
 // ===== Settings =====
@@ -533,7 +666,8 @@ function showToast(msg, isError = false) {
 }
 
 function logout() {
-  localStorage.removeItem('token');
+  localStorage.removeItem('elm_accessToken');
+  localStorage.removeItem('elm_user');
   window.location.href = '../../auth/login.html';
 }
 

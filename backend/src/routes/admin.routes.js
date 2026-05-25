@@ -24,6 +24,10 @@ router.patch('/settings', requireAuth, requireSuperAdmin, ctrl.updateSettings);
 router.post('/create-reviewer', requireAuth, requireSuperAdmin, ctrl.createReviewer);
 router.get('/reviewers', requireAuth, requireSuperAdmin, ctrl.listReviewers);
 router.delete('/reviewers/:id', requireAuth, requireSuperAdmin, ctrl.deleteReviewer);
+router.patch('/reviewers/:id/permissions', requireAuth, requireSuperAdmin, ctrl.updateReviewerPermissions);
+
+// list of valid permission keys — used by the frontend to render checkboxes dynamically
+router.get('/permissions', requireAuth, requireSuperAdmin, ctrl.listAvailablePermissions);
 
 // ===== Terms & Conditions =====
 router.get('/terms', ctrl.getTerms); // public

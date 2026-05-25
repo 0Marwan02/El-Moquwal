@@ -682,10 +682,31 @@
             div.style.cssText = 'margin:12px 24px; padding:16px; background:linear-gradient(135deg,var(--color-navy-dark),var(--color-navy)); border-radius:var(--radius-md); color:#fff;';
             div.innerHTML = `
               <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.5);margin-bottom:8px;">🤖 توصية الذكاء الاصطناعي</div>
-              <div style="font-weight:700;color:var(--color-gold);margin-bottom:8px;">${rec.recommendedBidder ? 'المقاول الموصى به: ' + rec.recommendedBidder : 'تم التحليل'}</div>
+              <div style="font-weight:700;color:var(--color-gold);margin-bottom:8px;">تم التحليل والمقارنة بنجاح</div>
               <div style="font-size:13px;line-height:1.7;color:rgba(255,255,255,0.85);">${rec.reason || JSON.stringify(rec)}</div>
             `;
             bidsDiv.prepend(div);
+
+            // Highlight the chosen bid
+            if (rec.bidId) {
+              bidsDiv.querySelectorAll('.bid-card').forEach(b => {
+                b.style.borderColor = 'var(--border-default)';
+                b.style.borderWidth = '1px';
+                b.style.boxShadow = 'none';
+                const oldBadge = b.querySelector('.ai-badge');
+                if (oldBadge) oldBadge.remove();
+              });
+              const bestBid = document.getElementById(`bid-${rec.bidId}`);
+              if (bestBid) {
+                bestBid.style.borderColor = 'var(--color-gold)';
+                bestBid.style.borderWidth = '2px';
+                bestBid.style.boxShadow = '0 0 15px rgba(245, 158, 11, 0.2)';
+                const footer = bestBid.querySelector('.bid-footer');
+                if (footer) {
+                   footer.innerHTML += '<span class="ai-badge" style="background:#fef3c7; color:#d97706; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:800; margin-right:auto;">🏆 ترشيح الذكاء الاصطناعي</span>';
+                }
+              }
+            }
           }
           showToast('تم تحليل العروض بنجاح', 'success');
         } catch(e) { showToast(e.message || 'فشل التحليل', 'error'); }

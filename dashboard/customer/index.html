@@ -528,10 +528,8 @@
       });
 
       try {
-        const data = await window.api.fetch('/projects?limit=50');
-        const myProjects = (data.projects || []).filter(p =>
-          p.postedBy && (p.postedBy._id || p.postedBy) === user._id
-        );
+        const data = await window.api.fetch('/projects/my-projects');
+        const myProjects = data.projects || [];
         const openCount   = myProjects.filter(p => p.status === 'open').length;
         const awardedCount = myProjects.filter(p => p.status === 'awarded').length;
         const totalBids   = myProjects.reduce((sum, p) => sum + (p.bidsCount || 0), 0);

@@ -588,20 +588,29 @@ async function loadDisputes() {
         <div class="mt-4 pt-4 border-t border-gray-100">
           <p class="text-xs text-gray-500 mb-2 font-medium">حل النزاع:</p>
           <div class="flex gap-2 flex-wrap">
-            <button onclick="resolveDispute('${d._id}','release_to_contractor')" class="text-xs px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">تحرير للمقاول</button>
-            <button onclick="resolveDispute('${d._id}','refund_to_customer')" class="text-xs px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">استرداد للعميل</button>
-            <button onclick="resolveDispute('${d._id}','split')" class="text-xs px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 font-medium">تقسيم</button>
+            <button onclick="resolveDispute('${d.project?._id || d.project}','release_to_contractor')" class="text-xs px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">تحرير للمقاول</button>
+            <button onclick="resolveDispute('${d.project?._id || d.project}','refund_to_customer')" class="text-xs px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">استرداد للعميل</button>
+            <button onclick="resolveDispute('${d.project?._id || d.project}','split')" class="text-xs px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 font-medium">تقسيم</button>
           </div>
         </div>
       </div>`).join('');
   } catch { el.innerHTML = '<p class="text-red-400 text-sm text-center py-8">تعذر التحميل</p>'; }
 }
 
-async function resolveDispute(escrowId, decision) {
+async function resolveDispute(projectId, decision) {
   const labels = { release_to_contractor: 'تحرير للمقاول', refund_to_customer: 'استرداد للعميل', split: 'تقسيم' };
   if (!confirm(`هل تريد اتخاذ قرار "${labels[decision]}"؟`)) return;
+  
+  const adminNote = prompt('الرجاء إدخال ملاحظات وحيثيات القرار الإداري (مطلوب):') || '';
+  if (!adminNote.trim()) {
+    alert('الملاحظات وحيثيات القرار مطلوبة لحسم النزاع');
+    return;
+  }
+  
+  const warrantyDeduction = parseFloat(prompt('قيمة خصم الضمان (اختياري - بالجنيه):', '0') || '0') || 0;
+
   try {
-    await apiFetch(`/payments/escrow/${escrowId}/resolve`, 'POST', { decision });
+    await apiFetch(`/billing/${projectId}/resolve-dispute`, 'POST', { decision, warrantyDeduction, adminNote });
     showToast('تم تنفيذ القرار بنجاح');
     loadDisputes();
   } catch (e) { showToast(e.message || 'حدث خطأ', true); }

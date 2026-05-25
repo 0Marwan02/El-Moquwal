@@ -8,6 +8,13 @@ const router = express.Router();
 
 // public — list + detail
 router.get('/', optionalAuth, ctrl.listProjects);
+
+// customer only — list active contractors to invite
+router.get('/contractors/active', requireAuth, requireRole('customer'), ctrl.listActiveContractors);
+
+// customer only - get all my projects
+router.get('/my-projects', requireAuth, requireRole('customer'), ctrl.getMyProjects);
+
 router.get('/:id', optionalAuth, ctrl.getProject);
 
 // customer only — create (query ?draft=1 → مسودة)

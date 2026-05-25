@@ -176,6 +176,10 @@
           <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
           كل المشاريع
         </a>
+        <a href="disputes.html" class="sidebar-item" id="disputesNavItem">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          النزاعات والشكاوى
+        </a>
       </nav>
 
       <div class="sidebar-cta">
@@ -228,14 +232,30 @@
           const gov = p.propertyDetails?.governorate || '—';
           const area = p.propertyDetails?.area || '—';
           const type = TYPE_LABELS[p.projectType] || p.projectType || '—';
+          const featuredBadge = p.isFeatured ? '<span style="background:var(--color-gold);color:var(--color-navy-dark);font-size:10px;padding:2px 8px;border-radius:10px;font-weight:bold;margin-right:8px;display:inline-block;">⭐ مميز</span>' : '';
+          const urgentBadge = p.isUrgent ? '<span style="background:#ef4444;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:bold;margin-right:8px;display:inline-block;">⚡ عاجل</span>' : '';
           return `
-            <div class="pending-item">
-              <div class="pending-item-avatar">${escapeHtml(first)}</div>
-              <div style="min-width:0;">
-                <div class="pending-item-name">${escapeHtml(p.title || '—')}</div>
-                <div class="pending-item-meta">
-                  ${escapeHtml(type)} · ${escapeHtml(gov)} · ${escapeHtml(area)} م² · الحالة: ${escapeHtml(statusLabel)}
+            <div class="pending-item" style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:15px; flex-wrap:wrap;">
+              <div style="display:flex; align-items:center; gap:var(--space-4); min-width:0; flex:1;">
+                <div class="pending-item-avatar">${escapeHtml(first)}</div>
+                <div style="min-width:0;">
+                  <div class="pending-item-name" style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
+                    ${escapeHtml(p.title || '—')}
+                    ${featuredBadge}
+                    ${urgentBadge}
+                  </div>
+                  <div class="pending-item-meta">
+                    ${escapeHtml(type)} · ${escapeHtml(gov)} · ${escapeHtml(area)} م² · الحالة: ${escapeHtml(statusLabel)}
+                  </div>
                 </div>
+              </div>
+              <div style="display:flex; gap:8px;" class="project-item-actions">
+                <button class="btn btn-sm ${p.isFeatured ? 'btn-primary' : 'btn-outline'}" onclick="toggleFeatured('${p._id}', ${!p.isFeatured})" style="font-size:11px; padding:6px 12px; margin:0;">
+                  ${p.isFeatured ? '❌ إلغاء التميز' : '⭐ تمييز'}
+                </button>
+                <button class="btn btn-sm ${p.isUrgent ? 'btn-primary' : 'btn-outline'}" onclick="toggleUrgent('${p._id}', ${!p.isUrgent})" style="font-size:11px; padding:6px 12px; margin:0; ${p.isUrgent ? 'background:#ef4444;color:#fff;border-color:#ef4444;' : 'border-color:#ef4444;color:#ef4444;'}">
+                  ${p.isUrgent ? '❌ عادي' : '⚡ عاجل'}
+                </button>
               </div>
             </div>`;
         }).join('')
@@ -331,6 +351,31 @@
         }
       }
     })();
+    window.toggleFeatured = async function(projectId, isFeatured) {
+      try {
+        await window.api.fetch(`/projects/${projectId}/feature`, {
+          method: 'PUT',
+          body: JSON.stringify({ isFeatured })
+        });
+        showToast('تم تحديث حالة تمييز المشروع بنجاح!', 'success');
+        setTimeout(() => location.reload(), 900);
+      } catch (err) {
+        showToast(err.message || 'فشل التحديث', 'error');
+      }
+    };
+
+    window.toggleUrgent = async function(projectId, isUrgent) {
+      try {
+        await window.api.fetch(`/projects/${projectId}/feature`, {
+          method: 'PUT',
+          body: JSON.stringify({ isUrgent })
+        });
+        showToast('تم تحديث حالة صفة عاجل للمشروع بنجاح!', 'success');
+        setTimeout(() => location.reload(), 900);
+      } catch (err) {
+        showToast(err.message || 'فشل التحديث', 'error');
+      }
+    };
   </script>
 </body>
 

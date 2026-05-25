@@ -394,6 +394,10 @@
                 ? `<a href="proposals.html" class="btn btn-primary">👁️ عرض العروض (${bidsCount})</a>`
                 : `<span style="font-size:var(--font-size-xs);color:var(--text-muted);">لا توجد عروض بعد</span>`
               }
+              ${p.isPrivate && p.status === 'open'
+                ? `<button onclick="openInviteModal('${p._id}')" class="btn btn-outline" style="border-color:#3b82f6;color:#3b82f6;">🔒 دعوة مقاول</button>`
+                : ''
+              }
               ${p.status === 'draft'
                 ? `<button onclick="publishDraft('${p._id}')" class="btn btn-outline" style="border-color:var(--color-success);color:var(--color-success);">📢 نشر المشروع</button>`
                 : ''
@@ -414,20 +418,8 @@
         }
 
         try {
-          const responses = await Promise.all([
-            window.api.fetch('/projects?status=open&limit=50'),
-            window.api.fetch('/projects?status=awarded&limit=50'),
-            window.api.fetch('/projects?status=closed&limit=50'),
-            window.api.fetch('/projects?status=draft&limit=50'),
-          ]);
-          const merged = new Map();
-          responses.forEach(data => {
-            (data.projects || []).forEach(p => {
-              const by = (p.postedBy?._id || p.postedBy)?.toString();
-              if (by && by === user._id?.toString()) merged.set(p._id, p);
-            });
-          });
-          allProjects = Array.from(merged.values()).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+          const data = await window.api.fetch('/projects/my-projects');
+          allProjects = data.projects || [];
           renderProjects();
         } catch (err) {
           container.innerHTML = `<div class="state-msg"><span class="emoji">❌</span><h4>فشل تحميل المشاريع</h4><p>${err.message}</p></div>`;
@@ -469,7 +461,118 @@
           localStorage.removeItem('elm_user');
           window.location.href = '../../index.html';
         });
+
+        // Inject Invite Modal to body
+        if (!document.getElementById('inviteModal')) {
+          const modalHtml = `
+            <div id="inviteModal" class="modal-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+              <div style="background:var(--bg-surface);border-radius:var(--radius-lg);padding:var(--space-8);max-width:520px;width:95%;box-shadow:var(--shadow-xl);position:relative;border:1px solid var(--border-default);">
+                <button onclick="closeInviteModal()" style="position:absolute;top:12px;left:12px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted);">✕</button>
+                <h3 style="font-size:var(--font-size-lg);font-weight:900;color:var(--color-navy);margin-bottom:var(--space-2);">🔒 دعوة مقاول للمشروع</h3>
+                <p style="font-size:var(--font-size-xs);color:var(--text-muted);margin-bottom:var(--space-6);">اختر من قائمة المقاولين النشطين والمعتمدين لإرسال دعوة خاصة لهم لتقديم عروضهم.</p>
+
+                <div id="contractorsList" style="max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-5);">
+                  <p style="text-align:center; color:var(--text-muted); font-size:13px;">جاري تحميل المقاولين...</p>
+                </div>
+
+                <button id="submitInviteBtn" onclick="submitInvitation()" class="btn btn-primary btn-full" disabled style="font-size:var(--font-size-md);font-weight:800;">
+                  📤 إرسال الدعوة الخاصة
+                </button>
+              </div>
+            </div>
+          `;
+          document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
       });
+
+      let _inviteProjectId = null;
+      let _selectedContractorId = null;
+
+      window.openInviteModal = async function(projectId) {
+        _inviteProjectId = projectId;
+        _selectedContractorId = null;
+        const modal = document.getElementById('inviteModal');
+        const listContainer = document.getElementById('contractorsList');
+        const submitBtn = document.getElementById('submitInviteBtn');
+
+        modal.style.display = 'flex';
+        listContainer.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:13px;">جاري تحميل المقاولين...</p>';
+        submitBtn.disabled = true;
+
+        try {
+          const res = await window.api.fetch('/projects/contractors/active');
+          const contractors = res.contractors || [];
+
+          if (contractors.length === 0) {
+            listContainer.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:13px;">لا يوجد مقاولون نشطون متاحون حالياً.</p>';
+            return;
+          }
+
+          const specialtyLabels = {
+            civil_engineer: 'مهندس مدني', architect: 'مهندس معماري', electrical: 'كهرباء',
+            plumber: 'سباك', carpenter: 'نجار', painter: 'نقاش',
+            general_contractor: 'مقاول عام', finishing: 'تشطيبات', other: 'آخر'
+          };
+
+          listContainer.innerHTML = contractors.map(c => {
+            const spec = specialtyLabels[c.specialty] || c.specialty || '';
+            const rating = c.rating ? `⭐ ${c.rating.toFixed(1)}` : '⭐ 5.0';
+            return `
+              <label style="display:flex; align-items:center; gap:12px; padding:12px; border:1.5px solid var(--border-default); border-radius:var(--radius-sm); cursor:pointer; transition:all 0.2s;" class="contractor-select-card" id="c-card-${c._id}">
+                <input type="radio" name="selectedContractor" value="${c._id}" onchange="selectContractor('${c._id}')" style="accent-color:var(--color-navy); width:18px; height:18px; flex-shrink:0;">
+                <div style="flex:1; min-width:0; text-align:right;">
+                  <div style="font-weight:800; color:var(--color-navy); font-size:14px;">${c.name}</div>
+                  <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${spec} · خبرة ${c.yearsOfExperience || 0} سنة · ${rating}</div>
+                </div>
+              </label>
+            `;
+          }).join('');
+        } catch (err) {
+          listContainer.innerHTML = `<p style="text-align:center; color:var(--color-error); font-size:13px;">فشل تحميل المقاولين: ${err.message}</p>`;
+        }
+      };
+
+      window.closeInviteModal = function() {
+        document.getElementById('inviteModal').style.display = 'none';
+        _inviteProjectId = null;
+        _selectedContractorId = null;
+      };
+
+      window.selectContractor = function(contractorId) {
+        _selectedContractorId = contractorId;
+        document.getElementById('submitInviteBtn').disabled = false;
+        document.querySelectorAll('.contractor-select-card').forEach(el => {
+          el.style.borderColor = 'var(--border-default)';
+          el.style.background = 'transparent';
+        });
+        const activeCard = document.getElementById(`c-card-${contractorId}`);
+        if (activeCard) {
+          activeCard.style.borderColor = 'var(--color-navy)';
+          activeCard.style.background = 'var(--bg-surface-2)';
+        }
+      };
+
+      window.submitInvitation = async function() {
+        if (!_inviteProjectId || !_selectedContractorId) return;
+        const btn = document.getElementById('submitInviteBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ جاري إرسال الدعوة...';
+
+        try {
+          await window.api.fetch(`/projects/${_inviteProjectId}/invite`, {
+            method: 'POST',
+            body: JSON.stringify({ contractorId: _selectedContractorId })
+          });
+          alert('تم إرسال الدعوة الخاصة للمقاول بنجاح! 🚀');
+          closeInviteModal();
+          loadAll();
+        } catch (err) {
+          alert(err.message || 'فشل إرسال الدعوة الخاصة');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = '📤 إرسال الدعوة الخاصة';
+        }
+      };
 
       loadAll();
     })();

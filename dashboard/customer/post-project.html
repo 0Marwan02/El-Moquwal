@@ -639,6 +639,21 @@
               </div>
             </label>
           </div>
+
+          <!-- Private Project Add-on -->
+          <div style="margin-top: var(--space-4); background: rgba(59,130,246,0.05); border: 1.5px solid rgba(59,130,246,0.22); border-radius: var(--radius-md); padding: var(--space-5) var(--space-6);">
+            <p style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: var(--space-3);">خصوصية المشروع</p>
+            <label style="display: flex; align-items: flex-start; gap: var(--space-3); cursor: pointer;">
+              <input type="checkbox" id="privateToggle" name="isPrivate"
+                style="margin-top: 3px; accent-color: #3b82f6; width:17px; height:17px; flex-shrink:0;">
+              <div>
+                <div style="display:flex; align-items:center; gap: var(--space-2); font-weight: 800; color: var(--color-navy); font-size: var(--font-size-sm);">
+                  🔒 مشروع خاص (بالدعوة فقط)
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">لا يظهر هذا المشروع في قائمة المشاريع العامة للمقاولين. يمكنك فقط دعوة مقاولين محددين لتقديم عروضهم من لوحة تحكمك.</div>
+              </div>
+            </label>
+          </div>
         </section>
 
         <!-- ============ Navigation Buttons ============ -->
@@ -1081,6 +1096,7 @@ function showToastGlobal(message, type) {
       requiredEngineers: Math.min(50, Math.max(0, engVal)),
       status: document.querySelector('input[name="publishMode"]:checked')?.value === 'draft' ? 'draft' : 'open',
       isFeatured: document.getElementById('featuredToggle')?.checked || false,
+      isPrivate: document.getElementById('privateToggle')?.checked || false,
     };
 
     const submitBtn = document.getElementById('submitBtn');

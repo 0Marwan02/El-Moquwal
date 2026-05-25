@@ -212,6 +212,15 @@ const listProjects = asyncHandler(async (req, res) => {
   });
 });
 
+// GET /api/projects/my-projects — user only
+const getMyProjects = asyncHandler(async (req, res) => {
+  const projects = await Project.find({ postedBy: req.user._id })
+    .sort({ createdAt: -1 })
+    .lean();
+    
+  res.json({ projects });
+});
+
 // GET /api/projects/:id — public
 const getProject = asyncHandler(async (req, res) => {
   const project = await Project.findById(req.params.id)
@@ -666,4 +675,13 @@ const uploadProjectMedia = asyncHandler(async (req, res) => {
   res.json({ ok: true, images: project.photos, total: project.photos.length });
 });
 
-module.exports = { createProject, listProjects, getProject, aiEstimate, updateProject, deleteProject, publishDraft, closeProject, inviteContractor, featureProject, uploadProjectMedia };
+// GET /api/projects/contractors/active — lists all active approved contractors (for invite)
+const listActiveContractors = asyncHandler(async (req, res) => {
+  const Contractor = require('../models/ContractorProfile');
+  const contractors = await Contractor.find({ role: 'contractor', status: 'active' })
+    .select('name email phone specialty yearsOfExperience bio rating')
+    .lean();
+  res.json({ ok: true, contractors });
+});
+
+module.exports = { createProject, listProjects, getProject, aiEstimate, updateProject, deleteProject, publishDraft, closeProject, inviteContractor, featureProject, uploadProjectMedia, getMyProjects, listActiveContractors };

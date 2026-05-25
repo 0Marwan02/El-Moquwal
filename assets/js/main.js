@@ -13,15 +13,16 @@
 })();
 
 
-/* --- Scroll Reveal Animation --- */
+/* --- Scroll Reveal Animation (components.css + utilities.css) --- */
 (function initReveal() {
-  const elements = document.querySelectorAll('.reveal');
+  const elements = document.querySelectorAll('.reveal, .reveal-right, .reveal-left');
   if (!elements.length) return;
 
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        entry.target.classList.add('in-view');
+        // 'visible' → components.css  |  'in-view' → utilities.css (alias)
+        entry.target.classList.add('visible', 'in-view');
         observer.unobserve(entry.target);
       }
     });

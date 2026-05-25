@@ -200,10 +200,12 @@
         <div class="elm-msg elm-msg-bot">أهلاً! أنا مساعد منصة المقاول. يمكنني الإجابة على أسئلتك حول سياسات المنصة، نظام الضمان، العقود، والدفع. كيف يمكنني مساعدتك؟ 🏗️</div>
       </div>
       <div class="elm-quick-questions" id="elm-quick-questions">
-        <div class="elm-quick-label">أسئلة شائعة</div>
-        <button class="elm-quick-btn">كيف يعمل نظام الضمان؟</button>
-        <button class="elm-quick-btn">ما هي تكلفة الخدمة؟</button>
-        <button class="elm-quick-btn">هل العقود قانونية؟</button>
+        <div class="elm-quick-label">ردود سريعة — اضغط للحصول على إجابة فورية</div>
+        <button class="elm-quick-btn" data-quick-key="add_project">كيف أضيف مشروع؟</button>
+        <button class="elm-quick-btn" data-quick-key="payment">طريقة الدفع</button>
+        <button class="elm-quick-btn" data-quick-key="warranty">شروط الضمان</button>
+        <button class="elm-quick-btn" data-quick-key="commission">العمولة كام؟</button>
+        <button class="elm-quick-btn" data-quick-key="contract_sign">كيف أوقع العقد؟</button>
       </div>
       <form class="elm-chat-input-area" id="elm-chat-form">
         <input type="text" class="elm-chat-input" id="elm-chat-input" placeholder="اكتب سؤالك هنا..." autocomplete="off" maxlength="500">
@@ -252,12 +254,29 @@
     setTimeout(() => { chatBox.style.display = 'none'; }, 230);
   });
 
+  // Hardcoded quick replies — instant responses, no API call needed
+  const QUICK_REPLIES = {
+    add_project: 'لإضافة مشروع جديد: سجّل دخولك كعميل ← اضغط "نشر مشروع جديد" في لوحة التحكم ← أدخل وصف المشروع والميزانية والموقع ← انشره ليصلك عروض المقاولين فوراً. يمكنك استخدام مساعد الذكاء الاصطناعي لتحسين وصف مشروعك تلقائياً.',
+    payment: 'الدفع يتم عبر نظام الضمان الآمن: تودع قيمة المشروع في حساب ضمان محمي ← يُطلق المبلغ للمقاول فقط بعد موافقتك على اكتمال كل مرحلة. المنصة تخصم 2% عمولة من المشاريع المكتملة، والتسجيل مجاني تماماً.',
+    warranty: 'المنصة توفر ضماناً يصل إلى 10% من قيمة المشروع (بحد أقصى 50,000 جنيه) في حالة إخلال المقاول بالعقد. في حالة نزاع، تتدخل إدارة المنصة وتصدر حكماً ملزماً خلال 5 أيام عمل.',
+    commission: 'العمولة 2% فقط من قيمة المشروع، وتُخصم عند إتمام الصفقة. لا رسوم تسجيل ولا رسوم نشر مشاريع — العملاء يستخدمون المنصة مجاناً تماماً.',
+    contract_sign: 'توقيع العقد يتم إلكترونياً: بعد قبول عرض المقاول، اذهب إلى "اتفاقياتي" ← اضغط "توقيع العقد" ← ارسم توقيعك أو ارفع صورته. عند توقيع الطرفين، يصبح العقد نافذاً ويبدأ نظام الضمان. العقود موثقة بتوقيع رقمي قانوني.',
+  };
+
   // quick question buttons
   quickDiv.querySelectorAll('.elm-quick-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      input.value = btn.textContent.trim();
+      const key = btn.dataset.quickKey;
+      const question = btn.textContent.trim();
+      addMsg(question, 'user');
       quickDiv.style.display = 'none';
-      sendMessage(btn.textContent.trim());
+      if (key && QUICK_REPLIES[key]) {
+        // Instant hardcoded reply — no API call
+        setTimeout(() => addMsg(QUICK_REPLIES[key], 'bot'), 300);
+      } else {
+        input.value = question;
+        sendMessage(question);
+      }
     });
   });
 

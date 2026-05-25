@@ -206,41 +206,72 @@
   display: flex;
   align-items: center;
   gap: var(--space-4);
-  transition: all var(--transition-base);
+  transition: all 0.35s ease;
+  position: relative;
+  overflow: hidden;
 }
-.stat-card:hover { box-shadow: var(--shadow-sm); }
+/* Subtle top accent bar */
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-gold), rgba(245,158,11,0.3));
+  opacity: 0;
+  transition: opacity 0.35s;
+}
+.stat-card:hover {
+  box-shadow: 0 8px 24px -4px rgba(15,23,42,0.1);
+  transform: translateY(-2px);
+  border-color: rgba(245,158,11,0.25);
+}
+.stat-card:hover::before { opacity: 1; }
 
 .stat-card-icon {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  border: 1px solid transparent;
 }
-.stat-card-icon svg { width: 24px; height: 24px; }
+.stat-card-icon svg { width: 26px; height: 26px; }
 
-.stat-card-icon-navy  { background: rgba(26, 43, 74, 0.08);  }
+.stat-card-icon-navy  {
+  background: linear-gradient(135deg, rgba(26,43,74,0.12), rgba(26,43,74,0.04));
+  border-color: rgba(26,43,74,0.08);
+}
 .stat-card-icon-navy  svg { fill: var(--color-navy); }
-.stat-card-icon-gold  { background: var(--color-gold-subtle); }
+.stat-card-icon-gold  {
+  background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.04));
+  border-color: rgba(245,158,11,0.18);
+}
 .stat-card-icon-gold  svg { fill: var(--color-gold-dark); }
-.stat-card-icon-green { background: var(--color-success-bg); }
+.stat-card-icon-green {
+  background: linear-gradient(135deg, rgba(46,204,113,0.15), rgba(46,204,113,0.04));
+  border-color: rgba(46,204,113,0.18);
+}
 .stat-card-icon-green svg { fill: var(--color-success); }
-.stat-card-icon-red   { background: var(--color-error-bg);   }
+.stat-card-icon-red   {
+  background: linear-gradient(135deg, rgba(231,76,60,0.15), rgba(231,76,60,0.04));
+  border-color: rgba(231,76,60,0.18);
+}
 .stat-card-icon-red   svg { fill: var(--color-error); }
 
 .stat-card-value {
-  font-size: var(--font-size-2xl);
+  font-size: 30px;
   font-weight: 900;
   color: var(--color-navy);
   line-height: 1;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
+  letter-spacing: -0.5px;
 }
 .stat-card-label {
   font-size: var(--font-size-sm);
   color: var(--text-muted);
-  font-weight: 500;
+  font-weight: 600;
 }
 .stat-card-trend {
   display: inline-flex;
@@ -441,6 +472,7 @@
 }
 
 .section-header-center { text-align: center; }
+.section-header-center .section-title { display: inline-block; }
 .section-header-center .section-sub { margin-left: auto; margin-right: auto; }
 
 
@@ -707,3 +739,237 @@
   color: var(--text-muted);
   margin-bottom: var(--space-5);
 }
+
+
+/* ===========================================
+   GLASS CARD — كارد بأسلوب glassmorphism
+   =========================================== */
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--glass-shadow);
+  padding: var(--space-6);
+}
+
+.glass-card-dark {
+  background: var(--glass-bg-dark);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border-dark);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  padding: var(--space-6);
+}
+
+/* Hover lift */
+.glass-card-hover {
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+.glass-card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card-hover);
+}
+
+
+/* ===========================================
+   SKELETON LOADERS — شاشة التحميل
+   =========================================== */
+
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+@keyframes skeletonShimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  border-radius: var(--radius-xs);
+  background: linear-gradient(
+    90deg,
+    var(--bg-surface-2) 25%,
+    rgba(15,23,42,0.04) 50%,
+    var(--bg-surface-2) 75%
+  );
+  background-size: 800px 100%;
+  animation: skeletonShimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton-text   { height: 14px; border-radius: var(--radius-full); margin-bottom: var(--space-2); }
+.skeleton-title  { height: 22px; border-radius: var(--radius-full); margin-bottom: var(--space-3); }
+.skeleton-avatar { border-radius: 50%; }
+.skeleton-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  animation: skeletonPulse 1.8s ease-in-out infinite;
+}
+/* Widths helpers */
+.sk-w-full { width: 100%; }
+.sk-w-3-4  { width: 75%; }
+.sk-w-1-2  { width: 50%; }
+.sk-w-1-3  { width: 33%; }
+.sk-h-8    { height: 32px; }
+.sk-h-12   { height: 48px; }
+.sk-h-16   { height: 64px; }
+
+
+/* ===========================================
+   FLOATING LABEL INPUTS — مدخلات بـ label عائم
+   =========================================== */
+
+.float-field {
+  position: relative;
+  width: 100%;
+}
+
+.float-field .float-input {
+  width: 100%;
+  padding: 22px 16px 10px;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-main);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  transition: all var(--transition-base);
+  display: block;
+}
+.float-field .float-input:focus {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 3px var(--color-gold-subtle);
+  outline: none;
+}
+.float-field .float-input.has-error {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px var(--color-error-bg);
+}
+
+.float-field .float-label {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+  font-size: var(--font-size-base);
+  color: var(--text-muted);
+  font-weight: 500;
+  pointer-events: none;
+  transition: all 0.2s var(--ease-snappy);
+  transform-origin: right top;
+  background: transparent;
+}
+
+/* Label floats up on focus or when input has content */
+.float-field .float-input:focus ~ .float-label,
+.float-field .float-input:not(:placeholder-shown) ~ .float-label {
+  top: 12px;
+  transform: translateY(0) scale(0.78);
+  color: var(--color-gold-dark);
+  font-weight: 700;
+}
+
+
+/* ===========================================
+   DATA TABLE — جدول بيانات موحد
+   =========================================== */
+
+.data-table-wrap {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.data-table thead {
+  background: var(--bg-surface-2);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.data-table thead th {
+  padding: var(--space-3) var(--space-5);
+  text-align: right;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.data-table tbody tr {
+  border-bottom: 1px solid var(--border-default);
+  transition: background var(--transition-fast);
+}
+.data-table tbody tr:last-child { border-bottom: none; }
+.data-table tbody tr:hover { background: var(--bg-surface-2); }
+
+.data-table tbody td {
+  padding: var(--space-4) var(--space-5);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.data-table .td-muted { color: var(--text-muted); font-size: var(--font-size-xs); }
+.data-table .td-bold  { font-weight: 700; color: var(--color-navy); }
+.data-table .td-gold  { font-weight: 800; color: var(--color-gold-dark); }
+
+/* Sortable header */
+.data-table thead th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+.data-table thead th.sortable:hover { color: var(--color-navy); }
+
+
+/* ===========================================
+   SCROLL REVEAL ANIMATIONS — ظهور عند التمرير
+   =========================================== */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.6s var(--ease-snappy),
+    transform 0.6s var(--ease-snappy);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger helpers */
+.reveal-delay-1 { transition-delay: var(--stagger-1); }
+.reveal-delay-2 { transition-delay: var(--stagger-2); }
+.reveal-delay-3 { transition-delay: var(--stagger-3); }
+.reveal-delay-4 { transition-delay: var(--stagger-4); }
+.reveal-delay-5 { transition-delay: var(--stagger-5); }
+
+/* Horizontal variants */
+.reveal-right {
+  opacity: 0;
+  transform: translateX(28px);
+  transition: opacity 0.6s var(--ease-snappy), transform 0.6s var(--ease-snappy);
+}
+.reveal-right.visible { opacity: 1; transform: translateX(0); }
+
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-28px);
+  transition: opacity 0.6s var(--ease-snappy), transform 0.6s var(--ease-snappy);
+}
+.reveal-left.visible { opacity: 1; transform: translateX(0); }

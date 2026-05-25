@@ -92,6 +92,7 @@
   </div>
 
   <script src="../../assets/js/api.js"></script>
+  <script src="../../assets/js/customer-router.js"></script>
   <script>
     const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
       ? 'http://localhost:4000/api'
@@ -139,6 +140,7 @@
           <a href="index.html" class="sidebar-item"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>لوحة التحكم</a>
           <div class="sidebar-section-label">المشاريع</div>
           <a href="post-project.html" class="sidebar-item"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>إضافة مشروع جديد</a>
+          <a href="my-projects.html" class="sidebar-item"><svg viewBox="0 0 24 24"><path d="M4 6h18V4H4c-1.1 0-2 .9-2 2v11H0v3h14v-3H4V6zm19 2h-6c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V9c0-.55-.45-1-1-1zm-1 9h-4v-7h4v7z"/></svg>مشاريعي</a>
           <a href="proposals.html" class="sidebar-item"><svg viewBox="0 0 24 24"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>عروض الأسعار</a>
           <a href="contract.html" class="sidebar-item active"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>اتفاقياتي</a>
         </nav>
@@ -291,29 +293,175 @@
       } catch(e) { showToast('خطأ بالاتصال', 'error'); }
     };
 
-    window.signContract = async function(contractId) {
-      if(!confirm('هل أنت متأكد من التوقيع؟ يعتبر هذا التوقيع ملزماً قانونياً.')) return;
-      showToast('جاري التوقيع...', 'success');
-      const token = localStorage.getItem('elm_accessToken') || localStorage.getItem('token');
+    // ── E-Signature Modal Logic ──
+    let _signContractId = null;
+    let _signMode = 'draw';
+    let _isDrawing = false;
+    let _ctx = null;
+
+    window.signContract = function(contractId) {
+      _signContractId = contractId;
+      const modal = document.getElementById('signModal');
+      modal.style.display = 'flex';
+      switchSignTab('draw');
+      initCanvas();
+    };
+
+    window.closeSignModal = function() {
+      document.getElementById('signModal').style.display = 'none';
+      _signContractId = null;
+    };
+
+    window.switchSignTab = function(mode) {
+      _signMode = mode;
+      document.getElementById('drawSection').style.display = mode === 'draw' ? 'block' : 'none';
+      document.getElementById('uploadSection').style.display = mode === 'upload' ? 'block' : 'none';
+      document.getElementById('tabDraw').className = mode === 'draw' ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+      document.getElementById('tabUpload').className = mode === 'upload' ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+      if (mode === 'draw') initCanvas();
+    };
+
+    function initCanvas() {
+      const canvas = document.getElementById('signCanvas');
+      if (!canvas) return;
+      _ctx = canvas.getContext('2d');
+      _ctx.lineWidth = 2.5;
+      _ctx.lineCap = 'round';
+      _ctx.strokeStyle = '#0F172A';
+
+      canvas.onmousedown = (e) => { _isDrawing = true; _ctx.beginPath(); _ctx.moveTo(e.offsetX, e.offsetY); };
+      canvas.onmousemove = (e) => { if (!_isDrawing) return; _ctx.lineTo(e.offsetX, e.offsetY); _ctx.stroke(); };
+      canvas.onmouseup = () => { _isDrawing = false; };
+      canvas.onmouseleave = () => { _isDrawing = false; };
+
+      canvas.ontouchstart = (e) => {
+        e.preventDefault();
+        const t = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        _isDrawing = true; _ctx.beginPath(); _ctx.moveTo(t.clientX - rect.left, t.clientY - rect.top);
+      };
+      canvas.ontouchmove = (e) => {
+        e.preventDefault();
+        if (!_isDrawing) return;
+        const t = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        _ctx.lineTo(t.clientX - rect.left, t.clientY - rect.top); _ctx.stroke();
+      };
+      canvas.ontouchend = () => { _isDrawing = false; };
+    }
+
+    window.clearCanvas = function() {
+      const canvas = document.getElementById('signCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    };
+
+    window.previewUploadedSig = function(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = document.getElementById('sigPreview');
+        img.src = e.target.result;
+        img.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    };
+
+    window.submitSignature = async function() {
+      if (!_signContractId) return;
+      let signatureData = '';
+
+      if (_signMode === 'draw') {
+        const canvas = document.getElementById('signCanvas');
+        signatureData = canvas.toDataURL('image/png');
+        const blank = document.createElement('canvas');
+        blank.width = canvas.width; blank.height = canvas.height;
+        if (canvas.toDataURL() === blank.toDataURL()) {
+          alert('يرجى رسم توقيعك أولاً');
+          return;
+        }
+      } else {
+        const img = document.getElementById('sigPreview');
+        if (!img.src || img.style.display === 'none') {
+          alert('يرجى رفع صورة التوقيع أولاً');
+          return;
+        }
+        signatureData = img.src;
+      }
+
+      const btn = document.getElementById('submitSignBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ جاري الإرسال...';
+
       try {
-        const res = await fetch(`${API_BASE}/contracts/${contractId}/sign`, {
+        const token = localStorage.getItem('elm_accessToken');
+        const res = await fetch(`${API_BASE}/contracts/${_signContractId}/sign`, {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ signatureData: 'UserAcceptedViaUI' })
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ signatureData })
         });
-        if(res.ok) {
+
+        if (res.ok) {
           showToast('تم توقيع العقد بنجاح! ✅', 'success');
+          closeSignModal();
           loadContracts();
         } else {
-          const data = await res.json();
-          showToast(data.message || 'فشل التوقيع', 'error');
+          const data = await res.json().catch(() => ({}));
+          showToast(data.message || 'تعذّر تسجيل التوقيع', 'error');
         }
-      } catch(e) { showToast('خطأ بالاتصال', 'error'); }
+      } catch (err) {
+        showToast('خطأ بالاتصال', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '✅ تأكيد التوقيع وإرسال';
+      }
     };
 
     document.addEventListener('DOMContentLoaded', () => {
       injectLayout();
       loadContracts();
+      
+      // Inject Modal to body
+      if (!document.getElementById('signModal')) {
+        const modalHtml = `
+          <div id="signModal" class="modal-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+            <div style="background:var(--bg-surface);border-radius:var(--radius-lg);padding:var(--space-8);max-width:520px;width:95%;box-shadow:var(--shadow-xl);position:relative;border:1px solid var(--border-default);">
+              <button onclick="closeSignModal()" style="position:absolute;top:12px;left:12px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted);">✕</button>
+              <h3 style="font-size:var(--font-size-lg);font-weight:900;color:var(--color-navy);margin-bottom:var(--space-2);">التوقيع الإلكتروني</h3>
+              <p style="font-size:var(--font-size-xs);color:var(--text-muted);margin-bottom:var(--space-6);">ارسم توقيعك بالماوس أو بإصبعك على الشاشة، أو ارفع صورة لتوقيعك.</p>
+
+              <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-4);">
+                <button id="tabDraw" onclick="switchSignTab('draw')" class="btn btn-primary btn-sm" style="flex:1;">✏️ رسم التوقيع</button>
+                <button id="tabUpload" onclick="switchSignTab('upload')" class="btn btn-outline btn-sm" style="flex:1;">📷 رفع صورة</button>
+              </div>
+
+              <div id="drawSection">
+                <canvas id="signCanvas" width="460" height="180" style="width:100%;border:2px dashed var(--border-default);border-radius:var(--radius-sm);background:#fafafa;cursor:crosshair;touch-action:none;"></canvas>
+                <button onclick="clearCanvas()" style="margin-top:var(--space-2);background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;font-family:inherit;">🗑️ مسح التوقيع</button>
+              </div>
+
+              <div id="uploadSection" style="display:none;">
+                <label style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:var(--space-8);border:2px dashed var(--border-default);border-radius:var(--radius-sm);cursor:pointer;background:#fafafa;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--color-gold)'" onmouseout="this.style.borderColor='var(--border-default)'">
+                  <span style="font-size:36px;margin-bottom:var(--space-2);">📁</span>
+                  <span style="font-size:var(--font-size-sm);color:var(--text-muted);">اضغط لاختيار صورة التوقيع</span>
+                  <input type="file" id="signFileInput" accept="image/*" style="display:none;" onchange="previewUploadedSig(this)">
+                </label>
+                <img id="sigPreview" src="" alt="" style="display:none;max-width:100%;max-height:160px;margin-top:var(--space-3);border-radius:var(--radius-sm);border:1px solid var(--border-default);">
+              </div>
+
+              <button id="submitSignBtn" onclick="submitSignature()" class="btn btn-primary btn-full" style="margin-top:var(--space-5);font-size:var(--font-size-md);font-weight:800;">
+                ✅ تأكيد التوقيع وإرسال
+              </button>
+            </div>
+          </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+      }
     });
   </script>
 </body>

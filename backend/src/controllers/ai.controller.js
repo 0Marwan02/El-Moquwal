@@ -2,7 +2,6 @@
 const { z } = require('zod');
 const {
   callLLM,
-  callAnthropicLLM,
   parseJsonResponse,
   askPolicyBot,
 } = require('../utils/ai.service');
@@ -49,7 +48,7 @@ ${governorate ? `المحافظة: ${governorate}` : ''}
   try {
     const raw = await callLLM(prompt, {
       maxTokens: 600,
-      systemPrompt: 'أنت مساعد ذكي لمنصة مقاولات وتجاوب فقط بـ JSON صالح بدون أي نص إضافي.',
+      systemPrompt: 'أنت مساعد ذكي لمنصة مقاولات. مهم جداً: أخرج JSON صالح فقط — لا مقدمة، لا شرح، لا markdown، فقط JSON object يبدأ بـ { وينتهي بـ }.',
     });
     if (!raw) {
       // Mock mode
@@ -103,9 +102,7 @@ const bidDraft = asyncHandler(async (req, res) => {
     .map(([k, v]) => `${k}: ${v}`)
     .join('، ') || 'غير محددة';
 
-  const prompt = `أنت مساعد ذكي لمقاول في منصة مقاولات مصرية. ساعده في كتابة رسالة عرض احترافية ومقنعة لهذا المشروع.
-
-بيانات المشروع:
+  const prompt = `بيانات المشروع المراد التقدم له:
 - العنوان: ${project.title}
 - النوع: ${TYPE_LABELS[project.projectType] || project.projectType}
 - الموقع: ${project.propertyDetails?.governorate || 'غير محدد'}${project.propertyDetails?.district ? ' - ' + project.propertyDetails.district : ''}
@@ -115,21 +112,23 @@ const bidDraft = asyncHandler(async (req, res) => {
 - الميزانية: ${project.budgetRange || 'غير محددة'}
 - الوصف: ${project.description || 'لا يوجد'}
 
-${parsed.data.contractorNotes ? `ملاحظات المقاول: ${parsed.data.contractorNotes}` : ''}
+${parsed.data.contractorNotes ? `ملاحظات المقاول الإضافية: ${parsed.data.contractorNotes}` : ''}
 
-اكتب رسالة عرض احترافية بالعربية (30-100 كلمة) تتضمن:
-1. تحية مهنية
-2. إشارة لخبرة المقاول في هذا النوع
-3. نقاط قوة العرض
-4. التزام بالجودة والمواعيد
+اكتب رسالة عرض احترافية بالعربية (50-120 كلمة) تتضمن:
+1. تحية مهنية موجزة
+2. استعراض الخبرة المتعلقة بهذا النوع من المشاريع مع ذكر أمثلة ذات صلة
+3. تأكيد على جودة التشطيبات ومستوى الإنجاز
+4. إشارة للمدة والالتزام بالمواعيد
+5. دعوة للتواصل لمناقشة التفاصيل
 
+قدِّر مدة تنفيذ واقعية بناءً على حجم المشروع. لا تترك فراغات أو أقواس مربعة.
 أجب بـ JSON فقط:
-{"message": "نص رسالة العرض", "suggestedDurationDays": number, "tips": ["نصيحة 1"], "source": "ai_assistant"}`;
+{"message": "نص رسالة العرض", "suggestedDurationDays": number, "tips": ["نصيحة تنافسية 1", "نصيحة تنافسية 2"], "source": "ai_assistant"}`;
 
   try {
     const raw = await callLLM(prompt, {
-      maxTokens: 500,
-      systemPrompt: 'أنت مساعد ذكي للمقاولين وتجاوب فقط بـ JSON صالح بدون أي نص إضافي.',
+      maxTokens: 600,
+      systemPrompt: 'أنت مقاول مصري محترف بخبرة 15 سنة في مجال البناء والتشطيبات. تكتب عروض احترافية وإنسانية ومقنعة. لا تبدو كـ AI. لا تترك فراغات مثل [أدخل الاسم] أو أقواس مربعة. استخدم مصطلحات السوق المصري مثل "تشطيب سوبر لوكس" و"مقايسة" و"مدة التنفيذ". مهم جداً: أخرج JSON صالح فقط — لا مقدمة، لا شرح، لا markdown، فقط JSON object يبدأ بـ { وينتهي بـ }.',
     });
     if (!raw) {
       return res.json({
@@ -189,7 +188,7 @@ ${bidsText}
   try {
     const raw = await callLLM(prompt, {
       maxTokens: 800,
-      systemPrompt: 'أنت خبير مقاولات مصري وتجاوب فقط بـ JSON صالح.',
+      systemPrompt: 'أنت خبير مقاولات مصري. مهم جداً: أخرج JSON صالح فقط — لا مقدمة، لا شرح، لا markdown، فقط JSON object يبدأ بـ { وينتهي بـ }.',
     });
 
     if (!raw) {
@@ -284,8 +283,7 @@ ${anomalyDescriptions}
 
       logger.info({ anomalousCount: anomalousEntries.length, mean: Math.round(mean) }, 'Anomaly LLM assessment requested');
 
-      const llmRaw = await callAnthropicLLM(llmPrompt, {
-        model: 'claude-sonnet-4-6',
+      const llmRaw = await callLLM(llmPrompt, {
         maxTokens: 300,
         temperature: 0.3,
         systemPrompt: 'أنت خبير تقييم عطاءات وتجاوب فقط بـ JSON صالح بدون أي نص إضافي.',
@@ -369,34 +367,49 @@ const chatbot = asyncHandler(async (req, res) => {
   if (!message) throw new AppError('الرسالة مطلوبة', 400, 'MISSING_MESSAGE');
 
   const chatHistory = (history || []).slice(-6); // آخر 6 رسائل فقط
-  const prompt = `أنت مساعد ذكي لمنصة المقاول. استخدم المعلومات التالية للإجابة على سؤال المستخدم:
 
+  // System prompt يحدد الشخصية بوضوح ويمنع المقدمات المزعجة
+  const systemPrompt = `أنت مساعد ودود لمنصة "المقاول" — أكبر منصة مقاولات في مصر.
+لديك المعلومات التالية عن المنصة:
 ${PLATFORM_KNOWLEDGE}
+قواعد المحادثة:
+- أجب بالعربية فقط بأسلوب ودود ومختصر (3-4 جمل كحد أقصى)
+- لا تبدأ بـ "بالطبع" أو "بكل سرور" — أجب مباشرة
+- لو السؤال خارج نطاق المنصة، قل ذلك بجملة ولطف شديد
+- لو المستخدم يسلّم عليك، ردّ بترحيب ودود قصير واسأله كيف تساعده`;
 
-محادثة سابقة:
-${chatHistory.map((m) => `${m.role === 'user' ? 'المستخدم' : 'المساعد'}: ${m.content}`).join('\n')}
+  // صيغة محادثة طبيعية — الموديل يكمل "مساعد:" مباشرة
+  const historyText = chatHistory.length > 0
+    ? chatHistory.map((m) => `${m.role === 'user' ? 'مستخدم' : 'مساعد'}: ${m.content}`).join('\n') + '\n'
+    : '';
 
-سؤال المستخدم الحالي: ${message}
-
-أجب بإيجاز ووضوح بالعربية. لو السؤال خارج نطاق المنصة، وجّه المستخدم بلطف.`;
+  const prompt = `${historyText}مستخدم: ${message}
+مساعد:`;
 
   try {
     const raw = await callLLM(prompt, {
-      maxTokens: 400,
-      systemPrompt: 'أنت مساعد ذكي لمنصة المقاول. أجب بالعربية بشكل مختصر وودود.',
+      maxTokens: 350,
+      temperature: 0.5,
+      systemPrompt,
     });
 
     if (!raw) {
       return res.json({
-        reply: 'أهلاً بك! أنا مساعد منصة المقاول. يمكنني مساعدتك في أي استفسار عن سياسات المنصة، التسجيل، النقاط، العقود، أو أي موضوع آخر. اسألني!',
+        reply: 'أهلاً بك في منصة المقاول! 👋 كيف أقدر أساعدك؟ يمكنني الإجابة عن النقاط، العقود، Escrow، أو أي استفسار آخر.',
         mock: true,
       });
     }
 
-    res.json({ reply: raw });
+    // نظّف أي مقدمة زائدة يردها الموديل
+    const cleanReply = raw
+      .replace(/^(مساعد:\s*)/i, '')
+      .replace(/^(بالطبع[،,]?\s*|بكل سرور[،,]?\s*|حسناً[،,]?\s*)/i, '')
+      .trim();
+
+    res.json({ reply: cleanReply });
   } catch (err) {
     logger.error({ err: err.message }, 'AI chatbot failed');
-    res.json({ reply: 'عذراً، لم أتمكن من معالجة سؤالك حالياً. حاول مرة أخرى أو تواصل مع الدعم.' });
+    res.json({ reply: 'عذراً، حدث خطأ مؤقت. حاول مرة أخرى أو تواصل مع الدعم.' });
   }
 });
 
@@ -507,7 +520,7 @@ ${requirements ? 'متطلبات إضافية: ' + requirements : ''}
   try {
     const raw = await callLLM(prompt, {
       maxTokens: 700,
-      systemPrompt: 'أنت خبير مقاولات مصري. أجب فقط بـ JSON صالح بدون أي نص إضافي.',
+      systemPrompt: 'أنت خبير مقاولات مصري. مهم جداً: أخرج JSON صالح فقط — لا مقدمة، لا شرح، لا markdown، فقط JSON object يبدأ بـ { وينتهي بـ }.',
     });
 
     if (!raw) {

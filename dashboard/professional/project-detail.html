@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="../../assets/css/base.css">
   <link rel="stylesheet" href="../../assets/css/components.css">
   <link rel="stylesheet" href="../../assets/css/layout.css">
+  <link rel="stylesheet" href="../../assets/css/pro-dashboard.css">
   <link rel="stylesheet" href="../../assets/css/utilities.css">
 
   <style>
@@ -181,6 +182,61 @@
       color: var(--text-muted);
     }
 
+    /* ── AI Draft Button — Premium Glow ── */
+    .ai-draft-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%);
+      color: #fff;
+      border: 1.5px solid rgba(245,158,11,0.4);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-main);
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      animation: aiGlowPulse 2.5s ease-in-out infinite;
+      margin-bottom: 4px;
+    }
+    .ai-draft-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(245,158,11,0.35);
+    }
+    .ai-draft-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      animation: none;
+    }
+    .ai-draft-sparkle { font-size: 16px; }
+    @keyframes aiGlowPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.5), 0 4px 16px rgba(15,23,42,0.3); }
+      50% { box-shadow: 0 0 18px 4px rgba(245,158,11,0.22), 0 4px 16px rgba(15,23,42,0.3); }
+    }
+
+    /* ── AI Skeleton Loader ── */
+    .ai-skeleton {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px 0;
+    }
+    .ai-skeleton-line {
+      height: 14px;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+      background-size: 400% 100%;
+      animation: shimmer 1.4s ease infinite;
+    }
+    .ai-skeleton-line:nth-child(1) { width: 95%; }
+    .ai-skeleton-line:nth-child(2) { width: 80%; }
+    .ai-skeleton-line:nth-child(3) { width: 65%; }
+    @keyframes shimmer {
+      0% { background-position: 100% 0; }
+      100% { background-position: -100% 0; }
+    }
+
     @media (max-width: 960px) {
       .detail-layout { grid-template-columns: 1fr; }
       .bid-panel { position: static; }
@@ -313,6 +369,7 @@
   <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 
   <script src="../../assets/js/api.js"></script>
+  <script src="../../assets/js/dashboard-router.js"></script>
   <script>
     (() => {
       if (!localStorage.getItem('elm_user') || !localStorage.getItem('elm_accessToken')) {
@@ -468,8 +525,9 @@
                 <div class="form-field">
                   <label for="bidMessage">رسالة للعميل</label>
                   <div style="margin-bottom:var(--space-2);">
-                    <button type="button" id="aiDraftBtn" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:linear-gradient(135deg,var(--color-navy-dark),var(--color-navy));color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--font-main);font-size:12px;font-weight:700;cursor:pointer;transition:opacity .2s;">
-                      <span>✨</span> صياغة بالذكاء الاصطناعي
+                    <button type="button" id="aiDraftBtn" class="ai-draft-btn">
+                      <span class="ai-draft-sparkle">✨</span>
+                      <span class="ai-draft-label">صياغة عرض احترافي بالذكاء الاصطناعي</span>
                     </button>
                   </div>
                   <textarea id="bidMessage" name="message" required placeholder="اشرح خبرتك وطريقة التنفيذ..." rows="5"></textarea>
@@ -509,7 +567,25 @@
         if (aiDraftBtn) {
           aiDraftBtn.addEventListener('click', async () => {
             aiDraftBtn.disabled = true;
-            aiDraftBtn.innerHTML = '⏳ جاري الصياغة...';
+            aiDraftBtn.querySelector('.ai-draft-label').textContent = 'جاري الصياغة...';
+
+            // Show skeleton loader in the textarea area
+            const msgEl = document.getElementById('bidMessage');
+            let originalValue = '';
+            if (msgEl) {
+              originalValue = msgEl.value;
+              msgEl.style.display = 'none';
+              const skeleton = document.createElement('div');
+              skeleton.id = 'aiSkeleton';
+              skeleton.className = 'ai-skeleton';
+              skeleton.innerHTML = `
+                <div class="ai-skeleton-line"></div>
+                <div class="ai-skeleton-line"></div>
+                <div class="ai-skeleton-line"></div>
+              `;
+              msgEl.parentNode.insertBefore(skeleton, msgEl.nextSibling);
+            }
+
             try {
               const res = await window.api.fetch('/ai/bid-draft', {
                 method: 'POST',
@@ -517,22 +593,34 @@
               });
               const draft = res.draft;
               if (draft?.message) {
-                const msgEl = document.getElementById('bidMessage');
-                if (msgEl) msgEl.value = draft.message;
+                if (msgEl) {
+                  msgEl.value = draft.message;
+                  // Trigger DOM events so validators & counters update
+                  msgEl.dispatchEvent(new Event('input', { bubbles: true }));
+                  msgEl.dispatchEvent(new Event('change', { bubbles: true }));
+                }
                 const durEl = document.getElementById('bidDuration');
-                if (durEl && draft.suggestedDurationDays) durEl.value = draft.suggestedDurationDays;
+                if (durEl && draft.suggestedDurationDays) {
+                  durEl.value = draft.suggestedDurationDays;
+                  durEl.dispatchEvent(new Event('input', { bubbles: true }));
+                }
                 const tipsEl = document.getElementById('aiDraftTips');
                 if (tipsEl && draft.tips?.length) {
                   tipsEl.style.display = 'block';
                   tipsEl.innerHTML = '<strong>💡 نصائح:</strong> ' + draft.tips.map(t => escapeHtml(t)).join(' · ');
                 }
-                showToast('تمت الصياغة بنجاح — راجع الرسالة وعدّلها حسب خبرتك', 'success');
+                showToast('✨ تمت الصياغة — راجع الرسالة وعدّلها حسب خبرتك', 'success');
               }
             } catch (err) {
+              if (msgEl) msgEl.value = originalValue;
               showToast(err.message || 'تعذر صياغة العرض', 'error');
             } finally {
+              // Remove skeleton, restore textarea
+              const skeleton = document.getElementById('aiSkeleton');
+              if (skeleton) skeleton.remove();
+              if (msgEl) msgEl.style.display = '';
               aiDraftBtn.disabled = false;
-              aiDraftBtn.innerHTML = '<span>✨</span> صياغة بالذكاء الاصطناعي';
+              aiDraftBtn.innerHTML = '<span class="ai-draft-sparkle">✨</span><span class="ai-draft-label">صياغة عرض احترافي بالذكاء الاصطناعي</span>';
             }
           });
         }

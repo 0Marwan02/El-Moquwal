@@ -30,12 +30,8 @@ a {
   transition: color var(--transition-base);
 }
 
-/* --- Images --- */
-img {
-  display: block;
-  max-width: 100%;
-  height: auto;
-}
+/* --- Images (base reset) --- */
+img { display: block; max-width: 100%; height: auto; }
 
 /* --- Lists --- */
 ul, ol { list-style: none; }
@@ -60,8 +56,45 @@ p  { font-size: var(--font-size-base);  color: var(--text-muted); line-height: 1
   color: var(--color-navy-dark);
 }
 
-/* --- Scrollbar --- */
-::-webkit-scrollbar       { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--bg-app); }
-::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: var(--radius-full); }
-::-webkit-scrollbar-thumb:hover { background: var(--color-navy-light); }
+/* --- Focus Visible (accessibility — outline only on keyboard nav) --- */
+:focus { outline: none; }
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* --- Scrollbar — slim & light aesthetic --- */
+::-webkit-scrollbar       { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.14);
+  border-radius: var(--radius-full);
+  transition: background 0.2s;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(15, 23, 42, 0.3); }
+
+/* Firefox */
+* { scrollbar-width: thin; scrollbar-color: rgba(15,23,42,0.14) transparent; }
+
+/* --- Image default behaviour --- */
+img { display: block; max-width: 100%; height: auto; object-fit: cover; }
+
+/* --- Smooth anchor scroll with offset for fixed navbar --- */
+html { scroll-padding-top: calc(var(--navbar-height) + 16px); }
+
+/* --- Global SVG icon size guard — prevents unbounded icons on scroll --- */
+.section-icon svg,
+.feature-icon svg,
+.how-icon svg,
+.how-step-icon svg,
+.service-icon svg,
+.step-icon svg,
+.icon-wrap svg,
+.card-icon svg,
+.feature-card svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  flex-shrink: 0;
+}

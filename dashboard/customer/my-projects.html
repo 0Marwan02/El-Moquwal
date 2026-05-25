@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مشاريعي | المقاول</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/variables.css">
+  <link rel="stylesheet" href="../../assets/css/base.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/layout.css">
+  <style>
+    .section-title {
+      font-size: var(--font-size-lg);
+      font-weight: 800;
+      color: var(--color-navy);
+      margin-bottom: var(--space-5);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-default);
+    }
+
+    /* Filter Tabs */
+    .filter-tabs {
+      display: flex;
+      gap: var(--space-2);
+      margin-bottom: var(--space-6);
+      flex-wrap: wrap;
+    }
+    .filter-tab {
+      padding: 8px 20px;
+      border-radius: var(--radius-full);
+      font-family: var(--font-main);
+      font-size: var(--font-size-xs);
+      font-weight: 700;
+      border: 1.5px solid var(--border-default);
+      background: var(--bg-surface);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--transition-base);
+    }
+    .filter-tab:hover {
+      border-color: var(--color-gold);
+      color: var(--color-gold-dark);
+    }
+    .filter-tab.active {
+      background: var(--color-navy);
+      color: #fff;
+      border-color: var(--color-navy);
+    }
+
+    /* Project Cards Grid */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: var(--space-5);
+    }
+
+    .project-card {
+      background: rgba(255,255,255,0.82);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(245,158,11,0.18);
+      border-radius: var(--radius-md);
+      padding: var(--space-6);
+      box-shadow: 0 4px 24px rgba(15,23,42,0.08), 0 1px 4px rgba(15,23,42,0.04);
+      transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.22s ease, border-color 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .project-card:hover {
+      box-shadow: 0 12px 40px rgba(15,23,42,0.14), 0 2px 8px rgba(245,158,11,0.12);
+      transform: translateY(-4px);
+      border-color: rgba(245,158,11,0.45);
+    }
+    .project-card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 100%; height: 3px;
+      background: linear-gradient(90deg, transparent, var(--card-accent, var(--color-gold)));
+      opacity: 0.6;
+    }
+    .project-card.status-open::before { --card-accent: var(--color-success); }
+    .project-card.status-awarded::before { --card-accent: #3b82f6; }
+    .project-card.status-draft::before { --card-accent: var(--text-muted); }
+    .project-card.status-closed::before { --card-accent: var(--color-navy); }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: var(--space-4);
+    }
+    .card-title {
+      font-size: var(--font-size-md);
+      font-weight: 800;
+      color: var(--color-navy);
+      margin-bottom: 4px;
+    }
+    .card-meta {
+      font-size: var(--font-size-xs);
+      color: var(--text-muted);
+    }
+
+    .card-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 14px;
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .card-status.open {
+      background: var(--color-success-bg);
+      color: var(--color-success);
+      animation: statusPulse 2.5s ease-in-out infinite;
+    }
+    .card-status.awarded {
+      background: rgba(59,130,246,0.1);
+      color: #1e40af;
+      animation: statusPulse 3s ease-in-out infinite;
+    }
+    .card-status.draft { background: var(--bg-surface-2); color: var(--text-muted); }
+    .card-status.closed { background: rgba(15,23,42,0.06); color: var(--color-navy); }
+
+    @keyframes statusPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.35); }
+      50% { box-shadow: 0 0 0 5px rgba(16,185,129,0); }
+    }
+    .card-status.awarded {
+      animation-name: statusPulseBlue;
+    }
+    @keyframes statusPulseBlue {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.35); }
+      50% { box-shadow: 0 0 0 5px rgba(59,130,246,0); }
+    }
+
+    .card-stats {
+      display: flex;
+      gap: var(--space-5);
+      padding: var(--space-4) 0;
+      border-top: 1px dashed var(--border-default);
+      border-bottom: 1px dashed var(--border-default);
+      margin-bottom: var(--space-4);
+    }
+    .card-stat .lbl {
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 2px;
+    }
+    .card-stat .val {
+      font-size: var(--font-size-sm);
+      font-weight: 700;
+      color: var(--color-navy);
+    }
+
+    .card-actions {
+      display: flex;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+    .card-actions .btn {
+      font-size: 12px;
+      padding: 7px 16px;
+    }
+
+    /* Featured badge */
+    .featured-flag {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: linear-gradient(135deg, #F59E0B, #D97706);
+      color: #0F172A;
+      font-size: 10px;
+      font-weight: 900;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      box-shadow: 0 2px 8px rgba(245,158,11,0.3);
+    }
+
+    /* Empty state */
+    .state-msg {
+      text-align: center;
+      padding: var(--space-16) var(--space-8);
+      color: var(--text-muted);
+      font-size: var(--font-size-sm);
+      background: var(--bg-surface);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-default);
+    }
+    .state-msg .emoji { font-size: 40px; display: block; margin-bottom: var(--space-3); }
+    .state-msg h4 { color: var(--color-navy); margin-bottom: var(--space-1); font-weight: 800; }
+
+    @media (max-width: 768px) {
+      .projects-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="dashboard-page">
+  <div class="dashboard-wrapper">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo-mark">
+          <img src="../../assets/images/logo.png" alt="المقاول">
+        </div>
+        <div class="sidebar-logo-text">المقاول</div>
+      </div>
+
+      <div class="sidebar-user">
+        <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--color-gold),var(--color-gold-dark));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:var(--color-navy-dark);" id="sidebarAvatar">م</div>
+        <div class="sidebar-user-info">
+          <div class="name" id="sidebarUserName">جاري التحميل...</div>
+          <div class="role">عميل</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-section-label">الرئيسية</div>
+        <a href="index.html" class="sidebar-item">
+          <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+          لوحة التحكم
+        </a>
+        <a href="browse-projects.html" class="sidebar-item">
+          <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          تصفح المشاريع
+        </a>
+        <div class="sidebar-section-label">مشاريعي</div>
+        <a href="post-project.html" class="sidebar-item">
+          <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          إضافة مشروع جديد
+        </a>
+        <a href="my-projects.html" class="sidebar-item active">
+          <svg viewBox="0 0 24 24"><path d="M4 6h18V4H4c-1.1 0-2 .9-2 2v11H0v3h14v-3H4V6zm19 2h-6c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V9c0-.55-.45-1-1-1zm-1 9h-4v-7h4v7z"/></svg>
+          مشاريعي
+        </a>
+        <a href="proposals.html" class="sidebar-item">
+          <svg viewBox="0 0 24 24"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>
+          عروض الأسعار
+        </a>
+        <a href="contract.html" class="sidebar-item">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+          اتفاقياتي
+        </a>
+      </nav>
+
+      <div class="sidebar-cta">
+        <button class="btn btn-ghost-light btn-full" id="logoutBtn">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+          تسجيل الخروج
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="dashboard-main">
+      <div class="dashboard-topbar">
+        <div class="topbar-page-title">مشاريعي</div>
+        <div class="topbar-actions">
+          <a href="post-project.html" class="btn btn-primary btn-sm">
+            <svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:currentColor;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            مشروع جديد
+          </a>
+          <div class="topbar-user">
+            <div style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--color-gold),var(--color-gold-dark));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--color-navy-dark);" id="topbarAvatar">م</div>
+            <div class="topbar-user-name" id="topbarUserName">جاري...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-content">
+        <div class="page-head" style="margin-bottom: var(--space-6);">
+          <h2 class="section-title">جميع مشاريعك</h2>
+          <p style="color:var(--text-muted); font-size:var(--font-size-sm);">تابع حالة مشاريعك وعروض المقاولين الواردة عليها من مكان واحد.</p>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-filter="all">الكل</button>
+          <button class="filter-tab" data-filter="open">مفتوح</button>
+          <button class="filter-tab" data-filter="awarded">تم الترسية</button>
+          <button class="filter-tab" data-filter="draft">مسودة</button>
+          <button class="filter-tab" data-filter="closed">مغلق</button>
+        </div>
+
+        <div id="pageContent">
+          <div class="state-msg"><span class="emoji">⏳</span><h4>جاري تحميل مشاريعك...</h4></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../../assets/js/api.js"></script>
+  <script src="../../assets/js/customer-router.js"></script>
+  <script>
+    (() => {
+      const STATUS_LABELS = { open: 'مفتوح', awarded: 'تم الترسية', closed: 'مغلق', draft: 'مسودة' };
+      const TYPE_LABELS = {
+        new_construction: 'بناء جديد', renovation: 'تجديد', finishing: 'تشطيبات',
+        repair: 'إصلاح', extension: 'توسعة', electrical: 'كهرباء',
+        plumbing: 'سباكة', demolition: 'هدم', other: 'أخرى'
+      };
+      const BUDGET_LABELS = {
+        under_50k: 'أقل من 50,000', '50k_200k': '50,000 - 200,000',
+        '200k_500k': '200,000 - 500,000', '500k_1m': '500,000 - 1 مليون', above_1m: 'أكثر من 1 مليون'
+      };
+
+      const container = document.getElementById('pageContent');
+      let allProjects = [];
+      let currentFilter = 'all';
+
+      // Filter tabs
+      document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          currentFilter = tab.dataset.filter;
+          renderProjects();
+        });
+      });
+
+      function renderProjects() {
+        const filtered = currentFilter === 'all'
+          ? allProjects
+          : allProjects.filter(p => p.status === currentFilter);
+
+        if (filtered.length === 0) {
+          container.innerHTML = `
+            <div class="state-msg">
+              <span class="emoji">📋</span>
+              <h4>${currentFilter === 'all' ? 'لا توجد مشاريع بعد' : 'لا توجد مشاريع بحالة "' + (STATUS_LABELS[currentFilter] || currentFilter) + '"'}</h4>
+              <p>انشر مشروعك الأول لتبدأ باستقبال العروض من أفضل المقاولين</p>
+              <a href="post-project.html" class="btn btn-primary" style="margin-top:var(--space-4);">نشر مشروع جديد</a>
+            </div>`;
+          return;
+        }
+
+        container.innerHTML = `<div class="projects-grid">${filtered.map(renderCard).join('')}</div>`;
+      }
+
+      function renderCard(p) {
+        const statusLabel = STATUS_LABELS[p.status] || p.status;
+        const typeLabel = TYPE_LABELS[p.projectType] || '';
+        const budgetLabel = BUDGET_LABELS[p.budgetRange] || '—';
+        const bidsCount = p.bidsCount || 0;
+        const createdDate = p.createdAt ? new Date(p.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+
+        return `
+          <div class="project-card status-${p.status}">
+            ${p.isFeatured ? '<div class="featured-flag">⭐ مميز</div>' : ''}
+            <div class="card-top">
+              <div>
+                <div class="card-title">${p.title}</div>
+                <div class="card-meta">${typeLabel} • ${p.propertyDetails?.governorate || '—'} • ${createdDate}</div>
+              </div>
+              <span class="card-status ${p.status}">${statusLabel}</span>
+            </div>
+
+            <div class="card-stats">
+              <div class="card-stat">
+                <span class="lbl">العروض</span>
+                <span class="val">${bidsCount}</span>
+              </div>
+              <div class="card-stat">
+                <span class="lbl">المساحة</span>
+                <span class="val">${p.propertyDetails?.area || '—'} م²</span>
+              </div>
+              <div class="card-stat">
+                <span class="lbl">الميزانية</span>
+                <span class="val">${budgetLabel}</span>
+              </div>
+            </div>
+
+            <div class="card-actions">
+              ${bidsCount > 0
+                ? `<a href="proposals.html" class="btn btn-primary">👁️ عرض العروض (${bidsCount})</a>`
+                : `<span style="font-size:var(--font-size-xs);color:var(--text-muted);">لا توجد عروض بعد</span>`
+              }
+              ${p.status === 'draft'
+                ? `<button onclick="publishDraft('${p._id}')" class="btn btn-outline" style="border-color:var(--color-success);color:var(--color-success);">📢 نشر المشروع</button>`
+                : ''
+              }
+              ${p.status === 'awarded'
+                ? `<a href="contract.html" class="btn btn-outline">📄 الاتفاقية</a>`
+                : ''
+              }
+            </div>
+          </div>`;
+      }
+
+      async function loadAll() {
+        const user = JSON.parse(localStorage.getItem('elm_user') || '{}');
+        if (!user._id) {
+          container.innerHTML = `<div class="state-msg"><span class="emoji">🔒</span><h4>يجب تسجيل الدخول أولاً</h4><a href="../../auth/login.html" class="btn btn-primary" style="margin-top:var(--space-4);">تسجيل الدخول</a></div>`;
+          return;
+        }
+
+        try {
+          const responses = await Promise.all([
+            window.api.fetch('/projects?status=open&limit=50'),
+            window.api.fetch('/projects?status=awarded&limit=50'),
+            window.api.fetch('/projects?status=closed&limit=50'),
+            window.api.fetch('/projects?status=draft&limit=50'),
+          ]);
+          const merged = new Map();
+          responses.forEach(data => {
+            (data.projects || []).forEach(p => {
+              const by = (p.postedBy?._id || p.postedBy)?.toString();
+              if (by && by === user._id?.toString()) merged.set(p._id, p);
+            });
+          });
+          allProjects = Array.from(merged.values()).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+          renderProjects();
+        } catch (err) {
+          container.innerHTML = `<div class="state-msg"><span class="emoji">❌</span><h4>فشل تحميل المشاريع</h4><p>${err.message}</p></div>`;
+        }
+      }
+
+      // Publish draft
+      window.publishDraft = async function(projectId) {
+        try {
+          await window.api.fetch(`/projects/${projectId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status: 'open' })
+          });
+          loadAll();
+        } catch (err) {
+          alert(err.message || 'فشل نشر المشروع');
+        }
+      };
+
+      // Sidebar & Topbar
+      document.addEventListener('DOMContentLoaded', () => {
+        const user = JSON.parse(localStorage.getItem('elm_user') || '{}');
+        if (user.name) {
+          const initial = user.name.charAt(0) || 'م';
+          const elements = {
+            'sidebarUserName': user.name,
+            'topbarUserName': user.name,
+            'sidebarAvatar': initial,
+            'topbarAvatar': initial
+          };
+          for (const [id, val] of Object.entries(elements)) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = val;
+          }
+        }
+
+        document.getElementById('logoutBtn')?.addEventListener('click', () => {
+          localStorage.removeItem('elm_accessToken');
+          localStorage.removeItem('elm_user');
+          window.location.href = '../../index.html';
+        });
+      });
+
+      loadAll();
+    })();
+  </script>
+</body>
+</html>

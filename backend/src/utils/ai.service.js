@@ -4,56 +4,52 @@
 const env = require('../config/env');
 const logger = require('./logger');
 
-const HF_API_URL = 'https://api-inference.huggingface.co/models';
+const POLLINATIONS_API_URL = 'https://text.pollinations.ai/openai';
 
 /**
- * يستدعي Hugging Face Inference API
+ * يستدعي Pollinations AI (بديل مجاني متوافق مع OpenAI API ولا يحتاج مفتاح)
  */
 async function callLLM(prompt, options = {}) {
-  const { maxTokens = 600, temperature = 0.7, systemPrompt } = options;
-  const token = env.HF_API_TOKEN;
-  const model = env.HF_MODEL || 'Qwen/Qwen2.5-72B-Instruct';
+  const { maxTokens = 800, temperature = 0.7, systemPrompt } = options;
 
-  if (!token || token.includes('YOUR_') || token.length < 10) {
-    logger.warn('HF_API_TOKEN not configured — returning mock response');
+  const messages = [];
+  if (systemPrompt) {
+    messages.push({ role: 'system', content: systemPrompt });
+  }
+  messages.push({ role: 'user', content: prompt });
+
+  try {
+    const response = await fetch(POLLINATIONS_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'openai', // uses the best available OpenAI compatible model
+        messages: messages,
+        temperature,
+        max_tokens: maxTokens,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => 'unknown');
+      logger.error({ status: response.status, body: errorText }, 'Pollinations API error');
+      throw new Error(`Pollinations API returned ${response.status}: ${errorText}`);
+    }
+
+    const data = await response.json();
+    
+    if (data?.choices?.[0]?.message?.content) {
+      return data.choices[0].message.content.trim();
+    }
+    
+    logger.warn({ data }, 'Unexpected Pollinations response shape');
+    return null;
+  } catch (error) {
+    logger.error({ err: error.message }, 'callLLM error (Pollinations)');
     return null;
   }
-
-  const systemPart = systemPrompt ? `<|im_start|>system\n${systemPrompt}<|im_end|>\n` : '';
-  const fullPrompt = `${systemPart}<|im_start|>user\n${prompt}<|im_end|>\n<|im_start|>assistant\n`;
-
-  const url = `${HF_API_URL}/${model}`;
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      inputs: fullPrompt,
-      parameters: {
-        max_new_tokens: maxTokens,
-        temperature,
-        return_full_text: false,
-      },
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => 'unknown');
-    logger.error({ status: response.status, body: errorText }, 'HF API error');
-    throw new Error(`HF API returned ${response.status}: ${errorText}`);
-  }
-
-  const data = await response.json();
-
-  if (Array.isArray(data) && data[0]?.generated_text) {
-    return data[0].generated_text.trim();
-  }
-
-  logger.warn({ data }, 'Unexpected HF response shape');
-  return null;
 }
 
 /**
@@ -161,7 +157,7 @@ function findRelevantPolicies(question, topN = 3) {
 
 /**
  * Policy RAG Bot — يجيب على أسئلة المستخدم بناءً على سياسات المنصة
- * بيستخدم claude-haiku-4-5-20251001 (أسرع وأرخص)
+ * بيستخدم Hugging Face (Qwen2.5-72B-Instruct) بدلاً من Anthropic
  * بيرجع { answer: string, relatedPolicies: string[] }
  */
 async function askPolicyBot(userQuestion) {
@@ -173,30 +169,35 @@ async function askPolicyBot(userQuestion) {
 
   const contextBlocks = keysToUse.map((k) => PLATFORM_POLICIES[k]).join('\n\n');
 
-  const systemPrompt = `أنت مساعد منصة المقاول — منصة مقاولات مصرية. مهمتك الإجابة على أسئلة المستخدمين بناءً على سياسات المنصة فقط.
-قواعد مهمة:
-- أجب بالعربية فقط
-- لا تخترع معلومات غير موجودة في السياسات المقدمة
-- لو السؤال خارج نطاق سياسات المنصة، أخبر المستخدم بذلك بأدب واقترح عليه التواصل مع الدعم
-- كن موجزاً وواضحاً (3-5 جمل كحد أقصى)`;
+  // System prompt محسَّن لـ Qwen — لا يبدأ بمقدمات
+  const systemPrompt = `أنت مساعد خدمة عملاء ودود لمنصة "المقاول" — منصة مقاولات مصرية احترافية.
+مهمتك: الإجابة على أسئلة المستخدمين بشكل طبيعي ومفيد وودود.
+قواعد:
+- أجب بالعربية فقط دون أي مقدمة مثل "بالطبع" أو "بكل سرور"
+- إذا كان السؤال متعلقاً بالمنصة أو البناء أو المقاولات أو الأسعار، أجب من السياسات المتاحة بشكل مفيد
+- إذا لم تجد معلومة محددة في السياسات، اعطِ إجابة عامة مفيدة ومنطقية بدلاً من الرفض
+- رفض الإجابة يكون فقط للمواضيع الحساسة أو غير الأخلاقية تماماً — لا تقل "خارج نطاق المنصة" للأسئلة العادية
+- الرد لا يتجاوز 4 جمل واضحة ومباشرة`;
 
-  const userMessage = `سياسات المنصة المتاحة:
+  // Prompt مُهيكَل لإجابة مباشرة
+  const userMessage = `سياسات المنصة ذات الصلة بالسؤال:
 ${contextBlocks}
 
-سؤال المستخدم: ${userQuestion}`;
+سؤال المستخدم: ${userQuestion}
 
-  logger.info({ questionLength: userQuestion.length, relevantKeys: keysToUse }, 'Policy RAG bot invoked');
+الإجابة المباشرة:`;
+
+  logger.info({ questionLength: userQuestion.length, relevantKeys: keysToUse }, 'Policy RAG bot invoked (HF)');
 
   try {
-    const answer = await callAnthropicLLM(userMessage, {
-      model: 'claude-haiku-4-5-20251001',
+    const answer = await callLLM(userMessage, {
       maxTokens: 400,
       temperature: 0.3,
       systemPrompt,
     });
 
     if (!answer) {
-      // Fallback: إجابة بسيطة من قاعدة البيانات مباشرة
+      // Fallback: إجابة نصية مباشرة من قاعدة البيانات
       const fallbackText = keysToUse.map((k) => PLATFORM_POLICIES[k]).join(' | ');
       return {
         answer: `بناءً على سياسات المنصة: ${fallbackText}`,
@@ -205,7 +206,12 @@ ${contextBlocks}
       };
     }
 
-    return { answer, relatedPolicies: keysToUse };
+    // نظّف أي مقدمات متبقية من الموديل
+    const cleanAnswer = answer
+      .replace(/^(بالطبع[،,]?\s*|بكل سرور[،,]?\s*|حسناً[،,]?\s*|الإجابة[:\s]*)/i, '')
+      .trim();
+
+    return { answer: cleanAnswer, relatedPolicies: keysToUse };
   } catch (err) {
     logger.error({ err: err.message }, 'askPolicyBot LLM call failed');
     throw err;
@@ -214,23 +220,51 @@ ${contextBlocks}
 
 /**
  * يحاول يعمل parse لـ JSON من استجابة الـ LLM
- * بيشيل أي code fences لو موجودة
+ * بيشيل أي code fences أو نص مقدمة قبل الـ JSON
+ * مُحسَّن لـ Qwen2.5 اللي بيحط أحياناً نص عربي قبل الـ JSON
  */
 function parseJsonResponse(raw) {
   if (!raw) return null;
-  // شيل أي كود بلوكات
-  const clean = raw
-    .replace(/```json?\s*\n?/gi, '')
+
+  // 1. شيل markdown code fences
+  let clean = raw
+    .replace(/```json\s*/gi, '')
     .replace(/```\s*/g, '')
     .trim();
 
-  // أحياناً الموديل بيرجع نص قبل الـ JSON
-  const jsonStart = clean.indexOf('{');
-  const jsonEnd = clean.lastIndexOf('}');
-  if (jsonStart !== -1 && jsonEnd !== -1) {
-    return JSON.parse(clean.substring(jsonStart, jsonEnd + 1));
+  // 2. حدد أول { أو [ في النص
+  const objIdx = clean.indexOf('{');
+  const arrIdx = clean.indexOf('[');
+
+  let startIdx = -1;
+  let endChar = '';
+
+  if (objIdx === -1 && arrIdx === -1) {
+    // مفيش JSON خالص — جرب parse مباشر (هيطير error لو فاشل)
+    return JSON.parse(clean);
+  } else if (objIdx === -1) {
+    startIdx = arrIdx;
+    endChar = ']';
+  } else if (arrIdx === -1) {
+    startIdx = objIdx;
+    endChar = '}';
+  } else {
+    // الأقرب للبداية يفوز
+    if (objIdx < arrIdx) { startIdx = objIdx; endChar = '}'; }
+    else                  { startIdx = arrIdx; endChar = ']'; }
   }
 
+  const endIdx = clean.lastIndexOf(endChar);
+  if (startIdx !== -1 && endIdx > startIdx) {
+    const candidate = clean.substring(startIdx, endIdx + 1);
+    try {
+      return JSON.parse(candidate);
+    } catch (_) {
+      // تابع للـ fallback
+    }
+  }
+
+  // 3. آخر محاولة — parse النص كاملاً
   return JSON.parse(clean);
 }
 

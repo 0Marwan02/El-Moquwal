@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>عقد مقاولة — منصة المقاول</title>
+
+  <!--
+    ╔══════════════════════════════════════════════════════════════╗
+    ║  Arabic Legal Construction Contract Template                 ║
+    ║  El-Moquwal Platform — عقد مقاولة رسمي وفق القانون المصري  ║
+    ║  Rendered via Puppeteer → PDF                                ║
+    ╚══════════════════════════════════════════════════════════════╝
+    Variables injected at runtime ({{PLACEHOLDER}} syntax):
+      {{CONTRACT_ID}}         {{CONTRACT_DATE}}        {{CONTRACT_STATUS}}
+      {{CUSTOMER_NAME}}       {{CUSTOMER_ID}}           {{CUSTOMER_PHONE}}  {{CUSTOMER_EMAIL}}
+      {{CONTRACTOR_NAME}}     {{CONTRACTOR_ID}}         {{CONTRACTOR_PHONE}} {{CONTRACTOR_EMAIL}}
+      {{CONTRACTOR_SPECIALTY}}
+      {{PROJECT_TITLE}}       {{PROJECT_TYPE}}          {{PROJECT_LOCATION}}
+      {{PROPERTY_AREA}}       {{PROPERTY_GOVERNORATE}}
+      {{CONTRACT_VALUE}}      {{NET_TO_CONTRACTOR}}     {{COMMISSION_RATE}}  {{COMMISSION_AMOUNT}}
+      {{PROPOSED_DURATION}}
+      {{MILESTONE_1_AMOUNT}}  {{MILESTONE_2_AMOUNT}}    {{MILESTONE_3_AMOUNT}}
+      {{WARRANTY_CAP}}        {{WARRANTY_STATUS}}
+      {{SCOPE_OF_WORK}}
+      {{CUSTOMER_SIGNED}}     {{CUSTOMER_SIGN_DATE}}    {{CUSTOMER_SIGN_HASH}}
+      {{CONTRACTOR_SIGNED}}   {{CONTRACTOR_SIGN_DATE}}  {{CONTRACTOR_SIGN_HASH}}
+      {{GENERATION_DATE}}
+  -->
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap');
+
+    :root {
+      --navy:        #0F172A;
+      --navy-mid:    #1E293B;
+      --navy-light:  #334155;
+      --gold:        #F59E0B;
+      --gold-dark:   #B45309;
+      --gold-light:  #FCD34D;
+      --gold-subtle: rgba(245,158,11,0.08);
+      --success:     #10B981;
+      --error:       #EF4444;
+      --muted:       #64748B;
+      --light:       #94A3B8;
+      --border:      #E2E8F0;
+      --bg:          #F8FAFC;
+      --white:       #FFFFFF;
+      --text:        #0F172A;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 210mm;
+      font-family: 'Noto Naskh Arabic', 'Arial', serif;
+      font-size: 11pt;
+      color: var(--text);
+      background: var(--white);
+      direction: rtl;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* ── Page wrapper ── */
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 14mm 14mm 20mm;
+      position: relative;
+    }
+
+    /* ──────────────────────────────────────
+       HEADER
+    ────────────────────────────────────── */
+    .header {
+      background: var(--navy);
+      margin: -14mm -14mm 0;
+      padding: 10mm 14mm 8mm;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--gold), var(--gold-light), var(--gold));
+    }
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-logo {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .header-logo img {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+    }
+    .header-brand-text .name {
+      font-size: 20pt;
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: -0.3px;
+    }
+    .header-brand-text .tagline {
+      font-size: 8pt;
+      color: rgba(255,255,255,0.5);
+      margin-top: 2px;
+    }
+    .header-meta {
+      text-align: left;
+    }
+    .header-meta .contract-label {
+      font-size: 13pt;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .header-meta .contract-num {
+      font-size: 9pt;
+      color: rgba(255,255,255,0.5);
+      margin-top: 4px;
+    }
+
+    /* Status badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 14px;
+      border-radius: 100px;
+      font-size: 8.5pt;
+      font-weight: 700;
+      margin-top: 10mm;
+    }
+    .status-badge.active    { background:#dcfce7; color:#15803d; }
+    .status-badge.pending   { background:#fef9c3; color:#854d0e; }
+    .status-badge.completed { background:#dbeafe; color:#1d4ed8; }
+    .status-badge.disputed  { background:#fee2e2; color:#dc2626; }
+    .status-badge::before {
+      content: '';
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+
+    /* ──────────────────────────────────────
+       SECTION HEADER
+    ────────────────────────────────────── */
+    .section-header {
+      background: var(--navy);
+      color: var(--gold-light);
+      font-size: 10.5pt;
+      font-weight: 700;
+      padding: 7px 14px;
+      border-radius: 6px;
+      margin: 14px 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-header .num {
+      background: var(--gold);
+      color: var(--navy);
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9pt;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+
+    /* ──────────────────────────────────────
+       PREAMBLE
+    ────────────────────────────────────── */
+    .preamble {
+      background: var(--gold-subtle);
+      border: 1px solid rgba(245,158,11,0.18);
+      border-right: 4px solid var(--gold);
+      border-radius: 0 6px 6px 0;
+      padding: 12px 16px;
+      margin-bottom: 14px;
+      font-size: 10pt;
+      line-height: 2;
+      color: var(--muted);
+    }
+    .preamble strong { color: var(--navy); }
+
+    /* ──────────────────────────────────────
+       PARTIES GRID
+    ────────────────────────────────────── */
+    .parties-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .party-box {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .party-box-header {
+      padding: 7px 12px;
+      font-size: 8.5pt;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .party-box-header.customer  { background: rgba(26,43,74,0.08); color: var(--navy-light); }
+    .party-box-header.contractor { background: var(--gold-subtle); color: var(--gold-dark); }
+    .party-box-body { padding: 10px 12px; }
+    .party-name {
+      font-size: 12.5pt;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 5px;
+    }
+    .party-detail {
+      font-size: 8.5pt;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+    .party-detail .label { font-weight: 600; color: var(--navy-light); }
+
+    /* ──────────────────────────────────────
+       INFO TABLE
+    ────────────────────────────────────── */
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9.5pt;
+    }
+    .info-table tr:nth-child(even) td { background: var(--bg); }
+    .info-table td {
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .info-table td.key {
+      width: 38%;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .info-table td.val {
+      color: var(--navy);
+      font-weight: 700;
+    }
+    .info-table td.val .highlight {
+      color: var(--gold-dark);
+      font-size: 11.5pt;
+    }
+
+    /* ──────────────────────────────────────
+       FINANCIAL BOX
+    ────────────────────────────────────── */
+    .financial-box {
+      background: var(--navy);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 10px 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .fin-item .fin-label { font-size: 8pt; color: rgba(255,255,255,0.5); margin-bottom: 3px; }
+    .fin-item .fin-val   { font-size: 16pt; font-weight: 700; color: var(--white); }
+    .fin-item .fin-val.gold { color: var(--gold-light); }
+    .fin-item .fin-sub   { font-size: 8pt; color: rgba(255,255,255,0.4); margin-top: 2px; }
+
+    /* ──────────────────────────────────────
+       ESCROW MILESTONES TABLE
+    ────────────────────────────────────── */
+    .escrow-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9.5pt;
+      margin-top: 8px;
+    }
+    .escrow-table thead tr {
+      background: var(--navy-mid);
+    }
+    .escrow-table thead th {
+      padding: 7px 10px;
+      color: var(--gold-light);
+      font-weight: 700;
+      text-align: right;
+      font-size: 8.5pt;
+    }
+    .escrow-table tbody tr:nth-child(odd) td { background: var(--bg); }
+    .escrow-table tbody td {
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--border);
+      color: var(--navy);
+      vertical-align: middle;
+    }
+    .escrow-table td.amount { font-weight: 800; color: var(--gold-dark); }
+    .escrow-table td.pct    { color: var(--muted); font-weight: 600; }
+    .escrow-table td.status {
+      font-size: 8pt;
+      font-weight: 700;
+    }
+    .escrow-table td.status .pending-pill {
+      display: inline-block;
+      background: #fef9c3;
+      color: #854d0e;
+      padding: 2px 8px;
+      border-radius: 100px;
+    }
+
+    /* ──────────────────────────────────────
+       LEGAL CLAUSES
+    ────────────────────────────────────── */
+    .clause {
+      margin-bottom: 10px;
+    }
+    .clause-title {
+      font-size: 10.5pt;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 6px;
+      padding-right: 10px;
+      border-right: 3px solid var(--gold);
+    }
+    .clause-body {
+      font-size: 9.5pt;
+      color: var(--muted);
+      line-height: 2;
+      text-align: justify;
+    }
+    .clause-body .bold { font-weight: 700; color: var(--navy); }
+
+    .clause-list {
+      list-style: none;
+      padding: 0;
+      margin: 6px 0 0 0;
+    }
+    .clause-list li {
+      font-size: 9.5pt;
+      color: var(--muted);
+      line-height: 1.9;
+      padding-right: 18px;
+      position: relative;
+    }
+    .clause-list li::before {
+      content: '•';
+      position: absolute;
+      right: 4px;
+      color: var(--gold);
+      font-weight: 900;
+    }
+
+    /* ──────────────────────────────────────
+       SIGNATURES
+    ────────────────────────────────────── */
+    .signatures-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 8px;
+    }
+    .sig-box {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .sig-box-header {
+      padding: 7px 12px;
+      font-size: 8.5pt;
+      font-weight: 700;
+    }
+    .sig-box-header.customer-sig  { background: rgba(26,43,74,0.06); color: var(--navy-light); }
+    .sig-box-header.contractor-sig { background: var(--gold-subtle); color: var(--gold-dark); }
+    .sig-box-body {
+      padding: 12px;
+    }
+    .sig-name {
+      font-size: 11pt;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 8px;
+    }
+    .sig-signed {
+      background: #dcfce7;
+      border: 1px solid #86efac;
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-bottom: 6px;
+    }
+    .sig-signed .check {
+      font-size: 9pt;
+      font-weight: 700;
+      color: #15803d;
+    }
+    .sig-signed .hash {
+      font-size: 7.5pt;
+      color: #4ade80;
+      word-break: break-all;
+      margin-top: 2px;
+    }
+    .sig-pending {
+      border: 1.5px dashed var(--light);
+      border-radius: 6px;
+      padding: 12px;
+      text-align: center;
+      color: var(--light);
+      font-size: 9pt;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sig-date {
+      font-size: 8pt;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* ──────────────────────────────────────
+       FOOTER
+    ────────────────────────────────────── */
+    .contract-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg);
+      border-top: 2px solid var(--border);
+      padding: 5mm 14mm;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 7.5pt;
+      color: var(--light);
+    }
+    .footer-brand { font-weight: 700; color: var(--navy-light); }
+    .footer-legal { font-size: 7pt; color: var(--light); }
+
+    /* ──────────────────────────────────────
+       PAGE BREAK
+    ────────────────────────────────────── */
+    .page-break { page-break-before: always; }
+
+    /* ──────────────────────────────────────
+       WATERMARK (optional — removed if contract is signed)
+    ────────────────────────────────────── */
+    .watermark {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-35deg);
+      font-size: 72pt;
+      font-weight: 900;
+      color: rgba(245,158,11,0.04);
+      pointer-events: none;
+      z-index: 0;
+      white-space: nowrap;
+    }
+
+    @media print {
+      .page { padding-bottom: 25mm; }
+    }
+  </style>
+</head>
+
+<body>
+<div class="watermark">المقاول</div>
+
+<div class="page">
+
+  <!-- ═══════════════════════════════════════════════
+       HEADER
+  ════════════════════════════════════════════════ -->
+  <div class="header">
+    <div class="header-brand">
+      <div class="header-logo">
+        {{LOGO_TAG}}
+      </div>
+      <div class="header-brand-text">
+        <div class="name">المقاول</div>
+        <div class="tagline">منصة المقاولات الأولى في مصر</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div class="contract-label">عقد مقاولة رسمي</div>
+      <div class="contract-num">رقم العقد: {{CONTRACT_ID}}</div>
+    </div>
+  </div>
+
+  <!-- Status + Date -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;margin-bottom:4px;">
+    <div class="status-badge {{STATUS_CLASS}}">{{CONTRACT_STATUS}}</div>
+    <div style="font-size:8.5pt;color:var(--muted);">تاريخ الإصدار: <strong>{{CONTRACT_DATE}}</strong></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       الديباجة — PREAMBLE
+  ════════════════════════════════════════════════ -->
+  <div class="section-header">
+    <span class="num">د</span>
+    الـديـبـاجـة
+  </div>
+
+  <div class="preamble">
+    بناءً على أحكام القانون المدني المصري (القانون رقم ١٣١ لسنة ١٩٤٨ وتعديلاته)، وقانون التجارة الإلكترونية والتوقيع الإلكتروني، واللوائح الصادرة عن هيئة تنمية صناعة تكنولوجيا المعلومات (إيتيدا)،
+    <br>
+    تم تحرير هذا العقد في تاريخ <strong>{{CONTRACT_DATE}}</strong> بين الطرفين الآتيَين، وذلك من خلال منصة <strong>المقاول الإلكترونية</strong> بوصفها وسيطاً رقمياً ونظاماً لإدارة الأمانات وفق ما تنص عليه لوائح المنصة المعتمدة.
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       البند الأول — PARTIES
+  ════════════════════════════════════════════════ -->
+  <div class="section-header">
+    <span class="num">١</span>
+    أولاً: طرفا العقد
+  </div>
+
+  <div class="parties-grid">
+    <!-- الطرف الأول: العميل -->
+    <div class="party-box">
+      <div class="party-box-header customer">الطرف الأول — العميل (صاحب المشروع)</div>
+      <div class="party-box-body">
+        <div class="party-name">{{CUSTOMER_NAME}}</div>
+        <div class="party-detail"><span class="label">رقم الهوية / الرقم القومي:</span> {{CUSTOMER_ID}}</div>
+        <div class="party-detail"><span class="label">البريد الإلكتروني:</span> {{CUSTOMER_EMAIL}}</div>
+        <div class="party-detail"><span class="label">رقم الهاتف:</span> {{CUSTOMER_PHONE}}</div>
+      </div>
+    </div>
+
+    <!-- الطرف الثاني: المقاول -->
+    <div class="party-box">
+      <div class="party-box-header contractor">الطرف الثاني — المقاول (المنفذ)</div>
+      <div class="party-box-body">
+        <div class="party-name">{{CONTRACTOR_NAME}}</div>
+        <div class="party-detail"><span class="label">رقم الهوية / الرقم القومي:</span> {{CONTRACTOR_ID}}</div>
+        <div class="party-detail"><span class="label">التخصص:</span> {{CONTRACTOR_SPECIALTY}}</div>
+        <div class="party-detail"><span class="label">البريد الإلكتروني:</span> {{CONTRACTOR_EMAIL}}</div>
+        <div class="party-detail"><span class="label">رقم الهاتف:</span> {{CONTRACTOR_PHONE}}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       البند الأول: موضوع العقد
+  ════════════════════════════════════════════════ -->
+  <div class="section-header">
+    <span class="num">٢</span>
+    البند الأول: موضوع العقد ونطاق العمل
+  </div>
+
+  <table class="info-table">
+    <tr><td class="key">عنوان المشروع</td><td class="val">{{PROJECT_TITLE}}</td></tr>
+    <tr><td class="key">نوع المشروع</td><td class="val">{{PROJECT_TYPE}}</td></tr>
+    <tr><td class="key">موقع تنفيذ العمل</td><td class="val">{{PROJECT_LOCATION}}</td></tr>
+    <tr><td class="key">المساحة الإجمالية</td><td class="val">{{PROPERTY_AREA}}</td></tr>
+    <tr><td class="key">مدة التنفيذ المقترحة</td><td class="val">{{PROPOSED_DURATION}}</td></tr>
+    <tr>
+      <td class="key">إجمالي قيمة العقد</td>
+      <td class="val"><span class="highlight">{{CONTRACT_VALUE}} جنيه مصري</span></td>
+    </tr>
+  </table>
+
+  <div class="clause" style="margin-top:10px;">
+    <div class="clause-title">نطاق وطبيعة العمل</div>
+    <div class="clause-body">{{SCOPE_OF_WORK}}</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       البند الثاني: المالية والأمانة
+  ════════════════════════════════════════════════ -->
+  <div class="section-header">
+    <span class="num">٣</span>
+    البند الثاني: الشروط المالية ونظام الأمانة (Escrow)
+  </div>
+
+  <div class="financial-box">
+    <div class="fin-item">
+      <div class="fin-label">إجمالي قيمة العقد</div>
+      <div class="fin-val gold">{{CONTRACT_VALUE}}</div>
+      <div class="fin-sub">جنيه مصري</div>
+    </div>
+    <div class="fin-item">
+      <div class="fin-label">صافي المبلغ للمقاول</div>
+      <div class="fin-val">{{NET_TO_CONTRACTOR}}</div>
+      <div class="fin-sub">بعد خصم عمولة المنصة {{COMMISSION_RATE}}% ({{COMMISSION_AMOUNT}} ج.م)</div>
+    </div>
+  </div>
+
+  <p style="font-size:9pt;color:var(--muted);line-height:1.8;margin-bottom:8px;">
+    تُودَع كامل مبلغ العقد في حساب أمانة (Escrow) تديره منصة المقاول. لا يُصرف أي مبلغ للمقاول إلا بعد اكتمال المرحلة المقابلة وتأكيد صاحب المشروع، وذلك وفق الجدول التالي:
+  </p>
+
+  <table class="escrow-table">
+    <thead>
+      <tr>
+        <th>المرحلة</th>
+        <th>وصف الإنجاز</th>
+        <th>نسبة المبلغ</th>
+        <th>المبلغ (ج.م)</th>
+        <th>الحالة</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>المرحلة الأولى</strong></td>
+        <td>انطلاق المشروع وتسليم أعمال الأساسات / التجهيزات</td>
+        <td class="pct">٣٠٪</td>
+        <td class="amount">{{MILESTONE_1_AMOUNT}}</td>
+        <td class="status"><span class="pending-pill">معلق</span></td>
+      </tr>
+      <tr>
+        <td><strong>المرحلة الثانية</strong></td>
+        <td>الانتهاء من ٥٠٪ من أعمال التنفيذ الرئيسية</td>
+        <td class="pct">٤٠٪</td>
+        <td class="amount">{{MILESTONE_2_AMOUNT}}</td>
+        <td class="status"><span class="pending-pill">معلق</span></td>
+      </tr>
+      <tr>
+        <td><strong>المرحلة الثالثة</strong></td>
+        <td>التسليم النهائي وإغلاق المشروع وموافقة العميل</td>
+        <td class="pct">٣٠٪</td>
+        <td class="amount">{{MILESTONE_3_AMOUNT}}</td>
+        <td class="status"><span class="pending-pill">معلق</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- PAGE BREAK for legal clauses -->
+  <div class="page-break"></div>
+
+  <!-- ═══════════════════════════════════════════════
+       البند الثالث: التزامات المقاول
+  ════════════════════════════════════════════════ -->
+  <div class="section-header">
+    <span class="num">٤</span>
+    البند الثالث: التزامات المقاول
+  </div>
+
+  <div class="clause">
+    <div class="clause-body">
+      يلتزم الطرف الثاني (المقاول) بما يلي:
+    </div>
+    <ul class="clause-list">
+      <li>تنفيذ الأعمال المحددة في هذا العقد وفق المواصفات والمقاييس المصرية المعتمدة (ES) والكود المصري للتشييد والبناء.</li>
+      <li>استخدام مواد بناء عالية الجودة والحصول على موافقة صاحب المشروع قبل أي استبدال.</li>
+      <li>الالتزام بالجدول الزمني المتفق عليه وإخطار العميل فوراً في حالة أي تأخير مع بيان الأسباب.</li>
+      <li>توفير وثائق الأعمال المنجزة (صور، تقارير دورية) عبر منصة المقاول في مواعيد تسليم كل مرحلة.</li>
+      <li>الالتزام بتطبيق اشتراطات السلامة والصحة المهنية وفق قانون العمل المصري رقم ١٢ لسنة ٢٠٠٣.</li>
+      <li>إزالة مخلفات البناء وتسليم الموقع نظيفاً فور إتمام الأعمال.</li>
+      <li>توفير ضمان على الأعمال المنجزة لمدة لا تقل عن سنة من تاريخ التسليم النهائي.</li>
+    </ul>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       البند الرابع: التزامات العميل
+  ════════════════════════════════════════════════ -->
+  <div class="section-header">
+    <span class="num">٥</span>
+    البند الرابع: التزامات العميل (صاحب المشروع)
+  </div>
+
+  <div class="clause">
+    <div class="clause-body">
+      يلتزم الطرف الأول (العميل) بما يلي:
+    </div>
+    <ul class="clause-list">
+      <li>إيداع كامل مبلغ العقد في حساب الأمانة (Escrow) قبل انطلاق المشروع.</li>
+      <li>تسهيل وصول المقاول للموقع في المواعيد المتفق عليها وإزالة العقبات الإدارية في حدود صلاحياته.</li>
+      <li>مراجعة تقارير الإنجاز والموافقة أو الاعتراض خلال ٧٢ ساعة من تاريخ الرفع على المنصة.</li>
+      <li>الإفراج عن دفعات الأمانة للمقاول فور اعتماد كل مرحلة وتحقق الشروط.</li>
+      <li>الإخطار الفوري للمنصة عند الاكتشاف بأي عيوب خلال مدة الضمان.</li>
+      <li>عدم التدخل في عمل المقاول أو إصدار تعليمات لعمال المقاول مباشرة دون علمه.</li>
+    </ul>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       البند الخامس: الشروط الجزائية والتأخير
+  ════════════════════════════════════════════════ -->
+  <div class="section-header">
+    <span class="num">٦</span>
+    البند الخامس: الشروط الجزائية والتأخير
+  </div>
+
+  <div class="clause">
+    <div class="clause-body">
+      في حال الإخلال بأي من بنود هذا العقد، تُطبَّق الشروط التالية:
+    </div>
+    <ul class="clause-list">
+      <li><span class="bold">تأخير التسليم:</span> يستحق العميل غرامة تأخير بنسبة <span class="bold">٠.٥٪</span> من قيمة العقد عن كل أسبوع تأخير لمدة أقصاها ٨ أسابيع.</li>
+      <li><span class="bold">التعثر الكامل:</span> إذا توقف المقاول عن العمل لأكثر من ٢١ يوم دون مبرر مقبول، حق للعميل إنهاء العقد وطلب إعادة الأموال من حساب الأمانة.</li>
+      <li><span class="bold">مخالفة المواصفات:</span> في حال ثبوت مخالفة المواصفات القياسية، تُشكَّل لجنة فنية محايدة تُعيّنها المنصة على نفقة الطرف المخالف.</li>
+      <li><span class="bold">تأخر الإفراج عن الدفعات:</span> إذا تأخر العميل في الموافقة أو الاعتراض أكثر من ٧٢ ساعة دون سبب يُعتد به، تُفرج المنصة تلقائياً عن الدفعة المستحقة للمقاول.</li>
+    </ul>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       البند السادس: الضمان والعيوب
+  ════════════════════════════════════════════════ -->
+  <div class="section-header">
+    <span class="num">٧</span>
+    البند السادس: الضمان والعيوب الخفية
+  </div>
+
+  <div class="clause">
+    <div class="clause-body">
+      وفق المادة <span class="bold">٦٥١</span> من القانون المدني المصري، يضمن المقاول الأعمال المنجزة من العيوب الخفية لمدة <span class="bold">سنة</span> للأعمال المعمارية العادية، وثلاث سنوات للمباني. ويُغطي صندوق ضمان المنصة حتى قيمة <span class="bold">{{WARRANTY_CAP}} جنيه مصري</span>.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       البند السابع: الاختصاص القضائي
+  ════════════════════════════════════════════════ -->
+  <div class="section-header">
+    <span class="num">٨</span>
+    البند السابع: الاختصاص القضائي وتسوية النزاعات
+  </div>
+
+  <div class="clause">
+    <div class="clause-body">
+      تختص <span class="bold">المحاكم المصرية</span> وحدها بالفصل في أي نزاع ينشأ عن هذا العقد أو يتعلق بتنفيذه أو تفسيره وفق أحكام القانون المدني المصري. وقبل اللجوء إلى القضاء، يلتزم الطرفان بالخضوع لإجراءات الوساطة الإلزامية التي تديرها منصة المقاول، وذلك خلال <span class="bold">١٤ يوم عمل</span> من تاريخ تسجيل النزاع. تُحفظ كافة وثائق العقد إلكترونياً ويُعتد بها دليلاً قانونياً وفق قانون التوقيع الإلكتروني رقم ١٥ لسنة ٢٠٠٤.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       التوقيعات الرقمية
+  ════════════════════════════════════════════════ -->
+  <div class="section-header">
+    <span class="num">٩</span>
+    التوقيعات الرقمية المعتمدة
+  </div>
+
+  <p style="font-size:9pt;color:var(--muted);line-height:1.8;margin-bottom:10px;">
+    يُعدّ التوقيع الرقمي على هذا العقد عبر منصة المقاول توقيعاً إلكترونياً معتمداً وفق قانون التوقيع الإلكتروني المصري رقم <strong>١٥ لسنة ٢٠٠٤</strong>، وله نفس الحجية القانونية للتوقيع الخطي.
+  </p>
+
+  <div class="signatures-grid">
+    <!-- توقيع العميل -->
+    <div class="sig-box">
+      <div class="sig-box-header customer-sig">توقيع العميل — الطرف الأول</div>
+      <div class="sig-box-body">
+        <div class="sig-name">{{CUSTOMER_NAME}}</div>
+        {{CUSTOMER_SIG_BLOCK}}
+        <div class="sig-date">التاريخ: {{CUSTOMER_SIGN_DATE}}</div>
+      </div>
+    </div>
+
+    <!-- توقيع المقاول -->
+    <div class="sig-box">
+      <div class="sig-box-header contractor-sig">توقيع المقاول — الطرف الثاني</div>
+      <div class="sig-box-body">
+        <div class="sig-name">{{CONTRACTOR_NAME}}</div>
+        {{CONTRACTOR_SIG_BLOCK}}
+        <div class="sig-date">التاريخ: {{CONTRACTOR_SIGN_DATE}}</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.page -->
+
+<!-- FOOTER -->
+<div class="contract-footer">
+  <div>
+    <span class="footer-brand">منصة المقاول الإلكترونية</span>
+    &nbsp;—&nbsp; رقم العقد: {{CONTRACT_ID}}
+  </div>
+  <div>تاريخ الإصدار: {{GENERATION_DATE}} &nbsp;|&nbsp; هذه الوثيقة منشأة آلياً وتحمل حجية قانونية كاملة</div>
+</div>
+
+</body>
+</html>

@@ -1,32 +1,38 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>المقاول | تصفح المشاريع</title>
-
-  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap"
-    rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../assets/css/variables.css">
   <link rel="stylesheet" href="../../assets/css/base.css">
   <link rel="stylesheet" href="../../assets/css/components.css">
   <link rel="stylesheet" href="../../assets/css/layout.css">
-  <link rel="stylesheet" href="../../assets/css/utilities.css">
-
+  <link rel="stylesheet" href="../../assets/css/pro-dashboard.css">
   <style>
-
-    /* ====== Page Layout ====== */
+    /* Browse-specific layout */
     .browse-wrap {
       display: grid;
       grid-template-columns: 280px 1fr;
       gap: var(--space-6);
       align-items: start;
     }
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+      gap: var(--space-5);
+    }
+    @media (max-width: 1100px) { .browse-wrap { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) {
+      .filter-mobile-btn { display: flex !important; }
+      .pro-filters { display: none; position: fixed; inset: 0; z-index: 200;
+                     border-radius: 0; overflow-y: auto; }
+      .pro-filters.open { display: block; }
+    }
 
-    /* ====== Filter Toggle Button (mobile only) ====== */
-    .filter-toggle-btn {
+    /* Mobile filter button */
+    .filter-mobile-btn {
       display: none;
       align-items: center;
       gap: 8px;
@@ -42,683 +48,382 @@
       margin-bottom: var(--space-4);
       transition: all var(--transition-base);
     }
-    .filter-toggle-btn:hover {
-      border-color: var(--color-gold);
-      color: var(--color-gold-dark);
-    }
-    .filter-toggle-btn svg {
-      width: 18px; height: 18px; fill: currentColor; flex-shrink: 0;
-    }
+    .filter-mobile-btn:hover { border-color: var(--color-gold); color: var(--color-gold-dark); }
+    .filter-mobile-btn svg { width: 16px; height: 16px; fill: currentColor; }
 
-    /* ====== Filter Sidebar (Luxury) ====== */
-    .filters {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-md);
-      padding: var(--space-6);
-      box-shadow: var(--shadow-sm);
-      position: sticky;
-      top: 20px;
-    }
-
-    .filters h3 {
-      font-size: var(--font-size-md);
-      font-weight: 800;
-      color: var(--color-navy);
-      margin-bottom: var(--space-5);
+    /* Results bar */
+    .results-bar {
       display: flex;
       align-items: center;
-      gap: 10px;
-    }
-
-    .filters h3::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border-default);
-    }
-
-    .filter-group {
-      margin-bottom: var(--space-5);
-    }
-
-    .filter-group label {
-      display: block;
-      font-size: 11px;
-      font-weight: 800;
-      color: var(--text-muted);
-      margin-bottom: var(--space-2);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .filter-group select {
-      width: 100%;
-      padding: 11px 14px;
-      border: 1.5px solid var(--border-default);
-      border-radius: var(--radius-sm);
-      background: var(--bg-surface-2);
-      font-family: var(--font-main);
-      font-size: var(--font-size-sm);
-      color: var(--text-primary);
-      transition: all var(--transition-base);
-    }
-
-    .filter-group select:focus {
-      border-color: var(--color-gold);
-      background: var(--bg-surface);
-    }
-
-    .filter-reset {
-      width: 100%;
-      padding: 11px;
-      background: transparent;
-      border: 1.5px solid var(--border-default);
-      border-radius: var(--radius-sm);
-      font-family: var(--font-main);
-      font-size: var(--font-size-sm);
-      font-weight: 700;
-      color: var(--text-muted);
-      transition: all var(--transition-base);
-    }
-
-    .filter-reset:hover {
-      border-color: var(--color-error);
-      color: var(--color-error);
-    }
-
-    /* ====== Projects Grid ====== */
-    .projects-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-      gap: var(--space-5);
-    }
-
-    .project-card {
-      background: var(--bg-surface);
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-default);
-      padding: var(--space-6);
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-4);
-      transition: all var(--transition-base);
-      box-shadow: var(--shadow-sm);
-    }
-
-    .project-card:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-md);
-      border-color: var(--color-gold-light);
-    }
-
-    .project-card--featured {
-      border-color: rgba(245,158,11,0.4);
-      box-shadow: 0 0 0 1px rgba(245,158,11,0.15), var(--shadow-sm);
-    }
-    .project-card--featured:hover {
-      border-color: var(--color-gold);
-      box-shadow: 0 0 0 1px rgba(245,158,11,0.3), var(--shadow-gold);
-    }
-
-    .pc-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 12px;
-      background: var(--color-gold-subtle);
-      color: var(--color-gold-dark);
-      border-radius: var(--radius-full);
-      font-size: 10px;
-      font-weight: 800;
-      text-transform: uppercase;
-    }
-
-    .pc-title {
-      font-size: var(--font-size-md);
-      font-weight: 800;
-      color: var(--color-navy);
-      line-height: 1.5;
-    }
-
-    .pc-meta {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--space-4);
-      padding: var(--space-4) 0;
-      border-top: 1px dashed var(--border-default);
-      border-bottom: 1px dashed var(--border-default);
-    }
-
-    .pc-meta-item .lbl {
-      font-size: 9px;
-      color: var(--text-muted);
-      font-weight: 800;
-      text-transform: uppercase;
-      margin-bottom: 2px;
-      display: block;
-    }
-
-    .pc-meta-item .val {
-      font-size: var(--font-size-sm);
-      color: var(--color-navy);
-      font-weight: 700;
-    }
-
-    .pc-bottom {
-      display: flex;
       justify-content: space-between;
-      align-items: center;
-    }
-
-    .pc-bids-count {
-      font-size: 11px;
-      color: var(--text-muted);
-      font-weight: 600;
-    }
-
-    .pc-bids-count strong {
-      color: var(--color-navy);
-      font-weight: 800;
-    }
-
-    /* Bid Modal */
-    .blind-note {
-      padding: 12px 16px;
-      background: rgba(59, 130, 246, 0.08);
-      border-right: 3px solid #3b82f6;
-      color: #1e40af;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: 600;
-      margin-bottom: var(--space-5);
-    }
-
-    @media (max-width: 1024px) {
-      .browse-wrap {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* ====== Mobile Filter Overlay ====== */
-    @media (max-width: 768px) {
-      .filter-toggle-btn {
-        display: flex;
-      }
-
-      .filters {
-        display: none;
-        position: fixed;
-        inset: 0;
-        z-index: 200;
-        border-radius: 0;
-        overflow-y: auto;
-        padding-top: var(--space-8);
-      }
-
-      .filters.filters-visible {
-        display: block;
-      }
-
-      .filter-close-btn {
-        display: flex !important;
-      }
-    }
-
-    /* Hide close button on desktop */
-    .filter-close-btn {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      background: transparent;
-      border: none;
-      font-family: var(--font-main);
-      font-size: var(--font-size-sm);
-      font-weight: 700;
-      color: var(--text-muted);
-      cursor: pointer;
-      padding: 0;
       margin-bottom: var(--space-4);
+      gap: var(--space-4);
     }
-    .filter-close-btn svg {
-      width: 18px; height: 18px; fill: currentColor;
-    }
-
-    .toast-stack {
-      position: fixed;
-      top: 18px;
-      left: 18px;
-      z-index: 2000;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      pointer-events: none;
-    }
-    .toast {
-      pointer-events: auto;
-      min-width: 260px;
-      max-width: 360px;
-      padding: 12px 14px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border-default);
-      background: var(--bg-surface);
-      box-shadow: var(--shadow-md);
+    .results-count {
       font-size: var(--font-size-sm);
-      font-weight: 700;
-      color: var(--color-navy);
+      color: var(--text-muted);
+      font-weight: 600;
     }
-    .toast.success {
-      border-color: rgba(16,185,129,0.35);
-      background: var(--color-success-bg);
-      color: #065f46;
-    }
-    .toast.error {
-      border-color: rgba(239,68,68,0.35);
-      background: rgba(239,68,68,0.08);
-      color: #991b1b;
-    }
+    .results-count strong { color: var(--color-navy); font-weight: 900; }
   </style>
 </head>
 
 <body class="dashboard-page">
-  <div class="dashboard-wrapper">
+<div class="dashboard-wrapper">
 
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <div class="sidebar-logo-mark">
-          <img src="../../assets/images/logo.png" alt="المقاول">
+  <!-- ════════════════════════ SIDEBAR ════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo-mark"><img src="../../assets/images/logo.png" alt="المقاول"></div>
+      <div class="sidebar-logo-text">المقاول</div>
+    </div>
+    <div class="sidebar-user">
+      <div id="sidebarAvatar"
+        style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--color-gold),var(--color-gold-dark));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:var(--color-navy-dark);">م</div>
+      <div class="sidebar-user-info">
+        <div class="name" id="sidebarUserName">جاري التحميل...</div>
+        <div class="role">مقاول</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">الرئيسية</div>
+      <a href="index.html" class="sidebar-item">
+        <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        لوحة التحكم
+      </a>
+      <div class="sidebar-section-label">المشاريع</div>
+      <a href="browse-projects.html" class="sidebar-item active">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        تصفح المشاريع
+      </a>
+      <a href="my-agreements.html" class="sidebar-item">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        اتفاقياتي
+      </a>
+      <a href="profile.html" class="sidebar-item">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        ملفي الشخصي
+      </a>
+    </nav>
+    <div class="sidebar-cta">
+      <button class="btn btn-ghost-light btn-full" id="logoutBtn">
+        <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+        تسجيل الخروج
+      </button>
+    </div>
+  </aside>
+
+  <!-- ════════════════════════ MAIN ════════════════════════ -->
+  <main class="dashboard-main">
+    <div class="dashboard-topbar">
+      <div class="topbar-page-title">تصفح المشاريع</div>
+      <div class="topbar-actions">
+        <div class="topbar-user">
+          <div id="topbarAvatar"
+            style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--color-gold),var(--color-gold-dark));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--color-navy-dark);">م</div>
+          <div class="topbar-user-name" id="topbarUserName">جاري...</div>
         </div>
-        <div class="sidebar-logo-text">المقاول</div>
       </div>
+    </div>
 
-      <div class="sidebar-user">
-        <div
-          style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--color-gold),var(--color-gold-dark));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:var(--color-navy-dark);"
-          id="sidebarAvatar">م</div>
-        <div class="sidebar-user-info">
-          <div class="name" id="sidebarUserName">جاري التحميل...</div>
-          <div class="role">مقاول</div>
-        </div>
-      </div>
+    <div class="dashboard-content">
 
-      <nav class="sidebar-nav">
-        <div class="sidebar-section-label">الرئيسية</div>
-        <a href="index.html" class="sidebar-item">
-          <svg viewBox="0 0 24 24">
-            <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
-          </svg>
-          لوحة التحكم
-        </a>
-        <div class="sidebar-section-label">المشاريع</div>
-        <a href="browse-projects.html" class="sidebar-item active">
-          <svg viewBox="0 0 24 24">
-            <path
-              d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
-          </svg>
-          تصفح المشاريع
-        </a>
-        <a href="my-agreements.html" class="sidebar-item">
-          <svg viewBox="0 0 24 24">
-            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
-          </svg>
-          اتفاقياتي
-        </a>
-        <a href="profile.html" class="sidebar-item">
-          <svg viewBox="0 0 24 24">
-            <path
-              d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-          </svg>
-          ملفي الشخصي
-        </a>
-      </nav>
-
-      <div class="sidebar-cta">
-        <button class="btn btn-ghost-light btn-full" id="logoutBtnMain">
-          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;">
-            <path
-              d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
-          </svg>
-          تسجيل الخروج
-        </button>
-      </div>
-    </aside>
-
-    <!-- Main -->
-    <main class="dashboard-main">
-      <div class="dashboard-topbar">
-        <div class="topbar-page-title">تصفح المشاريع</div>
-        <div class="topbar-actions">
-          <div class="topbar-user">
-            <div
-              style="width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--color-gold),var(--color-gold-dark));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--color-navy-dark);"
-              id="topbarAvatar">م</div>
-            <div class="topbar-user-name" id="topbarUserName">جاري...</div>
-          </div>
+      <!-- Page Header -->
+      <div class="dash-page-head">
+        <div>
+          <div class="dash-page-title">المشاريع المتاحة للتعاقد</div>
+          <p class="dash-page-subtitle">اكتشف الفرص المناسبة لتخصصك وقدم عروضك الفنية والمالية</p>
         </div>
       </div>
 
-      <div class="dashboard-content">
-        <div class="page-head" style="margin-bottom: var(--space-8);">
-          <div>
-            <h2 class="section-title">المشاريع المتاحة للتعاقد</h2>
-            <p style="color:var(--text-muted); font-size:var(--font-size-sm);">اكتشف الفرص المناسبة لتخصصك وقدم عروضك
-              الفنية والمالية.</p>
-          </div>
-        </div>
+      <!-- Mobile filter toggle -->
+      <button class="filter-mobile-btn" id="filterToggleBtn" type="button">
+        <svg viewBox="0 0 24 24"><path d="M10 18h4v-2h-4v2zm-7-5v2h18v-2H3zM3 6v2h18V6H3z"/></svg>
+        تصفية النتائج
+      </button>
 
+      <div class="browse-wrap">
 
-        <!-- Mobile filter toggle -->
-        <button class="filter-toggle-btn" id="filterToggleBtn" type="button">
-          <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-          تصفية النتائج
-        </button>
-
-        <div class="browse-wrap">
-
-          <!-- ============ Filter Sidebar ============ -->
-          <aside class="filters" id="filterSidebar">
-            <button class="filter-close-btn" id="filterCloseBtn" type="button">
-              <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        <!-- ── Filter Sidebar ── -->
+        <div class="pro-filters" id="filterSidebar">
+          <div class="pro-filters-head">
+            <div class="pro-filters-title">
+              <svg viewBox="0 0 24 24"><path d="M10 18h4v-2h-4v2zm-7-5v2h18v-2H3zM3 6v2h18V6H3z"/></svg>
+              تصفية النتائج
+            </div>
+            <button id="filterCloseBtn" type="button" style="background:none;border:none;cursor:pointer;color:var(--text-muted);display:none;align-items:center;gap:6px;font-family:var(--font-main);font-size:12px;font-weight:700;">
+              <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
               إغلاق
             </button>
-            <h3>تصفية النتائج</h3>
+          </div>
 
-            <div class="filter-group">
-              <label for="f-type">نوع المشروع</label>
-              <select id="f-type">
-                <option value="">كل الأنواع</option>
-                <option value="new_construction">بناء جديد</option>
-                <option value="renovation">تجديد</option>
-                <option value="finishing">تشطيبات</option>
-                <option value="repair">إصلاح</option>
-                <option value="extension">توسعة</option>
-                <option value="electrical">كهرباء</option>
-                <option value="plumbing">سباكة</option>
-                <option value="other">أخرى</option>
-              </select>
-            </div>
+          <div class="pro-filter-group">
+            <label class="pro-filter-label" for="f-type">نوع المشروع</label>
+            <select class="pro-filter-select" id="f-type">
+              <option value="">كل الأنواع</option>
+              <option value="new_construction">بناء جديد</option>
+              <option value="renovation">تجديد</option>
+              <option value="finishing">تشطيبات</option>
+              <option value="repair">إصلاح</option>
+              <option value="extension">توسعة</option>
+              <option value="electrical">كهرباء</option>
+              <option value="plumbing">سباكة</option>
+              <option value="other">أخرى</option>
+            </select>
+          </div>
 
-            <div class="filter-group">
-              <label for="f-gov">المحافظة</label>
-              <select id="f-gov">
-                <option value="">كل المحافظات</option>
-                <option>القاهرة</option>
-                <option>الجيزة</option>
-                <option>الإسكندرية</option>
-                <option>القليوبية</option>
-                <option>الدقهلية</option>
-                <option>الشرقية</option>
-                <option>الغربية</option>
-                <option>المنوفية</option>
-                <option>البحيرة</option>
-                <option>بورسعيد</option>
-                <option>الإسماعيلية</option>
-                <option>السويس</option>
-                <option>البحر الأحمر</option>
-                <option>الفيوم</option>
-                <option>المنيا</option>
-                <option>أسيوط</option>
-                <option>سوهاج</option>
-                <option>قنا</option>
-                <option>الأقصر</option>
-                <option>أسوان</option>
-              </select>
-            </div>
+          <div class="pro-filter-group">
+            <label class="pro-filter-label" for="f-gov">المحافظة</label>
+            <select class="pro-filter-select" id="f-gov">
+              <option value="">كل المحافظات</option>
+              <option>القاهرة</option><option>الجيزة</option><option>الإسكندرية</option>
+              <option>القليوبية</option><option>الدقهلية</option><option>الشرقية</option>
+              <option>الغربية</option><option>المنوفية</option><option>البحيرة</option>
+              <option>بورسعيد</option><option>الإسماعيلية</option><option>السويس</option>
+              <option>البحر الأحمر</option><option>الفيوم</option><option>المنيا</option>
+              <option>أسيوط</option><option>سوهاج</option><option>قنا</option>
+              <option>الأقصر</option><option>أسوان</option>
+            </select>
+          </div>
 
-            <div class="filter-group">
-              <label for="f-budget">نطاق الميزانية</label>
-              <select id="f-budget">
-                <option value="">أي ميزانية</option>
-                <option value="under_50k">أقل من 50,000</option>
-                <option value="50k_200k">50,000 - 200,000</option>
-                <option value="200k_500k">200,000 - 500,000</option>
-                <option value="500k_1m">500,000 - 1 مليون</option>
-                <option value="above_1m">أكثر من 1 مليون</option>
-              </select>
-            </div>
+          <div class="pro-filter-group">
+            <label class="pro-filter-label" for="f-budget">نطاق الميزانية</label>
+            <select class="pro-filter-select" id="f-budget">
+              <option value="">أي ميزانية</option>
+              <option value="under_50k">أقل من 50,000 ج.م</option>
+              <option value="50k_200k">50,000 — 200,000</option>
+              <option value="200k_500k">200,000 — 500,000</option>
+              <option value="500k_1m">500,000 — 1 مليون</option>
+              <option value="above_1m">أكثر من 1 مليون</option>
+            </select>
+          </div>
 
-            <button class="filter-reset" id="resetFilters" type="button">إعادة تعيين الفلاتر</button>
-          </aside>
-
-          <!-- ============ Projects Grid ============ -->
-          <section class="projects-grid" id="projectsGrid">
-            <!-- projects injected by JS -->
-          </section>
+          <button class="pro-filter-reset" id="resetFilters" type="button">
+            إعادة تعيين الفلاتر
+          </button>
         </div>
 
-    </main>
-  </div>
-
-  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
-
-  <script src="../../assets/js/api.js"></script>
-  <script>
-    /* ============================================================
-       browse-projects.js (inline)
-       Blind bid system:
-         - كل مقاول يشوف بس عدد العروض (count فقط)
-         - لما يقدم عرض يشوف قيمة عرضه بس (لا يرى عروض الآخرين)
-       ============================================================ */
-
-    (() => {
-      if (!localStorage.getItem('elm_user') || !localStorage.getItem('elm_accessToken')) {
-        window.location.href = '../../auth/login.html';
-        return;
-      }
-
-      // ====== Mock Data — يستبدل بـ API call ======
-      const TYPE_LABELS = {
-        new_construction: 'بناء جديد', renovation: 'تجديد',
-        finishing: 'تشطيبات', repair: 'إصلاح',
-        extension: 'توسعة', electrical: 'كهرباء',
-        plumbing: 'سباكة', demolition: 'هدم',
-        other: 'أخرى'
-      };
-      const BUDGET_LABELS = {
-        under_50k: 'أقل من 50,000',
-        '50k_200k': '50,000 - 200,000',
-        '200k_500k': '200,000 - 500,000',
-        '500k_1m': '500,000 - 1 مليون',
-        above_1m: 'أكثر من 1 مليون'
-      };
-      const TIMELINE_LABELS = {
-        within_week: 'خلال أسبوع', within_month: 'خلال شهر',
-        '1_3_months': '1 - 3 أشهر', '3_6_months': '3 - 6 أشهر',
-        flexible: 'مرن'
-      };
-
-      // Mock projects replaced with Real data from API
-      let PROJECTS = [];
-
-      // load real projects
-      async function hydrateMyBids() {
-        await Promise.all(
-          PROJECTS.map(async (p) => {
-            try {
-              const b = await window.api.fetch(`/projects/${p.id}/bids`);
-              if (b.myBid) {
-                myBids[p.id] = { amount: b.myBid.amount, message: b.myBid.message || '' };
-              }
-            } catch (_) { /* ignore */ }
-          })
-        );
-      }
-
-      async function loadProjects() {
-        try {
-          const data = await window.api.fetch('/projects');
-          PROJECTS = data.projects.map(p => ({
-            id: p._id,
-            type: p.projectType,
-            title: p.title,
-            governorate: p.propertyDetails?.governorate || 'غير محدد',
-            area: p.propertyDetails?.area || 0,
-            timeline: p.timeline,
-            budget: p.budgetRange,
-            bidsCount: p.bidsCount || 0,
-            isFeatured: p.isFeatured || false,
-            isUrgent: p.isUrgent || false,
-          }));
-          await hydrateMyBids();
-          renderProjects();
-        } catch (err) {
-          console.error('Error loading projects', err);
-        }
-      }
-
-      function showToast(message, type = 'success') {
-        const stack = document.getElementById('toastStack');
-        if (!stack) return;
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.textContent = message;
-        stack.appendChild(toast);
-        setTimeout(() => toast.remove(), 3200);
-      }
-
-      // storage: {projectId: {amount, message}}  — the bids this contractor has submitted
-      const myBids = {};
-
-      // ====== Rendering ======
-      const grid = document.getElementById('projectsGrid');
-
-      function renderProjects() {
-        // Apply filters
-        const fType = document.getElementById('f-type').value;
-        const fGov = document.getElementById('f-gov').value;
-        const fBudget = document.getElementById('f-budget').value;
-
-        const filtered = PROJECTS.filter(p => {
-          if (fType && p.type !== fType) return false;
-          if (fGov && p.governorate !== fGov) return false;
-          if (fBudget && p.budget !== fBudget) return false;
-          return true;
-        });
-
-        if (filtered.length === 0) {
-          grid.innerHTML = `
-        <div style="grid-column:1/-1;text-align:center;padding:var(--space-16);color:var(--text-muted);">
-          <div style="font-size:48px;margin-bottom:var(--space-3);">🔍</div>
-          <h4 style="color:var(--color-navy);margin-bottom:var(--space-2);">لا توجد مشاريع مطابقة</h4>
-          <p>جرب تغيير الفلاتر لعرض مشاريع أكتر</p>
-        </div>`;
-          return;
-        }
-
-        grid.innerHTML = filtered.map(p => {
-          const bid = myBids[p.id];
-          return `
-        <article class="project-card${p.isFeatured ? ' project-card--featured' : ''}">
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:var(--space-2);">
-            <span class="pc-tag">${TYPE_LABELS[p.type] || '—'}</span>
-            ${p.isFeatured ? `<span style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:11px;font-weight:800;padding:3px 10px;border-radius:var(--radius-full);display:inline-flex;align-items:center;gap:4px;">⭐ مميز</span>` : ''}
-            ${p.isUrgent ? `<span style="background:rgba(239,68,68,0.1);color:var(--color-error);font-size:11px;font-weight:800;padding:3px 10px;border-radius:var(--radius-full);">🔥 عاجل</span>` : ''}
+        <!-- ── Projects Grid ── -->
+        <div>
+          <div class="results-bar">
+            <div class="results-count" id="resultsCount">جاري التحميل...</div>
           </div>
-          <h3 class="pc-title">${p.title}</h3>
+          <section class="projects-grid" id="projectsGrid">
+            <!-- skeleton loaders -->
+            <div style="grid-column:1/-1;display:flex;gap:var(--space-5);">
+              <div style="flex:1;height:240px;background:var(--bg-surface);border-radius:var(--radius-md);border:1px solid var(--border-default);animation:skeletonPulse 1.5s ease-in-out infinite;"></div>
+              <div style="flex:1;height:240px;background:var(--bg-surface);border-radius:var(--radius-md);border:1px solid var(--border-default);animation:skeletonPulse 1.5s ease-in-out infinite 0.15s;"></div>
+              <div style="flex:1;height:240px;background:var(--bg-surface);border-radius:var(--radius-md);border:1px solid var(--border-default);animation:skeletonPulse 1.5s ease-in-out infinite 0.3s;"></div>
+            </div>
+          </section>
+        </div>
+      </div>
 
-          <div class="pc-meta">
-            <div class="pc-meta-item">
-              <span class="lbl">المحافظة</span>
-              <span class="val">${p.governorate}</span>
-            </div>
-            <div class="pc-meta-item">
-              <span class="lbl">المساحة</span>
-              <span class="val">${p.area} م²</span>
-            </div>
-            <div class="pc-meta-item">
-              <span class="lbl">الجدول</span>
-              <span class="val">${TIMELINE_LABELS[p.timeline] || '—'}</span>
-            </div>
-            <div class="pc-meta-item">
-              <span class="lbl">الميزانية</span>
-              <span class="val">${BUDGET_LABELS[p.budget] || '—'}</span>
-            </div>
+    </div>
+  </main>
+</div>
+
+<style>
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+</style>
+
+<div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/dashboard-router.js"></script>
+<script>
+(() => {
+  if (!localStorage.getItem('elm_user') || !localStorage.getItem('elm_accessToken')) {
+    window.location.href = '../../auth/login.html';
+    return;
+  }
+
+  const TYPE_LABELS = {
+    new_construction:'بناء جديد', renovation:'تجديد', finishing:'تشطيبات',
+    repair:'إصلاح', extension:'توسعة', electrical:'كهرباء',
+    plumbing:'سباكة', demolition:'هدم', other:'أخرى'
+  };
+  const BUDGET_LABELS = {
+    under_50k:'أقل من 50,000 ج.م', '50k_200k':'50,000 — 200,000',
+    '200k_500k':'200,000 — 500,000', '500k_1m':'500,000 — 1 مليون', above_1m:'أكثر من 1 مليون'
+  };
+  const TIMELINE_LABELS = {
+    within_week:'خلال أسبوع', within_month:'خلال شهر',
+    '1_3_months':'1 — 3 أشهر', '3_6_months':'3 — 6 أشهر', flexible:'مرن'
+  };
+
+  let PROJECTS = [];
+  const myBids = {};
+  const grid = document.getElementById('projectsGrid');
+  const countEl = document.getElementById('resultsCount');
+
+  function showToast(msg, type = 'success') {
+    const stack = document.getElementById('toastStack');
+    if (!stack) return;
+    const t = document.createElement('div');
+    t.className = `pro-toast ${type}`;
+    t.innerHTML = `<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;flex-shrink:0;">
+      ${type === 'success' ? '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>' :
+        type === 'error'   ? '<path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>' :
+                             '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>'}
+    </svg>${msg}`;
+    stack.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, 3000);
+  }
+
+  async function hydrateMyBids() {
+    await Promise.all(PROJECTS.map(async p => {
+      try {
+        const b = await window.api.fetch(`/projects/${p.id}/bids`);
+        if (b.myBid) myBids[p.id] = { amount: b.myBid.amount, message: b.myBid.message || '' };
+      } catch (_) {}
+    }));
+  }
+
+  async function loadProjects() {
+    try {
+      const data = await window.api.fetch('/projects');
+      PROJECTS = (data.projects || []).map(p => ({
+        id: p._id, type: p.projectType, title: p.title,
+        governorate: p.propertyDetails?.governorate || 'غير محدد',
+        area: p.propertyDetails?.area || 0,
+        timeline: p.timeline, budget: p.budgetRange,
+        bidsCount: p.bidsCount || 0,
+        isFeatured: !!p.isFeatured, isUrgent: !!p.isUrgent,
+      }));
+      await hydrateMyBids();
+      renderProjects();
+    } catch (err) {
+      grid.innerHTML = `<div style="grid-column:1/-1;" class="pro-empty">
+        <span class="pro-empty-icon">⚠️</span>
+        <div class="pro-empty-title">تعذّر تحميل المشاريع</div>
+        <p class="pro-empty-text">تحقق من اتصالك بالإنترنت أو حاول مجدداً</p>
+        <button class="btn btn-outline" onclick="loadProjects()">إعادة المحاولة</button>
+      </div>`;
+    }
+  }
+
+  function renderProjects() {
+    const fType   = document.getElementById('f-type').value;
+    const fGov    = document.getElementById('f-gov').value;
+    const fBudget = document.getElementById('f-budget').value;
+
+    const filtered = PROJECTS.filter(p => {
+      if (fType   && p.type !== fType)         return false;
+      if (fGov    && p.governorate !== fGov)   return false;
+      if (fBudget && p.budget !== fBudget)     return false;
+      return true;
+    });
+
+    if (countEl) countEl.innerHTML = `عرض <strong>${filtered.length}</strong> من أصل ${PROJECTS.length} مشروع`;
+
+    if (filtered.length === 0) {
+      grid.innerHTML = `<div style="grid-column:1/-1;" class="pro-empty">
+        <span class="pro-empty-icon">🔍</span>
+        <div class="pro-empty-title">لا توجد مشاريع مطابقة</div>
+        <p class="pro-empty-text">جرب تغيير الفلاتر لعرض مشاريع أكثر</p>
+      </div>`;
+      return;
+    }
+
+    grid.innerHTML = filtered.map(p => {
+      const bid = myBids[p.id];
+      return `
+      <article class="pro-project-card${p.isFeatured ? ' featured' : ''}">
+        <div class="ppc-tags">
+          <span class="ppc-tag">${TYPE_LABELS[p.type] || '—'}</span>
+          ${p.isFeatured ? `<span class="ppc-tag featured">⭐ مميز</span>` : ''}
+          ${p.isUrgent   ? `<span class="ppc-tag urgent">🔥 عاجل</span>` : ''}
+        </div>
+
+        <div class="ppc-title">${p.title}</div>
+
+        <div class="ppc-meta">
+          <div class="ppc-meta-item">
+            <span class="lbl">📍 المحافظة</span>
+            <span class="val">${p.governorate}</span>
           </div>
-
-          <div class="pc-bottom">
-            <span class="pc-bids-count">
-              📨 <strong>${p.bidsCount}</strong> عرض مقدم
-            </span>
+          <div class="ppc-meta-item">
+            <span class="lbl">📐 المساحة</span>
+            <span class="val">${p.area ? p.area + ' م²' : '—'}</span>
           </div>
-
-          <div style="display:flex;flex-direction:column;gap:10px;margin-top:var(--space-4);">
-            <a href="project-detail.html?id=${encodeURIComponent(p.id)}" class="btn btn-primary btn-full">عرض التفاصيل وتقديم عرض</a>
-            ${bid
-              ? `<div class="already-bid">
-                   ✅ لقد قدمت عرضاً بقيمة
-                   <span class="amount">${Number(bid.amount).toLocaleString('ar-EG')} جنيه</span>
-                 </div>`
-              : ''
-            }
+          <div class="ppc-meta-item">
+            <span class="lbl">⏱ الجدول</span>
+            <span class="val">${TIMELINE_LABELS[p.timeline] || '—'}</span>
           </div>
-        </article>`;
-        }).join('');
-      }
+          <div class="ppc-meta-item">
+            <span class="lbl">💰 الميزانية</span>
+            <span class="val">${BUDGET_LABELS[p.budget] || '—'}</span>
+          </div>
+        </div>
 
-      // ====== Sidebar & Topbar Populating ======
-      document.addEventListener('DOMContentLoaded', () => {
-        const user = JSON.parse(localStorage.getItem('elm_user') || '{}');
-        if (user.name) {
-          const firstName = user.name.split(' ')[0];
-          const initial = firstName.charAt(0) || 'م';
+        <div class="ppc-footer">
+          <div class="ppc-bids">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+            <strong>${p.bidsCount}</strong> عرض مقدم
+          </div>
+        </div>
 
-          const elements = {
-            'sidebarUserName': user.name,
-            'topbarUserName': user.name,
-            'sidebarAvatar': initial,
-            'topbarAvatar': initial
-          };
+        ${bid ? `
+        <div class="ppc-already-bid">
+          ✅ قدمت عرضاً بقيمة <span class="amount">${Number(bid.amount).toLocaleString('ar-EG')} ج.م</span>
+        </div>` : ''}
 
-          for (const [id, val] of Object.entries(elements)) {
-            const el = document.getElementById(id);
-            if (el) el.textContent = val;
-          }
-        }
+        <a href="project-detail.html?id=${encodeURIComponent(p.id)}" class="btn btn-primary btn-full" style="margin-top:var(--space-1);">
+          عرض التفاصيل وتقديم عرض
+        </a>
+      </article>`;
+    }).join('');
+  }
 
-        const logoutBtn = document.getElementById('logoutBtnMain');
-        if (logoutBtn) {
-          logoutBtn.addEventListener('click', async () => {
-            try { await window.api.fetch('/auth/logout', { method: 'POST' }); } catch (_) { }
-            localStorage.removeItem('elm_accessToken');
-            localStorage.removeItem('elm_user');
-            window.location.href = '../../index.html';
-          });
-        }
-
-        // ====== Mobile Filter Toggle ======
-        const filterToggleBtn = document.getElementById('filterToggleBtn');
-        const filterSidebar = document.getElementById('filterSidebar');
-        const filterCloseBtn = document.getElementById('filterCloseBtn');
-        if (filterToggleBtn && filterSidebar) {
-          filterToggleBtn.addEventListener('click', () => filterSidebar.classList.add('filters-visible'));
-        }
-        if (filterCloseBtn && filterSidebar) {
-          filterCloseBtn.addEventListener('click', () => filterSidebar.classList.remove('filters-visible'));
-        }
-
-        // ====== Filter bindings ======
-        ['f-type', 'f-gov', 'f-budget'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.addEventListener('change', renderProjects);
-        });
-
-        const resetBtn = document.getElementById('resetFilters');
-        if (resetBtn) {
-          resetBtn.addEventListener('click', () => {
-            document.getElementById('f-type').value = '';
-            document.getElementById('f-gov').value = '';
-            document.getElementById('f-budget').value = '';
-            renderProjects();
-            if (filterSidebar) filterSidebar.classList.remove('filters-visible');
-          });
-        }
+  document.addEventListener('DOMContentLoaded', () => {
+    const user = JSON.parse(localStorage.getItem('elm_user') || '{}');
+    if (user.name) {
+      const first = user.name.split(' ')[0];
+      const init  = first.charAt(0) || 'م';
+      ['sidebarUserName','topbarUserName'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = user.name;
       });
+      ['sidebarAvatar','topbarAvatar'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = init;
+      });
+    }
 
-      // Initial load
-      loadProjects();
-    })();
-  </script>
+    document.getElementById('logoutBtn')?.addEventListener('click', () => {
+      localStorage.clear();
+      window.location.href = '../../index.html';
+    });
+
+    // mobile filters
+    document.getElementById('filterToggleBtn')?.addEventListener('click', () => {
+      document.getElementById('filterSidebar').classList.add('open');
+      document.getElementById('filterCloseBtn').style.display = 'flex';
+    });
+    document.getElementById('filterCloseBtn')?.addEventListener('click', () => {
+      document.getElementById('filterSidebar').classList.remove('open');
+    });
+
+    // filter change events
+    ['f-type','f-gov','f-budget'].forEach(id =>
+      document.getElementById(id)?.addEventListener('change', renderProjects)
+    );
+    document.getElementById('resetFilters')?.addEventListener('click', () => {
+      ['f-type','f-gov','f-budget'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      renderProjects();
+      document.getElementById('filterSidebar').classList.remove('open');
+    });
+  });
+
+  loadProjects();
+})();
+</script>
 </body>
-
 </html>

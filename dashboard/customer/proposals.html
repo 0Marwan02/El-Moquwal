@@ -378,6 +378,10 @@
           </svg>
           إضافة مشروع جديد
         </a>
+        <a href="my-projects.html" class="sidebar-item">
+          <svg viewBox="0 0 24 24"><path d="M4 6h18V4H4c-1.1 0-2 .9-2 2v11H0v3h14v-3H4V6zm19 2h-6c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V9c0-.55-.45-1-1-1zm-1 9h-4v-7h4v7z"/></svg>
+          مشاريعي
+        </a>
         <a href="proposals.html" class="sidebar-item active">
           <svg viewBox="0 0 24 24">
             <path
@@ -474,6 +478,7 @@
   </div>
 
   <script src="../../assets/js/api.js"></script>
+  <script src="../../assets/js/customer-router.js"></script>
   <script>
     /* ============================================================
        proposals.js (inline)
@@ -522,8 +527,8 @@
           const merged = new Map();
           responses.forEach(data => {
             (data.projects || []).forEach(p => {
-              const by = p.postedBy?._id || p.postedBy;
-              if (by === user._id) merged.set(p._id, p);
+              const by = (p.postedBy?._id || p.postedBy)?.toString();
+              if (by && by === user._id?.toString()) merged.set(p._id, p);
             });
           });
           projects = Array.from(merged.values()).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
@@ -637,6 +642,7 @@
       async function loadBids(project) {
         try {
           const data = await window.api.fetch(`/projects/${project._id}/bids`);
+          console.debug('[proposals] bids response for', project._id, data);
           const bidsDiv = document.getElementById(`bids-${project._id}`);
           
           let aiButtons = '';
@@ -651,8 +657,9 @@
 
           if (bidsDiv) bidsDiv.innerHTML = aiButtons + renderBids(data.bids, project);
         } catch (err) {
+          console.error('[proposals] loadBids error for', project._id, err);
           const bidsDiv = document.getElementById(`bids-${project._id}`);
-          if (bidsDiv) bidsDiv.innerHTML = `<div class="no-bids-msg">❌ فشل تحميل العروض</div>`;
+          if (bidsDiv) bidsDiv.innerHTML = `<div class="no-bids-msg">❌ فشل تحميل العروض: ${err.message || 'خطأ غير معروف'}</div>`;
         }
       }
 
@@ -716,21 +723,86 @@
         } catch(e) { showToast(e.message || 'فشل الفحص', 'error'); }
       };
 
-      // ====== Boost Project (Feature) ======
-      window.boostProject = async function (projectId) {
-        const confirmBoost = confirm('تمييز مشروعك سيجعله يظهر في أعلى القائمة لمدة 30 يوماً.\nالرسوم: 99 ج.م (محاكاة — مجاني للاختبار).\n\nهل تريد المتابعة؟');
-        if (!confirmBoost) return;
-        showToast('جاري تمييز المشروع...', 'info');
-        try {
-          await window.api.fetch('/billing/feature-project', {
-            method: 'POST',
-            body: JSON.stringify({ projectId }),
-          });
-          showToast('✅ تم تمييز مشروعك! سيظهر في أعلى القائمة لمدة 30 يوماً.', 'success');
-          await loadAll();
-        } catch (err) {
-          showToast(err.message || 'تعذّر تمييز المشروع', 'error');
-        }
+      // ====== Boost Project (Feature) — Premium Modal ======
+      window.boostProject = function (projectId) {
+        // Remove existing modal if any
+        const existing = document.getElementById('boostModal');
+        if (existing) existing.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'boostModal';
+        modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.65);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;animation:fadeIn 0.2s ease;';
+        modal.innerHTML = `
+          <div style="background:linear-gradient(145deg,#0F172A,#1E293B);border-radius:20px;padding:36px 32px;max-width:460px;width:92%;box-shadow:0 25px 80px rgba(0,0,0,0.5);border:1px solid rgba(245,158,11,0.2);position:relative;overflow:hidden;">
+            <div style="position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(245,158,11,0.12),transparent);border-radius:50%;pointer-events:none;"></div>
+            <div style="position:relative;z-index:1;">
+              <div style="text-align:center;margin-bottom:24px;">
+                <div style="font-size:48px;margin-bottom:8px;">⭐</div>
+                <h3 style="font-size:22px;font-weight:900;color:#FCD34D;margin-bottom:6px;">تمييز مشروعك</h3>
+                <p style="font-size:13px;color:rgba(255,255,255,0.5);">اجعل مشروعك يظهر في أعلى القائمة ويجذب أفضل المقاولين</p>
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;">
+                <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px;text-align:center;">
+                  <div style="font-size:20px;margin-bottom:4px;">🔝</div>
+                  <div style="font-size:11px;color:rgba(255,255,255,0.7);font-weight:600;">أولوية الظهور</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px;text-align:center;">
+                  <div style="font-size:20px;margin-bottom:4px;">👷</div>
+                  <div style="font-size:11px;color:rgba(255,255,255,0.7);font-weight:600;">مقاولين أكثر</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px;text-align:center;">
+                  <div style="font-size:20px;margin-bottom:4px;">📅</div>
+                  <div style="font-size:11px;color:rgba(255,255,255,0.7);font-weight:600;">30 يوم مميز</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px;text-align:center;">
+                  <div style="font-size:20px;margin-bottom:4px;">🏷️</div>
+                  <div style="font-size:11px;color:rgba(255,255,255,0.7);font-weight:600;">شارة ⭐ مميزة</div>
+                </div>
+              </div>
+
+              <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:12px;padding:16px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;">
+                <span style="color:rgba(255,255,255,0.6);font-size:14px;">رسوم التمييز</span>
+                <div>
+                  <span style="font-size:28px;font-weight:900;color:#FCD34D;">99</span>
+                  <span style="font-size:13px;color:rgba(255,255,255,0.5);margin-right:4px;">ج.م</span>
+                  <span style="font-size:10px;color:rgba(245,158,11,0.7);display:block;text-align:left;">مجاني للاختبار</span>
+                </div>
+              </div>
+
+              <button id="boostConfirmBtn" style="width:100%;padding:14px;background:linear-gradient(135deg,#F59E0B,#D97706);border:none;border-radius:12px;color:#0F172A;font-family:inherit;font-size:16px;font-weight:900;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 20px rgba(245,158,11,0.3);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 30px rgba(245,158,11,0.4)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 20px rgba(245,158,11,0.3)'">
+                ⭐ تأكيد التمييز
+              </button>
+              <button style="width:100%;padding:10px;background:none;border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:rgba(255,255,255,0.4);font-family:inherit;font-size:13px;cursor:pointer;margin-top:10px;" onclick="document.getElementById('boostModal').remove()">
+                إلغاء
+              </button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Close on backdrop click
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
+        // Confirm button
+        document.getElementById('boostConfirmBtn').addEventListener('click', async () => {
+          const btn = document.getElementById('boostConfirmBtn');
+          btn.textContent = '⏳ جاري التمييز...';
+          btn.disabled = true;
+          try {
+            await window.api.fetch('/billing/feature-project', {
+              method: 'POST',
+              body: JSON.stringify({ projectId }),
+            });
+            showToast('✅ تم تمييز مشروعك! سيظهر في أعلى القائمة لمدة 30 يوماً.', 'success');
+            modal.remove();
+            await loadAll();
+          } catch (err) {
+            showToast(err.message || 'تعذّر تمييز المشروع', 'error');
+            btn.textContent = '⭐ تأكيد التمييز';
+            btn.disabled = false;
+          }
+        });
       };
 
       // ====== Toggle accordion ======

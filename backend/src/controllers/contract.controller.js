@@ -6,8 +6,10 @@ const Contract = require('../models/Contract');
 const Project = require('../models/Project');
 const Bid = require('../models/Bid');
 const PlatformSettings = require('../models/PlatformSettings');
+const Transaction = require('../models/Transaction');
 const { AppError, asyncHandler } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
+const { logAudit } = require('../utils/audit');
 const env = require('../config/env');
 
 const { generatePDFContract } = require('../utils/pdfGenerator');
@@ -181,16 +183,31 @@ const resolveClaim = asyncHandler(async (req, res) => {
   const { resolution, compensationAmount } = req.body;
   if (!resolution) throw new AppError('قرار الحل مطلوب', 400, 'MISSING_RESOLUTION');
 
+  // clamp بين 0 وسقف الضمان — يمنع قيم سالبة أو تجاوز السقف
+  const compensation = Math.max(0, Math.min(Number(compensationAmount) || 0, contract.warrantyCapEGP));
+
   contract.warrantyStatus = 'resolved';
   contract.status = 'completed';
   contract.warrantyClaim.resolvedAt = new Date();
   contract.warrantyClaim.resolution = resolution;
-  contract.warrantyClaim.compensationAmount = Math.min(
-    Number(compensationAmount) || 0,
-    contract.warrantyCapEGP
-  );
+  contract.warrantyClaim.compensationAmount = compensation;
   await contract.save();
 
+  // تسجيل معاملة تعويض الضمان — نفس منطق نزاعات الـ Escrow
+  if (compensation > 0) {
+    await Transaction.create({
+      user: contract.customer,
+      type: 'warranty_payout',
+      amount: compensation,
+      status: 'success',
+      gateway: 'platform',
+      relatedProject: contract.project,
+      relatedContract: contract._id,
+      meta: { resolution },
+    });
+  }
+
+  logAudit(req.user._id, 'resolve_warranty_claim', 'Contract', contract._id, { resolution, compensation });
   logger.info({ contractId: contract._id.toString(), adminId: req.user._id.toString() }, 'Warranty claim resolved');
   res.json({ contract });
 });

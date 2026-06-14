@@ -621,6 +621,13 @@ const featureProject = asyncHandler(async (req, res) => {
   const parsed = featureProjectSchema.safeParse(req.body);
   if (!parsed.success) throw new AppError('بيانات غير صحيحة', 400, 'VALIDATION_ERROR');
 
+  // التمييز/الاستعجال يرفع ظهور المشروع لجذب العروض — فمنطقي بس للمشاريع المفتوحة.
+  // نسمح دايماً بإلغاء التمييز/الاستعجال (false) لأي حالة، لكن نمنع تفعيله لغير open.
+  const turningOnFeature = parsed.data.isFeatured === true || parsed.data.isUrgent === true;
+  if (turningOnFeature && project.status !== 'open') {
+    throw new AppError('لا يمكن تمييز أو استعجال مشروع غير مفتوح (المشاريع المرسّاة أو المغلقة لا تستقبل عروضاً)', 400, 'PROJECT_NOT_OPEN');
+  }
+
   if (parsed.data.isFeatured !== undefined) project.isFeatured = parsed.data.isFeatured;
   if (parsed.data.isUrgent !== undefined) project.isUrgent = parsed.data.isUrgent;
   if (parsed.data.featuredUntil !== undefined) {

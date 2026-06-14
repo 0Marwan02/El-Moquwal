@@ -8,6 +8,7 @@ const PlatformSettings = require('../models/PlatformSettings');
 const Project = require('../models/Project');
 const { AppError, asyncHandler } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
+const { logAudit } = require('../utils/audit');
 const env = require('../config/env');
 const { v4: uuidv4 } = require('uuid');
 
@@ -258,7 +259,7 @@ const resolveDispute = asyncHandler(async (req, res) => {
   // Update all disputed milestones based on decision
   escrow.milestones.forEach((m) => {
     if (m.status === 'disputed') {
-      m.status = decision === 'refund_to_customer' ? 'disputed' : 'released';
+      m.status = decision === 'refund_to_customer' ? 'refunded' : 'released';
       if (decision !== 'refund_to_customer') m.releasedAt = new Date();
     }
   });
@@ -281,6 +282,7 @@ const resolveDispute = asyncHandler(async (req, res) => {
     });
   }
 
+  logAudit(req.user._id, 'resolve_escrow_dispute', 'Escrow', escrow._id, { decision, deductionAmount, project: escrow.project });
   logger.info({ escrowId: escrow._id.toString(), decision, deductionAmount }, 'Dispute resolved by admin');
   res.json({ ok: true, escrow });
 });
@@ -294,6 +296,10 @@ const featureProject = asyncHandler(async (req, res) => {
   if (!project) throw new AppError('المشروع غير موجود', 404, 'NOT_FOUND');
   if (project.postedBy.toString() !== req.user._id.toString()) {
     throw new AppError('غير مصرح — هذا المشروع ليس لك', 403, 'FORBIDDEN');
+  }
+  // التمييز يرفع ظهور المشروع لجذب العروض — منطقي بس للمشاريع المفتوحة
+  if (project.status !== 'open') {
+    throw new AppError('لا يمكن تمييز مشروع غير مفتوح (المشاريع المرسّاة أو المغلقة لا تستقبل عروضاً)', 400, 'PROJECT_NOT_OPEN');
   }
   if (project.isFeatured && project.featuredUntil && project.featuredUntil > new Date()) {
     throw new AppError('المشروع مميز بالفعل حتى ' + project.featuredUntil.toLocaleDateString('ar-EG'), 409, 'ALREADY_FEATURED');

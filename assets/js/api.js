@@ -1,7 +1,16 @@
 /* ============================================================
    api.js — Centralized API Communication
+   - أصل السيرفر قابل للتهيئة عبر window.__API_BASE__ (origin بدون /api)
+   - file:// أو live-server محلي → localhost:4000
+   - أي استضافة تانية (الباك اند بيقدّم الواجهة) → نفس الـ origin
    ============================================================ */
-const API_URL = 'http://localhost:4000/api';
+const API_ORIGIN = (window.__API_BASE__ || '').replace(/\/api\/?$/, '').replace(/\/$/, '') ||
+  (window.location.protocol === 'file:' ||
+   window.location.hostname === 'localhost' ||
+   window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:4000'
+    : window.location.origin);
+const API_URL = `${API_ORIGIN}/api`;
 
 function loginRedirectHref() {
   const p = (window.location.pathname || '').replace(/\\/g, '/');
@@ -13,6 +22,12 @@ function loginRedirectHref() {
 
 window.api = {
   API_URL,
+  API_ORIGIN,
+
+  /** رابط ملف مرفوع على السيرفر (مستندات المقاولين، عقود PDF، ...) */
+  fileUrl(filename) {
+    return `${API_ORIGIN}/uploads/${filename}`;
+  },
 
   async fetch(url, options = {}) {
     const token = localStorage.getItem('elm_accessToken');

@@ -33,6 +33,14 @@ function errorHandler(err, req, res, next) {
     });
   }
 
+  // law ObjectId mesh sa7 (CastError) — 400 mesh 500
+  if (err.name === 'CastError') {
+    return res.status(400).json({
+      error: 'معرف غير صحيح',
+      code: 'INVALID_ID',
+    });
+  }
+
   // law duplicate key
   if (err.code === 11000) {
     return res.status(409).json({

@@ -272,47 +272,7 @@
 <body class="dashboard-page">
   <div class="dashboard-wrapper">
 
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <div class="sidebar-logo-mark">
-          <img src="../../assets/images/logo.png" alt="المقاول">
-        </div>
-        <div class="sidebar-logo-text">المقاول</div>
-      </div>
-
-      <div class="sidebar-user">
-        <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff;" id="sidebarAvatar">أ</div>
-        <div class="sidebar-user-info">
-          <div class="name" id="sidebarUserName">جاري التحميل...</div>
-          <div class="role" style="background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.2);color:#93c5fd;">مدير النظام</div>
-        </div>
-      </div>
-
-      <nav class="sidebar-nav">
-        <div class="sidebar-section-label">الإدارة</div>
-        <a href="index.html" class="sidebar-item">لوحة التحكم</a>
-        <a href="pending-contractors.html" class="sidebar-item" id="pendingNavItem">
-          <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-          طلبات المقاولين
-          <span class="sidebar-badge" id="sidebarPendingCount">0</span>
-        </a>
-        <a href="all-projects.html" class="sidebar-item">
-          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-          كل المشاريع
-        </a>
-        <a href="disputes.html" class="sidebar-item active" id="disputesNavItem">
-          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-          النزاعات والشكاوى
-        </a>
-      </nav>
-
-      <div class="sidebar-cta">
-        <button class="btn btn-ghost-light btn-full" id="logoutBtn">
-          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
-          تسجيل الخروج
-        </button>
-      </div>
-    </aside>
+    <aside class="sidebar" id="adminSidebar" data-active="disputes"></aside>
 
     <main class="dashboard-main">
       <div class="dashboard-topbar">
@@ -320,7 +280,7 @@
       </div>
 
       <div class="dashboard-content">
-        <h2 class="section-title">نزاعات مراحل الضمان (Escrow)</h2>
+        <h2 class="section-title">النزاعات والشكاوى (مالية + ضمان)</h2>
         
         <div class="dispute-list">
           <div class="dispute-list-header">
@@ -345,10 +305,10 @@
     <div class="resolve-modal">
       <button onclick="closeResolveModal()" class="resolve-modal-close">✕</button>
       <h3 id="resolveModalTitle">حسم النزاع المالي</h3>
-      <p class="sub">سيتم تطبيق هذا القرار فورياً على مراحل الدفع للمشروع وسحب أو تحرير الأموال من الضمان.</p>
+      <p class="sub" id="resolveModalSub">سيتم تطبيق هذا القرار فورياً على مراحل الدفع للمشروع وسحب أو تحرير الأموال من الضمان.</p>
 
       <form id="resolveForm" onsubmit="submitResolution(event)">
-        <div class="form-group">
+        <div class="form-group" id="decisionGroup">
           <label for="decisionSelect">القرار الإداري *</label>
           <select id="decisionSelect" required>
             <option value="">اختر القرار...</option>
@@ -359,7 +319,7 @@
         </div>
 
         <div class="form-group">
-          <label for="warrantyInput">قيمة خصم الضمان (اختياري - بالجنيه)</label>
+          <label for="warrantyInput" id="warrantyLabel">قيمة خصم الضمان (اختياري - بالجنيه)</label>
           <input type="number" id="warrantyInput" min="0" value="0" placeholder="المبلغ المخصوم من ضمان المقاول لصالح العميل">
           <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">لا يمكن تجاوز سقف الضمان المحدد في إعدادات المنصة.</div>
         </div>
@@ -377,9 +337,9 @@
   </div>
 
   <script src="../../assets/js/api.js"></script>
+  <script src="../../assets/js/admin-dashboard.js"></script>
   <script>
     let activeDisputes = [];
-    let _selectedProjectId = null;
 
     function showToast(message, type = 'success') {
       const stack = document.getElementById('toastStack');
@@ -438,7 +398,9 @@
                   <h3 class="dispute-proj-title">${escapeHtml(d.project?.title || 'مشروع غير معروف')}</h3>
                   <div class="dispute-meta-line">المعرف: #${d._id.slice(-6).toUpperCase()} · المحافظة: ${escapeHtml(d.project?.propertyDetails?.governorate || '—')}</div>
                 </div>
-                <span class="dispute-status-tag">نزاع مالي ⚠️</span>
+                <span class="dispute-status-tag" style="${d.type === 'contract' ? 'background:rgba(59,130,246,0.1);color:#2563eb;border-color:rgba(59,130,246,0.25);' : ''}">
+                  ${d.type === 'contract' ? 'مطالبة ضمان 🛡️' : 'نزاع مالي ⚠️'}
+                </span>
               </div>
 
               <div class="dispute-parties">
@@ -461,7 +423,7 @@
 
               <div class="dispute-footer">
                 <span class="dispute-opened-date">تاريخ فتح النزاع: ${date}</span>
-                <button onclick="openResolveModal('${d.project?._id || d.project}')" class="btn btn-primary btn-sm">⚖️ اتخاذ القرار وحسم النزاع</button>
+                <button onclick="openResolveModal('${d._id}', '${d.type}', '${d.project?._id || d.project}')" class="btn btn-primary btn-sm">⚖️ اتخاذ القرار وحسم النزاع</button>
               </div>
             </div>
           `;
@@ -472,22 +434,47 @@
       }
     }
 
-    window.openResolveModal = function(projectId) {
+    let _selectedDisputeId = null;
+    let _selectedDisputeType = null;
+    let _selectedProjectId = null;
+
+    window.openResolveModal = function(disputeId, disputeType, projectId) {
+      _selectedDisputeId = disputeId;
+      _selectedDisputeType = disputeType;
       _selectedProjectId = projectId;
+
+      // الواجهة بتختلف حسب نوع النزاع — مطالبة الضمان مالهاش قرار مالي (release/refund/split)
+      const isContract = disputeType === 'contract';
+      const decisionGroup = document.getElementById('decisionGroup');
+      const decisionSelect = document.getElementById('decisionSelect');
+      decisionGroup.style.display = isContract ? 'none' : '';
+      decisionSelect.required = !isContract;
+
+      document.getElementById('resolveModalTitle').textContent =
+        isContract ? 'معالجة مطالبة الضمان 🛡️' : 'حسم النزاع المالي ⚠️';
+      document.getElementById('resolveModalSub').textContent = isContract
+        ? 'سيتم إغلاق مطالبة الضمان وتسجيل التعويض المعتمد للعميل (إن وُجد).'
+        : 'سيتم تطبيق هذا القرار فورياً على مراحل الدفع للمشروع وسحب أو تحرير الأموال من الضمان.';
+      document.getElementById('warrantyLabel').textContent = isContract
+        ? 'قيمة التعويض للعميل (اختياري - بالجنيه)'
+        : 'قيمة خصم الضمان (اختياري - بالجنيه)';
+
       document.getElementById('resolveModalOverlay').classList.add('visible');
-      document.getElementById('decisionSelect').value = '';
+      decisionSelect.value = '';
       document.getElementById('warrantyInput').value = '0';
       document.getElementById('adminNoteText').value = '';
     };
 
     window.closeResolveModal = function() {
       document.getElementById('resolveModalOverlay').classList.remove('visible');
+      _selectedDisputeId = null;
+      _selectedDisputeType = null;
       _selectedProjectId = null;
     };
 
     window.submitResolution = async function(e) {
       e.preventDefault();
-      if (!_selectedProjectId) return;
+      if (!_selectedDisputeId) return;
 
       const decision = document.getElementById('decisionSelect').value;
       const warrantyDeduction = +document.getElementById('warrantyInput').value || 0;
@@ -497,9 +484,19 @@
       btn.disabled = true; btn.textContent = '⏳ جاري حسم النزاع...';
 
       try {
-        await window.api.fetch(`/billing/${_selectedProjectId}/resolve-dispute`, {
+        let endpoint = '';
+        let bodyPayload = {};
+        if (_selectedDisputeType === 'contract') {
+           endpoint = `/contracts/${_selectedDisputeId}/resolve`;
+           bodyPayload = { resolution: adminNote, compensationAmount: warrantyDeduction };
+        } else {
+           endpoint = `/billing/${_selectedProjectId}/resolve-dispute`;
+           bodyPayload = { decision, warrantyDeduction, adminNote };
+        }
+
+        await window.api.fetch(endpoint, {
           method: 'POST',
-          body: JSON.stringify({ decision, warrantyDeduction, adminNote })
+          body: JSON.stringify(bodyPayload)
         });
         showToast('تم حسم النزاع وتطبيق القرار بنجاح! ✅', 'success');
         closeResolveModal();
@@ -511,39 +508,11 @@
       }
     };
 
-    // Sidebar pending contractors count sync
-    async function loadPendingCount() {
-      try {
-        const pend = await window.api.fetch('/admin/contractors/pending');
-        const count = (pend.items || []).length;
-        const badge = document.getElementById('sidebarPendingCount');
-        if (badge) badge.textContent = count;
-      } catch (_) { }
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      const userJSON = localStorage.getItem('elm_user');
-      if (!userJSON) { window.location.href = '../../auth/admin-login.html'; return; }
-
-      let user;
-      try { user = JSON.parse(userJSON); } catch (_) { window.location.href = '../../auth/admin-login.html'; return; }
-      if (user.role !== 'admin' && user.role !== 'super_admin') { window.location.href = '../../auth/login.html'; return; }
-
-      const initial = (user.name || 'أ').charAt(0);
-      const sbName = document.getElementById('sidebarUserName');
-      if (sbName) sbName.textContent = user.name || 'مدير النظام';
-      const sbAvatar = document.getElementById('sidebarAvatar');
-      if (sbAvatar) sbAvatar.textContent = initial;
-
-      document.getElementById('logoutBtn').addEventListener('click', () => {
-        localStorage.removeItem('elm_accessToken');
-        localStorage.removeItem('elm_user');
-        window.location.href = '../../index.html';
-      });
-
-      await loadPendingCount();
-      await loadDisputes();
-    });
+    (async () => {
+      const user = await window.adminDash.bootAdminPage({ active: 'disputes', requirePerm: 'manage_disputes' });
+      if (!user) return;
+      loadDisputes();
+    })();
   </script>
 </body>
 

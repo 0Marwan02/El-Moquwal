@@ -147,48 +147,7 @@
 <body class="dashboard-page">
   <div class="dashboard-wrapper">
 
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <div class="sidebar-logo-mark">
-          <img src="../../assets/images/logo.png" alt="المقاول">
-        </div>
-        <div class="sidebar-logo-text">المقاول</div>
-      </div>
-
-      <div class="sidebar-user">
-        <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff;"
-          id="sidebarAvatar">أ</div>
-        <div class="sidebar-user-info">
-          <div class="name" id="sidebarUserName">جاري التحميل...</div>
-          <div class="role" style="background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.2);color:#93c5fd;">مدير النظام</div>
-        </div>
-      </div>
-
-      <nav class="sidebar-nav">
-        <div class="sidebar-section-label">الإدارة</div>
-        <a href="index.html" class="sidebar-item">لوحة التحكم</a>
-        <a href="pending-contractors.html" class="sidebar-item" id="pendingNavLink">
-          <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-          طلبات المقاولين
-          <span class="sidebar-badge" id="sidebarPendingCount">0</span>
-        </a>
-        <a href="all-projects.html" class="sidebar-item active" id="allProjectsNavLink">
-          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-          كل المشاريع
-        </a>
-        <a href="disputes.html" class="sidebar-item" id="disputesNavItem">
-          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-          النزاعات والشكاوى
-        </a>
-      </nav>
-
-      <div class="sidebar-cta">
-        <button class="btn btn-ghost-light btn-full" id="logoutBtn">
-          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor;"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
-          تسجيل الخروج
-        </button>
-      </div>
-    </aside>
+    <aside class="sidebar" id="adminSidebar" data-active="projects"></aside>
 
     <main class="dashboard-main">
       <div class="dashboard-topbar">
@@ -196,6 +155,14 @@
       </div>
 
       <div class="dashboard-content" style="padding-bottom: var(--space-10);">
+        <div style="background:var(--bg-surface); border:1px solid var(--border-default); border-right:3px solid var(--color-gold); border-radius:var(--radius-sm); padding:var(--space-4) var(--space-5); margin-bottom:var(--space-6); font-size:12.5px; color:var(--text-muted); line-height:1.8;">
+          <strong style="color:var(--color-navy);">حالات المشروع:</strong>
+          <span style="color:var(--color-navy);">مسودة</span> (لم تُنشر بعد) ·
+          <span style="color:var(--color-navy);">مفتوح</span> (يستقبل عروض المقاولين) ·
+          <span style="color:var(--color-navy);">مرسّى</span> (تم تعيين مقاول والعمل جارٍ) ·
+          <span style="color:var(--color-navy);">مغلق</span> (اكتمل المشروع).
+          <br>أزرار <strong>⭐ تمييز</strong> و<strong>⚡ عاجل</strong> تظهر فقط للمشاريع <strong>المفتوحة</strong> لأنها ترفع ظهور المشروع لجذب العروض — لا معنى لها بعد إرساء أو إغلاق المشروع.
+        </div>
         <div id="projectsRoot"></div>
       </div>
     </main>
@@ -204,6 +171,7 @@
   <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 
   <script src="../../assets/js/api.js"></script>
+  <script src="../../assets/js/admin-dashboard.js"></script>
   <script>
     let projectsCacheByStatus = {};
 
@@ -249,6 +217,7 @@
                   </div>
                 </div>
               </div>
+              ${p.status === 'open' && window.__hasPermManageFeatured ? `
               <div style="display:flex; gap:8px;" class="project-item-actions">
                 <button class="btn btn-sm ${p.isFeatured ? 'btn-primary' : 'btn-outline'}" onclick="toggleFeatured('${p._id}', ${!p.isFeatured})" style="font-size:11px; padding:6px 12px; margin:0;">
                   ${p.isFeatured ? '❌ إلغاء التميز' : '⭐ تمييز'}
@@ -257,6 +226,7 @@
                   ${p.isUrgent ? '❌ عادي' : '⚡ عاجل'}
                 </button>
               </div>
+              ` : ''}
             </div>`;
         }).join('')
         : `<div class="empty-state"><div class="empty-state-text">لا توجد مشاريع هنا.</div></div>`;
@@ -288,34 +258,10 @@
     };
 
     (async () => {
-      const userJSON = localStorage.getItem('elm_user');
-      if (!userJSON) { window.location.href = '../../auth/admin-login.html'; return; }
-      let user;
-      try { user = JSON.parse(userJSON); } catch { window.location.href = '../../auth/admin-login.html'; return; }
-      if (user.role !== 'admin' && user.role !== 'super_admin') { window.location.href = '../../auth/login.html'; return; }
+      const user = await window.adminDash.bootAdminPage({ active: 'projects', requirePerm: 'view_projects' });
+      if (!user) return;
 
-      const initial = (user.name || 'أ').charAt(0);
-      const sbName = document.getElementById('sidebarUserName');
-      if (sbName) sbName.textContent = user.name || 'مدير النظام';
-      const sbAvatar = document.getElementById('sidebarAvatar');
-      if (sbAvatar) sbAvatar.textContent = initial;
-
-      const logoutBtn = document.getElementById('logoutBtn');
-      if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-          localStorage.removeItem('elm_accessToken');
-          localStorage.removeItem('elm_user');
-          window.location.href = '../../index.html';
-        });
-      }
-
-      // Pending count badge
-      try {
-        const pend = await window.api.fetch('/admin/contractors/pending');
-        const count = (pend.items || []).length;
-        const badge = document.getElementById('sidebarPendingCount');
-        if (badge) badge.textContent = count;
-      } catch (_) { }
+      window.__hasPermManageFeatured = window.adminDash.hasPerm(user, 'manage_featured');
 
       const categories = [
         { key: 'draft', label: 'مسودات' },
@@ -335,7 +281,7 @@
           </div>
         `);
         try {
-          const res = await window.api.fetch(`/projects?status=${encodeURIComponent(cat.key)}&limit=30`);
+          const res = await window.api.fetch(`/admin/projects?status=${encodeURIComponent(cat.key)}&limit=30`);
           const projects = res.projects || [];
 
           // remove skeleton last node

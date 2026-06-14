@@ -19,6 +19,7 @@ const transactionSchema = new mongoose.Schema(
         'subscription',         // اشتراك Premium
         'featured_project',     // مشروع مميز
         'refund',               // استرداد
+        'warranty_payout',      // تعويض ضمان للعميل (قرار إداري)
       ],
       required: true,
       index: true,
@@ -33,7 +34,7 @@ const transactionSchema = new mongoose.Schema(
     },
     gateway: {
       type: String,
-      enum: ['mock', 'paymob', 'fawry'],
+      enum: ['mock', 'paymob', 'fawry', 'platform'],
       default: 'mock',
     },
     gatewayTransactionId: { type: String, default: null },

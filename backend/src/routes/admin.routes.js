@@ -6,18 +6,19 @@ const { requireAuth, requireRole, requireSuperAdmin, requirePermission } = requi
 const router = express.Router();
 
 // ===== Admin (reviewer) routes =====
-// VIEW routes — any authenticated admin (or super_admin) can read
-router.get('/contractors/pending', requireAuth, requireRole('admin'), ctrl.listPending);
-router.get('/projects',            requireAuth, requireRole('admin'), ctrl.listAllProjects);
-router.get('/stats',               requireAuth, requireRole('admin'), ctrl.dashboardStats);
-router.get('/disputes',            requireAuth, requireRole('admin'), ctrl.listDisputes);
+// VIEW routes — super_admin always passes; regular admin needs the matching permission
+router.get('/contractors/pending', requireAuth, requireRole('admin'), requirePermission('review_contractors'), ctrl.listPending);
+router.get('/contractors/pending/count', requireAuth, requireRole('admin'), requirePermission('review_contractors'), ctrl.pendingCount);
+router.get('/projects',            requireAuth, requireRole('admin'), requirePermission('view_projects'), ctrl.listAllProjects);
+router.get('/stats',               requireAuth, requireRole('admin'), requirePermission('view_stats'), ctrl.dashboardStats);
+router.get('/disputes',            requireAuth, requireRole('admin'), requirePermission('manage_disputes'), ctrl.listDisputes);
 
 // ACTION routes — super_admin always passes; regular admin needs the matching permission
 router.post('/contractors/:id/approve', requireAuth, requireRole('admin'), requirePermission('review_contractors'), ctrl.approveContractor);
 router.post('/contractors/:id/reject',  requireAuth, requireRole('admin'), requirePermission('review_contractors'), ctrl.rejectContractor);
 
-// ===== Platform settings (admin can view, super_admin can edit) =====
-router.get('/settings', requireAuth, requireRole('admin'), ctrl.getSettings);
+// ===== Platform settings (super_admin only — تكشف اقتصاديات المنصة) =====
+router.get('/settings', requireAuth, requireSuperAdmin, ctrl.getSettings);
 router.patch('/settings', requireAuth, requireSuperAdmin, ctrl.updateSettings);
 
 // ===== Super Admin only — manage reviewer admins =====
@@ -28,6 +29,9 @@ router.patch('/reviewers/:id/permissions', requireAuth, requireSuperAdmin, ctrl.
 
 // list of valid permission keys — used by the frontend to render checkboxes dynamically
 router.get('/permissions', requireAuth, requireSuperAdmin, ctrl.listAvailablePermissions);
+
+// audit log — سجل عمليات الإدارة
+router.get('/audit-log', requireAuth, requireSuperAdmin, ctrl.listAuditLog);
 
 // ===== Terms & Conditions =====
 router.get('/terms', ctrl.getTerms); // public

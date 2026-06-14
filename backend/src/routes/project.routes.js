@@ -1,7 +1,7 @@
 // el project routes — CRUD + AI estimate + publish + close + media upload
 const express = require('express');
 const ctrl = require('../controllers/project.controller');
-const { requireAuth, requireRole, optionalAuth } = require('../middleware/auth');
+const { requireAuth, requireRole, optionalAuth, requirePermission } = require('../middleware/auth');
 const { uploadProjectMedia, uploadClosurePhotos } = require('../middleware/upload');
 
 const router = express.Router();
@@ -58,6 +58,6 @@ router.post('/:id/ai-estimate', requireAuth, requireRole('customer'), ctrl.aiEst
 router.post('/:id/invite', requireAuth, requireRole('customer'), ctrl.inviteContractor);
 
 // admin only — set isFeatured / isUrgent flags
-router.put('/:id/feature', requireAuth, requireRole('admin', 'super_admin'), ctrl.featureProject);
+router.put('/:id/feature', requireAuth, requireRole('admin', 'super_admin'), requirePermission('manage_featured'), ctrl.featureProject);
 
 module.exports = router;

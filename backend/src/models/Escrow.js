@@ -8,7 +8,7 @@ const milestoneSchema = new mongoose.Schema(
     percentage: { type: Number, required: true, min: 0, max: 100 },
     status: {
       type: String,
-      enum: ['pending', 'released', 'disputed'],
+      enum: ['pending', 'released', 'disputed', 'refunded'],
       default: 'pending',
     },
     releasedAt: { type: Date, default: null },

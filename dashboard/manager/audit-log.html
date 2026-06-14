@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة الإدارة | سجل العمليات</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/variables.css">
+  <link rel="stylesheet" href="../../assets/css/base.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/layout.css">
+  <link rel="stylesheet" href="../../assets/css/utilities.css">
+  <style>
+    .section-title {
+      font-size: var(--font-size-md); font-weight: 800; color: var(--color-navy);
+      margin-bottom: var(--space-5); display: flex; align-items: center; gap: var(--space-3);
+    }
+    .audit-card {
+      background: var(--bg-surface); border: 1px solid var(--border-default);
+      border-radius: var(--radius-md); box-shadow: var(--shadow-sm);
+      padding: var(--space-4) var(--space-5); margin-bottom: var(--space-3);
+      display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); flex-wrap: wrap;
+    }
+    .audit-action-chip {
+      display: inline-block; font-size: 11px; font-weight: 800;
+      padding: 3px 12px; border-radius: var(--radius-full);
+      background: rgba(59,130,246,0.08); color: #2563eb; border: 1px solid rgba(59,130,246,0.18);
+    }
+    .audit-action-chip.danger  { background: rgba(239,68,68,0.08);  color: #991b1b; border-color: rgba(239,68,68,0.18); }
+    .audit-action-chip.success { background: var(--color-success-bg); color: #065f46; border-color: rgba(16,185,129,0.2); }
+    .audit-action-chip.warn    { background: rgba(245,158,11,0.1);  color: #92400e; border-color: rgba(245,158,11,0.25); }
+    .audit-details { font-size: 12px; color: var(--text-muted); margin-top: 4px; line-height: 1.7; }
+    .audit-date { font-size: 11px; color: var(--text-light); white-space: nowrap; }
+    .empty-state { padding: var(--space-12) var(--space-8); text-align: center; color: var(--text-muted); }
+    .pager { display: flex; justify-content: center; align-items: center; gap: var(--space-3); margin-top: var(--space-5); }
+    .pager .info { font-size: 12px; color: var(--text-muted); }
+  </style>
+</head>
+
+<body class="dashboard-page">
+  <div class="dashboard-wrapper">
+    <aside class="sidebar" id="adminSidebar" data-active="audit"></aside>
+
+    <main class="dashboard-main">
+      <div class="dashboard-topbar">
+        <div class="topbar-page-title">سجل العمليات</div>
+      </div>
+
+      <div class="dashboard-content">
+        <h2 class="section-title" style="margin-bottom:var(--space-3);">سجل عمليات الإدارة</h2>
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:var(--space-5); line-height:1.7;">
+          كل إجراء إداري حساس (موافقات المقاولين، حسم النزاعات، تعديل الإعدادات والصلاحيات) يُسجّل هنا تلقائياً مع توقيته ومنفّذه.
+        </p>
+        <div id="auditList">
+          <div class="empty-state">جاري التحميل...</div>
+        </div>
+        <div class="pager" id="auditPager" style="display:none;">
+          <button class="btn btn-sm btn-outline" id="prevPageBtn">السابق</button>
+          <span class="info" id="pageInfo"></span>
+          <button class="btn btn-sm btn-outline" id="nextPageBtn">التالي</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../../assets/js/api.js"></script>
+  <script src="../../assets/js/admin-dashboard.js"></script>
+  <script>
+    const ACTION_LABELS = {
+      approve_contractor:          { label: 'الموافقة على مقاول',      cls: 'success' },
+      reject_contractor:           { label: 'رفض مقاول',               cls: 'danger' },
+      resolve_escrow_dispute:      { label: 'حسم نزاع مالي',           cls: 'warn' },
+      resolve_warranty_claim:      { label: 'حسم مطالبة ضمان',         cls: 'warn' },
+      create_reviewer:             { label: 'إنشاء مراجع',             cls: '' },
+      delete_reviewer:             { label: 'حذف مراجع',               cls: 'danger' },
+      update_reviewer_permissions: { label: 'تعديل صلاحيات مراجع',     cls: '' },
+      update_settings:             { label: 'تعديل إعدادات المنصة',    cls: '' },
+      update_terms:                { label: 'تحديث الشروط والأحكام',   cls: '' },
+    };
+
+    function esc(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+
+    // ملخص مقروء من تفاصيل العملية حسب نوعها
+    function detailsSummary(item) {
+      const d = item.details || {};
+      switch (item.action) {
+        case 'approve_contractor':
+        case 'reject_contractor':
+          return d.name ? `المقاول: ${esc(d.name)}${d.reason ? ' — السبب: ' + esc(d.reason) : ''}` : '';
+        case 'resolve_escrow_dispute':
+          return `القرار: ${esc(d.decision || '—')}${d.deductionAmount ? ' — خصم ضمان: ' + esc(d.deductionAmount) + ' ج.م' : ''}`;
+        case 'resolve_warranty_claim':
+          return `${d.compensation ? 'تعويض: ' + esc(d.compensation) + ' ج.م — ' : ''}${esc(d.resolution || '')}`;
+        case 'create_reviewer':
+        case 'delete_reviewer':
+          return d.name ? `المراجع: ${esc(d.name)} (${esc(d.email || '')})` : '';
+        case 'update_reviewer_permissions':
+          return d.name ? `المراجع: ${esc(d.name)} — الصلاحيات الجديدة: ${(d.newPermissions || []).length}` : '';
+        case 'update_settings':
+          return `المفاتيح: ${esc((d.keys || []).join('، '))}`;
+        default:
+          return '';
+      }
+    }
+
+    let currentPage = 1;
+    let totalPages = 1;
+
+    async function loadAuditLog(page = 1) {
+      const el = document.getElementById('auditList');
+      const pager = document.getElementById('auditPager');
+      el.innerHTML = '<div class="empty-state">جاري التحميل...</div>';
+      try {
+        const r = await window.api.fetch(`/admin/audit-log?page=${page}&limit=30`);
+        const items = r.items || [];
+        currentPage = r.pagination?.page || page;
+        totalPages = r.pagination?.pages || 1;
+
+        if (!items.length) {
+          el.innerHTML = '<div class="empty-state">لا توجد عمليات مسجلة بعد. ستظهر هنا أول عملية إدارية تنفّذها أنت أو المراجعون.</div>';
+          pager.style.display = 'none';
+          return;
+        }
+
+        el.innerHTML = items.map(item => {
+          const meta = ACTION_LABELS[item.action] || { label: item.action, cls: '' };
+          const when = new Date(item.createdAt).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' });
+          const summary = detailsSummary(item);
+          return `
+          <div class="audit-card">
+            <div style="min-width:0;">
+              <div style="display:flex; align-items:center; gap:var(--space-3); flex-wrap:wrap;">
+                <span class="audit-action-chip ${meta.cls}">${meta.label}</span>
+                <span style="font-size:13px; font-weight:800; color:var(--color-navy);">${esc(item.admin?.name || 'مدير محذوف')}</span>
+                <span style="font-size:11px; color:var(--text-light);">${item.admin?.role === 'super_admin' ? 'المدير الرئيسي' : 'مراجع'}</span>
+              </div>
+              ${summary ? `<div class="audit-details">${summary}</div>` : ''}
+            </div>
+            <span class="audit-date">${when}</span>
+          </div>`;
+        }).join('');
+
+        pager.style.display = totalPages > 1 ? 'flex' : 'none';
+        document.getElementById('pageInfo').textContent = `صفحة ${currentPage} من ${totalPages}`;
+        document.getElementById('prevPageBtn').disabled = currentPage <= 1;
+        document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
+      } catch (e) {
+        el.innerHTML = `<div class="empty-state" style="color:var(--color-error);">تعذر التحميل: ${esc(e.message)}</div>`;
+        pager.style.display = 'none';
+      }
+    }
+
+    document.getElementById('prevPageBtn').addEventListener('click', () => { if (currentPage > 1) loadAuditLog(currentPage - 1); });
+    document.getElementById('nextPageBtn').addEventListener('click', () => { if (currentPage < totalPages) loadAuditLog(currentPage + 1); });
+
+    (async () => {
+      const user = await window.adminDash.bootAdminPage({ active: 'audit', superOnly: true });
+      if (!user) return;
+      loadAuditLog();
+    })();
+  </script>
+</body>
+</html>

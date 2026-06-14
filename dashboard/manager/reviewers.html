@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة الإدارة | إدارة المراجعين</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/variables.css">
+  <link rel="stylesheet" href="../../assets/css/base.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/layout.css">
+  <link rel="stylesheet" href="../../assets/css/utilities.css">
+  <style>
+    .section-title {
+      font-size: var(--font-size-md); font-weight: 800; color: var(--color-navy);
+      margin-bottom: var(--space-5); display: flex; align-items: center; gap: var(--space-3);
+    }
+    .reviewer-card {
+      background: var(--bg-surface); border: 1px solid var(--border-default);
+      border-radius: var(--radius-md); box-shadow: var(--shadow-sm);
+      padding: var(--space-5); margin-bottom: var(--space-4);
+    }
+    .perm-chip {
+      display: inline-block; font-size: 11px; font-weight: 700;
+      background: rgba(59,130,246,0.08); color: #2563eb;
+      border: 1px solid rgba(59,130,246,0.18);
+      padding: 3px 10px; border-radius: var(--radius-full);
+    }
+    .empty-state { padding: var(--space-12) var(--space-8); text-align: center; color: var(--text-muted); }
+
+    /* Modal */
+    .sa-modal-overlay {
+      position: fixed; inset: 0; background: rgba(2,6,23,0.6);
+      display: none; align-items: center; justify-content: center;
+      z-index: 3000; padding: var(--space-6); backdrop-filter: blur(4px);
+    }
+    .sa-modal-overlay.visible { display: flex; }
+    .sa-modal {
+      width: 100%; max-width: 480px; background: var(--bg-surface);
+      border: 1px solid var(--border-default); border-radius: var(--radius-md);
+      box-shadow: var(--shadow-xl); padding: var(--space-7); max-height: 90vh; overflow-y: auto;
+    }
+    .sa-modal h3 { font-size: var(--font-size-md); font-weight: 900; color: var(--color-navy); margin: 0 0 var(--space-4); }
+    .form-group { margin-bottom: var(--space-4); display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 13px; font-weight: 800; color: var(--color-navy); }
+    .form-group input {
+      width: 100%; padding: 10px 12px; border: 1.5px solid var(--border-default);
+      border-radius: var(--radius-sm); font-family: inherit; font-size: 13px;
+      background: var(--bg-surface-2); color: var(--color-navy);
+    }
+    .form-group input:focus { background: var(--bg-surface); border-color: var(--color-gold); outline: none; }
+    .perms-grid {
+      display: grid; grid-template-columns: 1fr; gap: 8px;
+      background: var(--bg-surface-2); border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm); padding: 12px;
+    }
+    .perms-grid label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--color-navy); font-weight: 600; }
+    .alert-box { display: none; padding: 10px 12px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: var(--space-3); }
+    .alert-box.error { display: block; background: rgba(239,68,68,0.08); color: #991b1b; }
+    .alert-box.success { display: block; background: var(--color-success-bg); color: #065f46; }
+    .toast-stack { position: fixed; top: 18px; left: 18px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+  </style>
+</head>
+
+<body class="dashboard-page">
+  <div class="dashboard-wrapper">
+    <aside class="sidebar" id="adminSidebar" data-active="reviewers"></aside>
+
+    <main class="dashboard-main">
+      <div class="dashboard-topbar">
+        <div class="topbar-page-title">إدارة المراجعين</div>
+      </div>
+
+      <div class="dashboard-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-6); flex-wrap:wrap; gap:var(--space-3);">
+          <h2 class="section-title" style="margin:0;">حسابات المراجعين (أدمن محدود)</h2>
+          <button class="btn btn-primary" id="addReviewerBtn">+ إضافة مراجع</button>
+        </div>
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:var(--space-5); line-height:1.7;">
+          المراجع هو أدمن بصلاحيات محدودة تحددها أنت. سيدخل نفس لوحة الإدارة لكنه يرى فقط الأقسام المسموح له بها.
+        </p>
+        <div id="reviewersList">
+          <div class="empty-state">جاري التحميل...</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Add Reviewer Modal -->
+  <div class="sa-modal-overlay" id="addReviewerModal">
+    <div class="sa-modal">
+      <h3>إضافة مراجع جديد</h3>
+      <form id="addReviewerForm">
+        <div class="alert-box" id="addAlert"></div>
+        <div class="form-group"><label>الاسم *</label><input type="text" id="rName" required></div>
+        <div class="form-group"><label>البريد الإلكتروني *</label><input type="email" id="rEmail" required></div>
+        <div class="form-group"><label>الرقم القومي *</label><input type="text" id="rNid" required minlength="14" maxlength="14" placeholder="14 رقم"></div>
+        <div class="form-group"><label>كلمة المرور *</label><input type="password" id="rPass" required minlength="8"></div>
+        <div class="form-group">
+          <label>الصلاحيات *</label>
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px;">اختر ما سيُسمح لهذا المراجع برؤيته/إدارته.</div>
+          <div class="perms-grid" id="addPermsGrid"></div>
+        </div>
+        <div style="display:flex; gap:var(--space-3); margin-top:var(--space-4);">
+          <button type="submit" class="btn btn-primary btn-full" id="rSubmit">إنشاء الحساب</button>
+          <button type="button" class="btn btn-outline" id="addCancel">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Permissions Modal -->
+  <div class="sa-modal-overlay" id="editPermsModal">
+    <div class="sa-modal">
+      <h3>تعديل الصلاحيات</h3>
+      <p id="editPermsName" style="font-size:13px; color:var(--text-muted); margin:-8px 0 var(--space-4);"></p>
+      <form id="editPermsForm">
+        <div class="alert-box" id="editAlert"></div>
+        <input type="hidden" id="editPermsId">
+        <div class="perms-grid" id="editPermsGrid"></div>
+        <div style="display:flex; gap:var(--space-3); margin-top:var(--space-4);">
+          <button type="submit" class="btn btn-primary btn-full" id="editSubmit">حفظ التغييرات</button>
+          <button type="button" class="btn btn-outline" id="editCancel">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../../assets/js/api.js"></script>
+  <script src="../../assets/js/admin-dashboard.js"></script>
+  <script>
+    const PERMISSION_LABELS = {
+      review_contractors: 'مراجعة المقاولين',
+      view_projects:      'عرض المشاريع',
+      view_stats:         'عرض الإحصائيات',
+      manage_disputes:    'إدارة النزاعات',
+      manage_featured:    'إدارة المشاريع المميزة',
+      manage_materials:   'إدارة سوق المواد',
+      adjust_credits:     'تعديل رصيد النقاط',
+    };
+    const DEFAULT_NEW_PERMS = ['review_contractors', 'view_projects', 'view_stats'];
+    let AVAILABLE_PERMS = Object.keys(PERMISSION_LABELS);
+
+    function showToast(message, type = 'success') {
+      const stack = document.getElementById('toastStack');
+      if (!stack) return;
+      const icons = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
+      const t = ['success','error','info','warning'].includes(type) ? type : 'success';
+      const toast = document.createElement('div');
+      toast.className = `toast-item toast-${t}`;
+      toast.innerHTML = `<span class="toast-icon">${icons[t]}</span><div class="toast-body"><div class="toast-msg">${message}</div></div><button class="toast-close" onclick="this.closest('.toast-item').remove()">×</button>`;
+      stack.appendChild(toast);
+      setTimeout(() => { toast.classList.add('toast-exit'); setTimeout(() => toast.remove(), 300); }, 3500);
+    }
+    function esc(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+
+    async function ensurePermissionsList() {
+      try {
+        const r = await window.api.fetch('/admin/permissions');
+        if (Array.isArray(r.permissions) && r.permissions.length) AVAILABLE_PERMS = r.permissions;
+      } catch (_) { /* احتفظ بالافتراضي */ }
+    }
+    function renderPermsGrid(containerId, checkedSet) {
+      document.getElementById(containerId).innerHTML = AVAILABLE_PERMS.map(p => `
+        <label><input type="checkbox" value="${p}" ${checkedSet.has(p) ? 'checked' : ''} style="width:16px;height:16px;accent-color:var(--color-gold);"> ${PERMISSION_LABELS[p] || p}</label>`).join('');
+    }
+    function readCheckedPerms(containerId) {
+      return [...document.querySelectorAll(`#${containerId} input[type="checkbox"]:checked`)].map(c => c.value);
+    }
+
+    async function loadReviewers() {
+      const el = document.getElementById('reviewersList');
+      el.innerHTML = '<div class="empty-state">جاري التحميل...</div>';
+      await ensurePermissionsList();
+      try {
+        const r = await window.api.fetch('/admin/reviewers');
+        if (!r.reviewers || !r.reviewers.length) {
+          el.innerHTML = '<div class="empty-state">لا يوجد مراجعون حتى الآن. اضغط "إضافة مراجع" لإنشاء أول حساب.</div>';
+          return;
+        }
+        el.innerHTML = r.reviewers.map(rev => {
+          const perms = Array.isArray(rev.permissions) ? rev.permissions : [];
+          const chips = perms.length === 0
+            ? '<span style="font-size:11px;color:var(--text-light);font-style:italic;">لا توجد صلاحيات</span>'
+            : perms.map(p => `<span class="perm-chip">${PERMISSION_LABELS[p] || p}</span>`).join(' ');
+          const statusOk = rev.status === 'active';
+          return `
+          <div class="reviewer-card">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:var(--space-4); margin-bottom:var(--space-3);">
+              <div style="min-width:0;">
+                <div style="font-weight:800; color:var(--color-navy);">${esc(rev.name)}</div>
+                <div style="font-size:13px; color:var(--text-muted);">${esc(rev.email)}</div>
+                <div style="font-size:11px; color:var(--text-light); margin-top:2px;">أُنشئ: ${new Date(rev.createdAt).toLocaleDateString('ar-EG')}</div>
+              </div>
+              <span style="font-size:11px; font-weight:800; padding:3px 12px; border-radius:var(--radius-full); ${statusOk ? 'background:var(--color-success-bg);color:#065f46;' : 'background:rgba(239,68,68,0.1);color:#991b1b;'}">${statusOk ? 'نشط' : 'موقوف'}</span>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px; padding-top:var(--space-3); border-top:1px solid var(--border-default);">${chips}</div>
+            <div style="display:flex; justify-content:flex-end; gap:var(--space-2); margin-top:var(--space-3);">
+              <button class="btn btn-sm btn-outline" onclick='openEditPerms(${JSON.stringify({ id: rev._id, name: rev.name, permissions: perms }).replace(/'/g, "&#39;")})'>تعديل الصلاحيات</button>
+              <button class="btn btn-sm" style="background:rgba(239,68,68,0.08);color:#991b1b;" onclick="deleteReviewer('${rev._id}')">حذف</button>
+            </div>
+          </div>`;
+        }).join('');
+      } catch (e) {
+        el.innerHTML = `<div class="empty-state" style="color:var(--color-error);">تعذر التحميل: ${esc(e.message)}</div>`;
+      }
+    }
+
+    window.deleteReviewer = async function (id) {
+      if (!confirm('هل تريد حذف هذا المراجع؟')) return;
+      try {
+        await window.api.fetch(`/admin/reviewers/${id}`, { method: 'DELETE' });
+        showToast('تم حذف المراجع', 'success');
+        loadReviewers();
+      } catch (e) { showToast(e.message || 'حدث خطأ', 'error'); }
+    };
+
+    // ===== Add Reviewer =====
+    const addModal = document.getElementById('addReviewerModal');
+    document.getElementById('addReviewerBtn').addEventListener('click', async () => {
+      await ensurePermissionsList();
+      renderPermsGrid('addPermsGrid', new Set(DEFAULT_NEW_PERMS));
+      document.getElementById('addAlert').className = 'alert-box';
+      addModal.classList.add('visible');
+    });
+    document.getElementById('addCancel').addEventListener('click', () => { addModal.classList.remove('visible'); document.getElementById('addReviewerForm').reset(); });
+    addModal.addEventListener('click', e => { if (e.target === addModal) addModal.classList.remove('visible'); });
+
+    document.getElementById('addReviewerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('rSubmit');
+      const alertBox = document.getElementById('addAlert');
+      const permissions = readCheckedPerms('addPermsGrid');
+      if (permissions.length === 0) { alertBox.textContent = 'يجب اختيار صلاحية واحدة على الأقل'; alertBox.className = 'alert-box error'; return; }
+      btn.disabled = true; btn.textContent = 'جاري الإنشاء...';
+      try {
+        await window.api.fetch('/admin/create-reviewer', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: document.getElementById('rName').value,
+            email: document.getElementById('rEmail').value,
+            nationalId: document.getElementById('rNid').value,
+            password: document.getElementById('rPass').value,
+            permissions,
+          })
+        });
+        alertBox.textContent = 'تم إنشاء حساب المراجع بنجاح!'; alertBox.className = 'alert-box success';
+        setTimeout(() => { addModal.classList.remove('visible'); document.getElementById('addReviewerForm').reset(); loadReviewers(); }, 1200);
+      } catch (err) {
+        alertBox.textContent = err.message || 'حدث خطأ'; alertBox.className = 'alert-box error';
+      } finally { btn.disabled = false; btn.textContent = 'إنشاء الحساب'; }
+    });
+
+    // ===== Edit Permissions =====
+    const editModal = document.getElementById('editPermsModal');
+    window.openEditPerms = function (rev) {
+      document.getElementById('editPermsId').value = rev.id;
+      document.getElementById('editPermsName').textContent = rev.name || '';
+      renderPermsGrid('editPermsGrid', new Set(rev.permissions || []));
+      document.getElementById('editAlert').className = 'alert-box';
+      editModal.classList.add('visible');
+    };
+    document.getElementById('editCancel').addEventListener('click', () => editModal.classList.remove('visible'));
+    editModal.addEventListener('click', e => { if (e.target === editModal) editModal.classList.remove('visible'); });
+
+    document.getElementById('editPermsForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('editPermsId').value;
+      const btn = document.getElementById('editSubmit');
+      const alertBox = document.getElementById('editAlert');
+      const permissions = readCheckedPerms('editPermsGrid');
+      if (permissions.length === 0) { alertBox.textContent = 'يجب أن تكون هناك صلاحية واحدة على الأقل'; alertBox.className = 'alert-box error'; return; }
+      btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+      try {
+        await window.api.fetch(`/admin/reviewers/${id}/permissions`, { method: 'PATCH', body: JSON.stringify({ permissions }) });
+        alertBox.textContent = 'تم تحديث الصلاحيات — ستُطبّق فوراً على المراجع.'; alertBox.className = 'alert-box success';
+        setTimeout(() => { editModal.classList.remove('visible'); loadReviewers(); }, 1000);
+      } catch (err) {
+        alertBox.textContent = err.message || 'حدث خطأ'; alertBox.className = 'alert-box error';
+      } finally { btn.disabled = false; btn.textContent = 'حفظ التغييرات'; }
+    });
+
+    // ===== Boot =====
+    (async () => {
+      const user = await window.adminDash.bootAdminPage({ active: 'reviewers', superOnly: true });
+      if (!user) return;
+      loadReviewers();
+    })();
+  </script>
+</body>
+</html>

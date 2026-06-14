@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة الإدارة | إعدادات المنصة</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/variables.css">
+  <link rel="stylesheet" href="../../assets/css/base.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/layout.css">
+  <link rel="stylesheet" href="../../assets/css/utilities.css">
+  <style>
+    .settings-card {
+      background: var(--bg-surface); border: 1px solid var(--border-default);
+      border-radius: var(--radius-md); box-shadow: var(--shadow-sm);
+      padding: var(--space-6); max-width: 760px;
+    }
+    .settings-group { padding-bottom: var(--space-5); margin-bottom: var(--space-5); border-bottom: 1px solid var(--border-default); }
+    .settings-group:last-of-type { border-bottom: none; margin-bottom: 0; }
+    .settings-group h3 { font-size: var(--font-size-base); font-weight: 800; color: var(--color-navy); margin: 0 0 var(--space-4); }
+    .settings-field { margin-bottom: var(--space-4); }
+    .settings-field label { display: block; font-size: 13px; font-weight: 700; color: var(--color-navy); margin-bottom: 6px; }
+    .settings-field input {
+      width: 100%; padding: 10px 12px; border: 1.5px solid var(--border-default);
+      border-radius: var(--radius-sm); font-family: inherit; font-size: 13px;
+      background: var(--bg-surface-2); color: var(--color-navy);
+    }
+    .settings-field input:focus { background: var(--bg-surface); border-color: var(--color-gold); outline: none; }
+    .alert-box { display: none; padding: 10px 12px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: var(--space-4); max-width: 760px; }
+    .alert-box.error { display: block; background: rgba(239,68,68,0.08); color: #991b1b; }
+    .alert-box.success { display: block; background: var(--color-success-bg); color: #065f46; }
+    .toast-stack { position: fixed; top: 18px; left: 18px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+  </style>
+</head>
+
+<body class="dashboard-page">
+  <div class="dashboard-wrapper">
+    <aside class="sidebar" id="adminSidebar" data-active="settings"></aside>
+
+    <main class="dashboard-main">
+      <div class="dashboard-topbar">
+        <div class="topbar-page-title">إعدادات المنصة</div>
+      </div>
+
+      <div class="dashboard-content">
+        <div class="alert-box" id="settingsAlert"></div>
+        <form id="settingsForm" class="settings-card">
+          <div id="settingsFields"><p style="color:var(--text-muted); font-size:13px;">جاري التحميل...</p></div>
+          <button type="submit" class="btn btn-primary" style="margin-top:var(--space-5);">حفظ الإعدادات</button>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="../../assets/js/api.js"></script>
+  <script src="../../assets/js/admin-dashboard.js"></script>
+  <script>
+    const settingLabels = {
+      commissionRate:              'نسبة عمولة المنصة (مثال: 0.02 = 2%)',
+      warrantyCapPercent:          'سقف الضمان كنسبة من المشروع',
+      warrantyCapMaxEGP:           'الحد الأقصى للضمان (ج.م)',
+      premiumPriceEGP:             'سعر اشتراك Premium (ج.م / شهر)',
+      premiumMonthlyCredits:       'نقاط مجانية لمشتركي Premium',
+      creditPackPriceEGP:          'سعر حزمة النقاط (ج.م)',
+      creditPackAmount:            'عدد النقاط في الحزمة',
+      featuredProjectPriceEGP:     'رسوم تمييز المشروع (ج.م)',
+      featuredProjectDurationDays: 'مدة التمييز (أيام)',
+      referralBonusCredits:        'نقاط مكافأة الإحالة',
+      bidCostUnder50k:             'تكلفة العرض — أقل من 50,000 (نقاط)',
+      bidCost50k200k:              'تكلفة العرض — 50,000 إلى 200,000 (نقاط)',
+      bidCost200k500k:             'تكلفة العرض — 200,000 إلى 500,000 (نقاط)',
+      bidCost500k1m:               'تكلفة العرض — 500,000 إلى 1 مليون (نقاط)',
+      bidCostAbove1m:              'تكلفة العرض — أكثر من 1 مليون (نقاط)',
+    };
+    const settingGroups = [
+      { title: 'العمولة والضمان', keys: ['commissionRate', 'warrantyCapPercent', 'warrantyCapMaxEGP'] },
+      { title: 'الاشتراكات والنقاط', keys: ['premiumPriceEGP', 'premiumMonthlyCredits', 'creditPackPriceEGP', 'creditPackAmount', 'referralBonusCredits'] },
+      { title: 'تمييز المشاريع', keys: ['featuredProjectPriceEGP', 'featuredProjectDurationDays'] },
+      { title: 'تكلفة العرض حسب ميزانية المشروع', keys: ['bidCostUnder50k', 'bidCost50k200k', 'bidCost200k500k', 'bidCost500k1m', 'bidCostAbove1m'] },
+    ];
+    const NON_NUMERIC_KEYS = new Set(['termsAndConditions', 'termsLastUpdated']);
+
+    function showToast(message, type = 'success') {
+      const stack = document.getElementById('toastStack');
+      if (!stack) return;
+      const icons = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
+      const t = ['success','error','info','warning'].includes(type) ? type : 'success';
+      const toast = document.createElement('div');
+      toast.className = `toast-item toast-${t}`;
+      toast.innerHTML = `<span class="toast-icon">${icons[t]}</span><div class="toast-body"><div class="toast-msg">${message}</div></div><button class="toast-close" onclick="this.closest('.toast-item').remove()">×</button>`;
+      stack.appendChild(toast);
+      setTimeout(() => { toast.classList.add('toast-exit'); setTimeout(() => toast.remove(), 300); }, 3500);
+    }
+
+    async function loadSettings() {
+      const el = document.getElementById('settingsFields');
+      el.innerHTML = '<p style="color:var(--text-muted); font-size:13px;">جاري التحميل...</p>';
+      try {
+        const r = await window.api.fetch('/admin/settings');
+        const settings = r.settings || {};
+        const renderedKeys = new Set();
+        const html = settingGroups.map(group => {
+          const fields = group.keys.filter(k => settings[k] !== undefined).map(key => {
+            renderedKeys.add(key);
+            return `<div class="settings-field"><label>${settingLabels[key] || key}</label>
+              <input type="number" step="any" name="${key}" value="${settings[key]}"></div>`;
+          }).join('');
+          if (!fields) return '';
+          return `<div class="settings-group"><h3>${group.title}</h3>${fields}</div>`;
+        }).join('');
+
+        const leftover = Object.entries(settings).filter(([k, v]) =>
+          !renderedKeys.has(k) && !NON_NUMERIC_KEYS.has(k) && (typeof v === 'number' || (!isNaN(parseFloat(v)) && v !== '')));
+        const leftoverHtml = leftover.length === 0 ? '' :
+          `<div class="settings-group"><h3>إعدادات أخرى</h3>${leftover.map(([k, v]) =>
+            `<div class="settings-field"><label>${settingLabels[k] || k}</label>
+              <input type="number" step="any" name="${k}" value="${v}"></div>`).join('')}</div>`;
+
+        el.innerHTML = html + leftoverHtml || '<p style="color:var(--text-muted); font-size:13px;">لا توجد إعدادات.</p>';
+      } catch (e) {
+        el.innerHTML = `<p style="color:var(--color-error); font-size:13px;">تعذر تحميل الإعدادات: ${e.message}</p>`;
+      }
+    }
+
+    document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const alertBox = document.getElementById('settingsAlert');
+      const inputs = e.target.querySelectorAll('input[name]');
+      const settings = {};
+      inputs.forEach(inp => { const num = parseFloat(inp.value); if (!isNaN(num)) settings[inp.name] = num; });
+      try {
+        await window.api.fetch('/admin/settings', { method: 'PATCH', body: JSON.stringify({ settings }) });
+        alertBox.textContent = 'تم حفظ الإعدادات بنجاح!'; alertBox.className = 'alert-box success';
+        showToast('تم حفظ الإعدادات', 'success');
+        setTimeout(() => alertBox.className = 'alert-box', 3000);
+      } catch (err) {
+        alertBox.textContent = err.message || 'حدث خطأ'; alertBox.className = 'alert-box error';
+      }
+    });
+
+    (async () => {
+      const user = await window.adminDash.bootAdminPage({ active: 'settings', superOnly: true });
+      if (!user) return;
+      loadSettings();
+    })();
+  </script>
+</body>
+</html>

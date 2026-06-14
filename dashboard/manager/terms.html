@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة الإدارة | الشروط والأحكام</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/variables.css">
+  <link rel="stylesheet" href="../../assets/css/base.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/layout.css">
+  <link rel="stylesheet" href="../../assets/css/utilities.css">
+  <style>
+    .terms-card {
+      background: var(--bg-surface); border: 1px solid var(--border-default);
+      border-radius: var(--radius-md); box-shadow: var(--shadow-sm);
+      padding: var(--space-6); max-width: 900px;
+    }
+    .terms-card textarea {
+      width: 100%; min-height: 420px; resize: vertical;
+      padding: 14px; border: 1.5px solid var(--border-default); border-radius: var(--radius-sm);
+      font-family: inherit; font-size: 14px; line-height: 1.8;
+      background: var(--bg-surface-2); color: var(--color-navy);
+    }
+    .terms-card textarea:focus { background: var(--bg-surface); border-color: var(--color-gold); outline: none; }
+    .alert-box { display: none; padding: 10px 12px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: var(--space-4); max-width: 900px; }
+    .alert-box.error { display: block; background: rgba(239,68,68,0.08); color: #991b1b; }
+    .alert-box.success { display: block; background: var(--color-success-bg); color: #065f46; }
+    .toast-stack { position: fixed; top: 18px; left: 18px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+  </style>
+</head>
+
+<body class="dashboard-page">
+  <div class="dashboard-wrapper">
+    <aside class="sidebar" id="adminSidebar" data-active="terms"></aside>
+
+    <main class="dashboard-main">
+      <div class="dashboard-topbar">
+        <div class="topbar-page-title">الشروط والأحكام</div>
+      </div>
+
+      <div class="dashboard-content">
+        <div class="alert-box" id="termsAlert"></div>
+        <form id="termsForm" class="terms-card">
+          <p style="font-size:13px; color:var(--text-muted); margin:0 0 var(--space-4);">النص التالي يظهر للمستخدمين في صفحة الشروط والأحكام العامة.</p>
+          <textarea id="termsContent" placeholder="اكتب الشروط والأحكام هنا..."></textarea>
+          <p id="termsLastUpdated" style="font-size:11px; color:var(--text-light); margin:var(--space-2) 0 var(--space-4);"></p>
+          <button type="submit" class="btn btn-primary">حفظ الشروط</button>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="../../assets/js/api.js"></script>
+  <script src="../../assets/js/admin-dashboard.js"></script>
+  <script>
+    function showToast(message, type = 'success') {
+      const stack = document.getElementById('toastStack');
+      if (!stack) return;
+      const icons = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
+      const t = ['success','error','info','warning'].includes(type) ? type : 'success';
+      const toast = document.createElement('div');
+      toast.className = `toast-item toast-${t}`;
+      toast.innerHTML = `<span class="toast-icon">${icons[t]}</span><div class="toast-body"><div class="toast-msg">${message}</div></div><button class="toast-close" onclick="this.closest('.toast-item').remove()">×</button>`;
+      stack.appendChild(toast);
+      setTimeout(() => { toast.classList.add('toast-exit'); setTimeout(() => toast.remove(), 300); }, 3500);
+    }
+
+    async function loadTerms() {
+      try {
+        const r = await window.api.fetch('/admin/terms');
+        document.getElementById('termsContent').value = r.terms || '';
+        const lu = document.getElementById('termsLastUpdated');
+        lu.textContent = r.lastUpdated
+          ? 'آخر تحديث: ' + new Date(r.lastUpdated).toLocaleDateString('ar-EG', { year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' })
+          : 'لم يتم تحديد الشروط بعد.';
+      } catch (_) {
+        document.getElementById('termsContent').value = '';
+        document.getElementById('termsLastUpdated').textContent = '';
+      }
+    }
+
+    document.getElementById('termsForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const alertBox = document.getElementById('termsAlert');
+      try {
+        await window.api.fetch('/admin/terms', { method: 'PATCH', body: JSON.stringify({ terms: document.getElementById('termsContent').value }) });
+        alertBox.textContent = 'تم حفظ الشروط والأحكام بنجاح!'; alertBox.className = 'alert-box success';
+        showToast('تم حفظ الشروط', 'success');
+        setTimeout(() => alertBox.className = 'alert-box', 3000);
+        loadTerms();
+      } catch (err) {
+        alertBox.textContent = err.message || 'حدث خطأ'; alertBox.className = 'alert-box error';
+      }
+    });
+
+    (async () => {
+      const user = await window.adminDash.bootAdminPage({ active: 'terms', superOnly: true });
+      if (!user) return;
+      loadTerms();
+    })();
+  </script>
+</body>
+</html>

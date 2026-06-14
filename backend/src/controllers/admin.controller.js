@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const Contractor = require('../models/ContractorProfile');
 const { asyncHandler, AppError } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');
+const { logAudit } = require('../utils/audit');
 
 // schema lel approve/reject action
 const rejectSchema = z.object({
@@ -26,6 +27,12 @@ const listPending = asyncHandler(async (req, res) => {
   res.json({ items: pending, total: pending.length });
 });
 
+// GET /api/admin/contractors/pending/count — عدّاد خفيف للـ sidebar badge
+const pendingCount = asyncHandler(async (req, res) => {
+  const count = await Contractor.countDocuments({ role: 'contractor', status: 'pending' });
+  res.json({ count });
+});
+
 // POST /api/admin/contractors/:id/approve
 const approveContractor = asyncHandler(async (req, res) => {
   assertValidId(req.params.id);
@@ -42,6 +49,7 @@ const approveContractor = asyncHandler(async (req, res) => {
   contractor.firstLoginAfterActivation = true; // 🎉 bybaat el welcome modal 3ala awel login
   await contractor.save();
 
+  logAudit(req.user._id, 'approve_contractor', 'User', contractor._id, { name: contractor.name });
   logger.info({ contractorId: contractor._id.toString(), adminId: req.user._id.toString() }, 'Contractor approved');
   res.json({ ok: true, user: contractor.toJSON() });
 });
@@ -58,6 +66,7 @@ const rejectContractor = asyncHandler(async (req, res) => {
   contractor.rejectionReason = reason;
   await contractor.save();
 
+  logAudit(req.user._id, 'reject_contractor', 'User', contractor._id, { name: contractor.name, reason });
   logger.info({ contractorId: contractor._id.toString(), adminId: req.user._id.toString() }, 'Contractor rejected');
   res.json({ ok: true, user: contractor.toJSON() });
 });
@@ -110,6 +119,8 @@ const User = require('../models/User');
 
 const Escrow = require('../models/Escrow');
 const Transaction = require('../models/Transaction');
+const Contract = require('../models/Contract');
+const AuditLog = require('../models/AuditLog');
 
 const dashboardStats = asyncHandler(async (req, res) => {
   const [
@@ -120,7 +131,8 @@ const dashboardStats = asyncHandler(async (req, res) => {
     totalContractors,
     pendingContractors,
     totalCustomers,
-    openDisputes,
+    openEscrowDisputes,
+    openWarrantyClaims,
     totalEscrowResult,
     revenueResult,
   ] = await Promise.all([
@@ -132,6 +144,7 @@ const dashboardStats = asyncHandler(async (req, res) => {
     User.countDocuments({ role: 'contractor', status: 'pending' }),
     User.countDocuments({ role: 'customer' }),
     Escrow.countDocuments({ status: 'disputed' }),
+    Contract.countDocuments({ warrantyStatus: 'claimed' }),
     Escrow.aggregate([{ $group: { _id: null, total: { $sum: '$totalAmount' } } }]),
     Transaction.aggregate([
       { $match: { type: 'commission', status: 'success' } },
@@ -144,7 +157,8 @@ const dashboardStats = asyncHandler(async (req, res) => {
     users: { contractors: totalContractors, pendingContractors, customers: totalCustomers },
     escrow: {
       totalVolume: totalEscrowResult[0]?.total || 0,
-      openDisputes,
+      // نزاعات الـ Escrow + مطالبات الضمان — يطابق قائمة النزاعات المدمجة
+      openDisputes: openEscrowDisputes + openWarrantyClaims,
     },
     revenue: {
       totalCommission: revenueResult[0]?.total || 0,
@@ -221,6 +235,7 @@ const createReviewer = asyncHandler(async (req, res) => {
     createdBySuperAdmin: req.user._id,
   });
 
+  logAudit(req.user._id, 'create_reviewer', 'User', admin._id, { name, email: admin.email, permissions: permsToSave });
   logger.info({ adminId: admin._id.toString(), createdBy: req.user._id.toString(), permissions: permsToSave }, 'Reviewer admin created');
   res.status(201).json({ admin: admin.toJSON() });
 });
@@ -233,9 +248,11 @@ const updateReviewerPermissions = asyncHandler(async (req, res) => {
   const admin = await Admin.findOne({ _id: req.params.id, role: 'admin' });
   if (!admin) throw new AppError('المراجع غير موجود', 404, 'NOT_FOUND');
 
+  const oldPermissions = [...(admin.permissions || [])];
   admin.permissions = permissions;
   await admin.save();
 
+  logAudit(req.user._id, 'update_reviewer_permissions', 'User', admin._id, { name: admin.name, oldPermissions, newPermissions: permissions });
   logger.info(
     { adminId: admin._id.toString(), updatedBy: req.user._id.toString(), permissions },
     'Reviewer permissions updated',
@@ -255,6 +272,7 @@ const deleteReviewer = asyncHandler(async (req, res) => {
   const admin = await Admin.findOne({ _id: req.params.id, role: 'admin' });
   if (!admin) throw new AppError('المراجع غير موجود', 404, 'NOT_FOUND');
   await admin.deleteOne();
+  logAudit(req.user._id, 'delete_reviewer', 'User', admin._id, { name: admin.name, email: admin.email });
   logger.info({ adminId: req.params.id, deletedBy: req.user._id.toString() }, 'Reviewer admin deleted');
   res.json({ ok: true, message: 'تم حذف المراجع بنجاح' });
 });
@@ -278,6 +296,7 @@ const updateSettings = asyncHandler(async (req, res) => {
     results[key] = doc.value;
   }
 
+  logAudit(req.user._id, 'update_settings', 'Settings', null, { keys: Object.keys(settings), values: results });
   logger.info({ adminId: req.user._id.toString(), keys: Object.keys(settings) }, 'Platform settings updated');
   res.json({ ok: true, settings: results });
 });
@@ -297,31 +316,71 @@ const updateTerms = asyncHandler(async (req, res) => {
   }
   await PlatformSettings.setSetting('termsAndConditions', terms, req.user._id);
   await PlatformSettings.setSetting('termsLastUpdated', new Date().toISOString(), req.user._id);
+  logAudit(req.user._id, 'update_terms', 'Settings', null, { length: terms.length });
   logger.info({ adminId: req.user._id.toString() }, 'Terms and conditions updated');
   res.json({ ok: true });
 });
 
-// GET /api/admin/disputes — كل النزاعات المفتوحة
+// GET /api/admin/disputes — كل النزاعات المفتوحة (Escrow + مطالبات الضمان)
 const listDisputes = asyncHandler(async (req, res) => {
   const { status = 'disputed', page = 1, limit = 20 } = req.query;
-  const filter = {};
-  if (status) filter.status = status;
 
-  const skip = (Number(page) - 1) * Number(limit);
-  const [disputes, total] = await Promise.all([
-    Escrow.find(filter)
+  const escrowFilter = {};
+  if (status) escrowFilter.status = status;
+
+  // مطالبات الضمان ليها مفردات حالة مختلفة عن الـ Escrow —
+  // بتظهر في القائمة المدمجة بس لما الفلتر 'disputed'
+  const includeContracts = status === 'disputed';
+
+  // سقف للاستعلامين — الدمج بيحصل في الذاكرة فلازم نمنع التحميل غير المحدود
+  const MERGE_QUERY_CAP = 200;
+
+  const [escrows, contracts] = await Promise.all([
+    Escrow.find(escrowFilter)
       .populate('project', 'title projectType propertyDetails')
       .populate('customer', 'name email phone')
       .populate('contractor', 'name email phone specialty')
       .populate('disputeOpenedBy', 'name role')
       .sort({ disputeOpenedAt: -1 })
-      .skip(skip)
-      .limit(Number(limit))
+      .limit(MERGE_QUERY_CAP)
       .lean(),
-    Escrow.countDocuments(filter),
+    includeContracts
+      ? Contract.find({ warrantyStatus: 'claimed' })
+          .populate('project', 'title projectType propertyDetails')
+          .populate('customer', 'name email phone')
+          .populate('contractor', 'name email phone specialty')
+          .sort({ 'warrantyClaim.claimedAt': -1 })
+          .limit(MERGE_QUERY_CAP)
+          .lean()
+      : Promise.resolve([]),
   ]);
 
-  res.json({ disputes, pagination: { total, page: Number(page), pages: Math.ceil(total / Number(limit)) } });
+  const contractDisputes = contracts.map(c => ({
+    _id: c._id,
+    type: 'contract',
+    project: c.project,
+    customer: c.customer,
+    contractor: c.contractor,
+    disputeReason: c.warrantyClaim?.reason || 'مطالبة بضمان العقد',
+    disputeOpenedAt: c.warrantyClaim?.claimedAt || c.updatedAt,
+    disputeOpenedBy: c.customer,
+    status: 'disputed'
+  }));
+
+  const escrowDisputes = escrows.map(e => ({
+    ...e,
+    type: 'escrow'
+  }));
+
+  const allDisputes = [...escrowDisputes, ...contractDisputes].sort((a, b) => {
+    return new Date(b.disputeOpenedAt || 0) - new Date(a.disputeOpenedAt || 0);
+  });
+
+  const total = allDisputes.length;
+  const skip = (Number(page) - 1) * Number(limit);
+  const paginatedDisputes = allDisputes.slice(skip, skip + Number(limit));
+
+  res.json({ disputes: paginatedDisputes, pagination: { total, page: Number(page), pages: Math.ceil(total / Number(limit)) } });
 });
 
 // GET /api/admin/permissions — قائمة الصلاحيات المتاحة (للواجهة)
@@ -329,11 +388,35 @@ const listAvailablePermissions = asyncHandler(async (req, res) => {
   res.json({ permissions: VALID_PERMISSIONS });
 });
 
+// GET /api/admin/audit-log — سجل عمليات الإدارة (super_admin فقط)
+const listAuditLog = asyncHandler(async (req, res) => {
+  const page = Math.max(1, Number(req.query.page) || 1);
+  const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 30));
+  const skip = (page - 1) * limit;
+
+  const filter = {};
+  if (req.query.action) filter.action = req.query.action;
+  if (req.query.admin && mongoose.Types.ObjectId.isValid(req.query.admin)) filter.admin = req.query.admin;
+
+  const [items, total] = await Promise.all([
+    AuditLog.find(filter)
+      .populate('admin', 'name email role')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    AuditLog.countDocuments(filter),
+  ]);
+
+  res.json({ items, pagination: { total, page, pages: Math.ceil(total / limit) } });
+});
+
 module.exports = {
-  listPending, approveContractor, rejectContractor,
+  listPending, pendingCount, approveContractor, rejectContractor,
   listAllProjects, dashboardStats, listDisputes,
   createReviewer, listReviewers, deleteReviewer,
   updateReviewerPermissions, listAvailablePermissions,
   getSettings, updateSettings,
   getTerms, updateTerms,
+  listAuditLog,
 };

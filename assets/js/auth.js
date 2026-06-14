@@ -223,8 +223,7 @@
           const role = data.user?.role;
           if (role === 'customer') window.location.href = '../dashboard/customer/index.html';
           else if (role === 'contractor') window.location.href = '../dashboard/professional/index.html';
-          else if (role === 'super_admin') window.location.href = '../dashboard/super-admin/index.html';
-          else if (role === 'admin') window.location.href = '../dashboard/manager/index.html';
+          else if (role === 'super_admin' || role === 'admin') window.location.href = '../dashboard/manager/index.html';
         }, 900);
       } catch (err) {
         showAlert('loginAlert', err.message);
@@ -262,9 +261,7 @@
         persistSessionUser(data);
         showAlert('adminLoginAlert', 'تم تسجيل الدخول بنجاح!', 'success');
         setTimeout(() => { 
-          const role = data.user?.role;
-          if (role === 'super_admin') window.location.href = '../dashboard/super-admin/index.html';
-          else window.location.href = '../dashboard/manager/index.html';
+          window.location.href = '../dashboard/manager/index.html';
         }, 900);
       } catch (err) {
         showAlert('adminLoginAlert', err.message);

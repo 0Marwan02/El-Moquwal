@@ -132,4 +132,10 @@
   --stagger-3: 0.24s;
   --stagger-4: 0.32s;
   --stagger-5: 0.40s;
+
+  /* --- Logo (logo.png) — مقاسات موحّدة في كل المنصة --- */
+  --logo-navbar-size:  52px;
+  --logo-sidebar-size: 48px;
+  --logo-footer-size:  52px;
+  --logo-img-scale:    1.32; /* تعويض الهامش الأسود حول الشعار الدائري */
 }

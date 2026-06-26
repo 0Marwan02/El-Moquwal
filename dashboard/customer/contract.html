@@ -92,6 +92,7 @@
   </div>
 
   <script src="../../assets/js/api.js"></script>
+  <script src="../../assets/js/contract-shared.js"></script>
   <script src="../../assets/js/customer-router.js"></script>
   <script>
     const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -259,7 +260,8 @@
                 </div>
                 
                 <div class="contract-actions" style="margin-top:15px; border-top:1px solid #eee; padding-top:15px;">
-                  <button class="btn btn-outline btn-sm" onclick="window.open(\`${API_BASE}/contracts/${contract._id}/pdf?token=${token}\`, '_blank')">تحميل العقد PDF 📄</button>
+                  <a href="contract-preview.html?projectId=${p._id}" class="btn btn-primary btn-sm">📋 معاينة العقد</a>
+                  <button class="btn btn-outline btn-sm" onclick="ContractShared.downloadContractPdf('${contract._id}').catch(e=>showToast(e.message,'error'))">تحميل PDF 📄</button>
                   ${!customerSigned ? `<button class="btn btn-primary btn-sm" onclick="signContract('${contract._id}')">توقيع إلكتروني ✍️</button>` : ''}
                   ${isFullySigned ? `<a href="escrow.html?projectId=${p._id}" class="btn btn-sm" style="background:#10b981; color:white; border:none; border-radius:var(--radius-sm); font-weight:bold; padding:7px 14px;">نظام الضمان Escrow 🛡️</a>` : ''}
                 </div>

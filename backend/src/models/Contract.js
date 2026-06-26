@@ -8,6 +8,7 @@ const signatureSchema = new mongoose.Schema(
     ipAddress: { type: String, default: '' },
     userAgent: { type: String, maxlength: 300, default: '' },
     signatureHash: { type: String, default: '' }, // SHA256 of canvas data
+    signatureImage: { type: String, default: null }, // filename under uploads/signatures/
   },
   { _id: false }
 );

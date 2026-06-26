@@ -6,6 +6,7 @@ const { requireAuth } = require('../middleware/auth');
 const router = express.Router();
 
 router.get('/code', requireAuth, ctrl.getMyCode);
+router.get('/stats', requireAuth, ctrl.getReferralStats);
 router.post('/apply', requireAuth, ctrl.applyCode);
 
 module.exports = router;

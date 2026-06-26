@@ -14,6 +14,30 @@ const env = require('../config/env');
 
 const { generatePDFContract } = require('../utils/pdfGenerator');
 
+const SIG_DIR = path.join(env.UPLOADS_DIR, 'signatures');
+
+function saveSignatureImage(signatureData, contractId, role) {
+  if (!signatureData || !signatureData.startsWith('data:image')) return null;
+  if (!fs.existsSync(SIG_DIR)) fs.mkdirSync(SIG_DIR, { recursive: true });
+  const base64 = signatureData.replace(/^data:image\/\w+;base64,/, '');
+  const filename = `sig_${contractId}_${role}_${Date.now()}.png`;
+  fs.writeFileSync(path.join(SIG_DIR, filename), Buffer.from(base64, 'base64'));
+  return filename;
+}
+
+function enrichContract(contract) {
+  if (!contract) return contract;
+  const base = env.NODE_ENV === 'production' ? '' : '';
+  const sigUrl = (filename) => (filename ? `/uploads/signatures/${filename}` : null);
+  if (contract.customerSignature?.signatureImage) {
+    contract.customerSignature.signatureImageUrl = sigUrl(contract.customerSignature.signatureImage);
+  }
+  if (contract.contractorSignature?.signatureImage) {
+    contract.contractorSignature.signatureImageUrl = sigUrl(contract.contractorSignature.signatureImage);
+  }
+  return contract;
+}
+
 // POST /api/contracts/generate — بيولد عقد بعد قبول العرض
 const generateContract = asyncHandler(async (req, res) => {
   const { projectId } = req.body;
@@ -25,7 +49,13 @@ const generateContract = asyncHandler(async (req, res) => {
 
   // التأكد من عدم وجود عقد سابق
   const existingContract = await Contract.findOne({ project: project._id });
-  if (existingContract) return res.json({ contract: existingContract, existing: true });
+  if (existingContract) {
+    const populated = await Contract.findById(existingContract._id)
+      .populate('customer', 'name email phone')
+      .populate('contractor', 'name email phone specialty')
+      .lean();
+    return res.json({ contract: enrichContract(populated), existing: true });
+  }
 
   const bid = await Bid.findById(project.awardedBidId);
   if (!bid) throw new AppError('العرض الفائز غير موجود', 404, 'BID_NOT_FOUND');
@@ -53,12 +83,15 @@ const generateContract = asyncHandler(async (req, res) => {
   });
 
   // توليد PDF مبدئي
+  contract = await Contract.findById(contract._id)
+    .populate('customer', 'name email phone nationalId')
+    .populate('contractor', 'name email phone specialty nationalId');
   const pdfFilename = await generatePDFContract(contract);
   contract.pdfFilename = pdfFilename;
   await contract.save();
 
   logger.info({ contractId: contract._id.toString(), projectId: project._id.toString() }, 'Contract generated');
-  res.status(201).json({ contract });
+  res.status(201).json({ contract: enrichContract(contract.toObject()) });
 });
 
 // POST /api/contracts/:id/sign — توقيع العقد
@@ -74,12 +107,15 @@ const signContract = asyncHandler(async (req, res) => {
 
   const { signatureData } = req.body; // base64 canvas data أو hash
   const signatureHash = crypto.createHash('sha256').update(signatureData || Date.now().toString()).digest('hex');
+  const sigRole = contract.customer._id.toString() === req.user._id.toString() ? 'customer' : 'contractor';
+  const signatureImage = saveSignatureImage(signatureData, contract._id.toString(), sigRole);
   const signaturePayload = {
     signed: true,
     signedAt: new Date(),
     ipAddress: req.ip || req.headers['x-forwarded-for'] || '',
     userAgent: (req.headers['user-agent'] || '').slice(0, 300),
     signatureHash,
+    signatureImage,
   };
 
   const isCustomer = contract.customer._id.toString() === req.user._id.toString();
@@ -103,13 +139,18 @@ const signContract = asyncHandler(async (req, res) => {
     contract.warrantyStatus = 'active';
   }
 
-  // إعادة توليد الـ PDF عشان التوقيعات تظهر
-  const pdfFilename = await generatePDFContract(contract);
-  contract.pdfFilename = pdfFilename;
-
   await contract.save();
+
+  // إعادة توليد الـ PDF بعد التوقيع مع بيانات الأطراف كاملة
+  const populated = await Contract.findById(contract._id)
+    .populate('customer', 'name email phone nationalId')
+    .populate('contractor', 'name email phone specialty nationalId');
+  const pdfFilename = await generatePDFContract(populated);
+  populated.pdfFilename = pdfFilename;
+  await populated.save();
+
   logger.info({ contractId: contract._id.toString(), signedBy: req.user._id.toString() }, 'Contract signed');
-  res.json({ contract });
+  res.json({ contract: enrichContract(populated.toObject()) });
 });
 
 // GET /api/contracts/:id — عرض بيانات العقد
@@ -127,7 +168,7 @@ const getContract = asyncHandler(async (req, res) => {
   const isAdmin = req.user.role === 'admin' || req.user.role === 'super_admin';
   if (!isParty && !isAdmin) throw new AppError('غير مصرح', 403, 'FORBIDDEN');
 
-  res.json({ contract });
+  res.json({ contract: enrichContract(contract) });
 });
 
 // GET /api/contracts/project/:projectId — عقد مشروع معين
@@ -143,7 +184,7 @@ const getContractByProject = asyncHandler(async (req, res) => {
   const isAdmin = req.user.role === 'admin' || req.user.role === 'super_admin';
   if (!isParty && !isAdmin) throw new AppError('غير مصرح', 403, 'FORBIDDEN');
 
-  res.json({ contract });
+  res.json({ contract: enrichContract(contract) });
 });
 
 // POST /api/contracts/:id/claim — تقديم مطالبة ضمان

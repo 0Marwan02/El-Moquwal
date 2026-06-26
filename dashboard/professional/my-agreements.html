@@ -342,8 +342,8 @@
               </div>
 
               <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;margin-top:var(--space-3);">
-                <a href="view-bid.html?projectId=${p._id}" class="btn btn-primary" style="font-size:13px;">عرض التفاصيل الكاملة</a>
-                <button onclick="viewContractPDF('${p._id}')" class="btn btn-outline" style="font-size:13px;">📄 عرض العقد PDF</button>
+                <a href="agreement-detail.html?projectId=${p._id}" class="btn btn-primary" style="font-size:13px;">عرض لوحة الاتفاقية</a>
+                <a href="contract-preview.html?projectId=${p._id}" class="btn btn-outline" style="font-size:13px;">📋 معاينة العقد</a>
                 ${mySig 
                   ? `<button disabled class="btn btn-outline" style="font-size:13px;border-color:var(--color-success);color:var(--color-success);opacity:0.8;cursor:default;">✅ تم توقيعك</button>`
                   : `<button onclick="openSignModal('${contract ? contract._id : ''}')" class="btn btn-outline" style="font-size:13px;border-color:var(--color-gold-dark);color:var(--color-gold-dark);">✍️ توقيع العقد</button>`

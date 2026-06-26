@@ -158,6 +158,14 @@
           </div>
 
           <div class="pro-filter-group">
+            <label class="pro-filter-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+              <input type="checkbox" id="f-specialty" checked style="width:16px;height:16px;accent-color:var(--color-gold);">
+              مشاريع تناسب تخصصي فقط
+            </label>
+            <p id="specialtyHint" style="font-size:11px;color:var(--text-muted);margin:6px 0 0;line-height:1.5;"></p>
+          </div>
+
+          <div class="pro-filter-group">
             <label class="pro-filter-label" for="f-type">نوع المشروع</label>
             <select class="pro-filter-select" id="f-type">
               <option value="">كل الأنواع</option>
@@ -283,9 +291,17 @@
     }));
   }
 
+  let matchSpecialty = true;
+  const SPECIALTY_LABELS = {
+    electrical:'فني كهرباء', plumber:'سباك', painter:'نقاش', finishing:'تشطيبات',
+    carpenter:'نجار', civil_engineer:'مهندس مدني', architect:'مهندس معماري',
+    general_contractor:'مقاول عام', other:'أخرى'
+  };
+
   async function loadProjects() {
     try {
-      const data = await window.api.fetch('/projects');
+      const qs = matchSpecialty ? '?matchMySpecialty=true' : '';
+      const data = await window.api.fetch('/projects' + qs);
       PROJECTS = (data.projects || []).map(p => ({
         id: p._id, type: p.projectType, title: p.title,
         governorate: p.propertyDetails?.governorate || 'غير محدد',
@@ -293,6 +309,7 @@
         timeline: p.timeline, budget: p.budgetRange,
         bidsCount: p.bidsCount || 0,
         isFeatured: !!p.isFeatured, isUrgent: !!p.isUrgent,
+        matchesSpecialty: p.matchesSpecialty !== false,
       }));
       await hydrateMyBids();
       renderProjects();
@@ -337,6 +354,7 @@
           <span class="ppc-tag">${TYPE_LABELS[p.type] || '—'}</span>
           ${p.isFeatured ? `<span class="ppc-tag featured">⭐ مميز</span>` : ''}
           ${p.isUrgent   ? `<span class="ppc-tag urgent">🔥 عاجل</span>` : ''}
+          ${p.matchesSpecialty && matchSpecialty ? `<span class="ppc-tag" style="background:rgba(244,166,35,0.15);color:var(--color-gold-dark);">✨ يناسب تخصصك</span>` : ''}
         </div>
 
         <div class="ppc-title">${p.title}</div>
@@ -394,6 +412,16 @@
       });
     }
 
+    const specHint = document.getElementById('specialtyHint');
+    if (specHint && user.specialty) {
+      specHint.textContent = 'تخصصك: ' + (SPECIALTY_LABELS[user.specialty] || user.specialty);
+    }
+
+    document.getElementById('f-specialty')?.addEventListener('change', (e) => {
+      matchSpecialty = e.target.checked;
+      loadProjects();
+    });
+
     document.getElementById('logoutBtn')?.addEventListener('click', () => {
       localStorage.clear();
       window.location.href = '../../index.html';
@@ -417,7 +445,9 @@
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
-      renderProjects();
+      const specEl = document.getElementById('f-specialty');
+      if (specEl) { specEl.checked = true; matchSpecialty = true; }
+      loadProjects();
       document.getElementById('filterSidebar').classList.remove('open');
     });
   });

@@ -3,7 +3,9 @@ const { z } = require('zod');
 const { callLLM, parseJsonResponse, isAIAvailable } = require('../utils/ai.service');
 
 const Project = require('../models/Project');
+const ContractorProfile = require('../models/ContractorProfile');
 const { AppError, asyncHandler } = require('../middleware/errorHandler');
+const { getProjectTypesForSpecialty, projectMatchesSpecialty } = require('../utils/specialtyMapping');
 const env = require('../config/env');
 const logger = require('../utils/logger');
 
@@ -171,7 +173,7 @@ const createProject = asyncHandler(async (req, res) => {
 const listProjects = asyncHandler(async (req, res) => {
   const {
     type, governorate, budget, status = 'open',
-    featured, urgent,
+    featured, urgent, matchMySpecialty,
     page = 1, limit = 20,
   } = req.query;
 
@@ -182,6 +184,14 @@ const listProjects = asyncHandler(async (req, res) => {
   if (budget) filter.budgetRange = budget;
   if (featured === 'true') filter.isFeatured = true;
   if (urgent === 'true') filter.isUrgent = true;
+
+  let contractorSpecialty = null;
+  if (matchMySpecialty === 'true' && req.user?.role === 'contractor') {
+    const profile = await ContractorProfile.findById(req.user._id).select('specialty').lean();
+    contractorSpecialty = profile?.specialty || null;
+    const types = getProjectTypesForSpecialty(contractorSpecialty);
+    if (types) filter.projectType = { $in: types };
+  }
 
   // hide private projects from public listing
   if (!req.user || (req.user.role !== 'admin' && req.user.role !== 'super_admin')) {
@@ -202,13 +212,21 @@ const listProjects = asyncHandler(async (req, res) => {
     Project.countDocuments(filter),
   ]);
 
+  const enriched = contractorSpecialty
+    ? projects.map((p) => ({
+        ...p,
+        matchesSpecialty: projectMatchesSpecialty(p.projectType, contractorSpecialty),
+      }))
+    : projects;
+
   res.json({
-    projects,
+    projects: enriched,
     pagination: {
       total,
       page: Number(page),
       pages: Math.ceil(total / Number(limit)),
     },
+    specialtyFilter: contractorSpecialty || null,
   });
 });
 

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>عقودي الرقمية | المقاول</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/variables.css">
+  <link rel="stylesheet" href="../../assets/css/base.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/layout.css">
+  <link rel="stylesheet" href="../../assets/css/pro-dashboard.css">
+  <style>
+    .contract-list { display: grid; gap: var(--space-6); }
+    .contract-card {
+      background: var(--bg-surface); border: 1px solid var(--border-default);
+      border-radius: var(--radius-md); padding: var(--space-6); position: relative; box-shadow: var(--shadow-sm);
+    }
+    .contract-status { position: absolute; top: var(--space-6); left: var(--space-6); padding: 4px 12px; border-radius: var(--radius-full); font-size: 11px; font-weight: 800; }
+    .contract-title { font-size: 18px; font-weight: 800; color: var(--color-navy); margin-bottom: 4px; padding-left: 120px; }
+    .contract-parties { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin: var(--space-4) 0; }
+    .party-box { padding: var(--space-4); background: var(--bg-surface-2); border-radius: var(--radius-sm); }
+    .party-label { font-size: 10px; font-weight: 800; color: var(--text-muted); margin-bottom: 6px; display: block; }
+    .contract-details { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--space-3); background: var(--color-navy-dark); color: #fff; padding: var(--space-4); border-radius: var(--radius-sm); }
+    .det-lbl { font-size: 10px; color: rgba(255,255,255,0.6); }
+    .det-val { font-size: 15px; font-weight: 800; color: var(--color-gold); }
+    .contract-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; justify-content: flex-end; margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px dashed var(--border-default); }
+    @media (max-width: 600px) { .contract-parties, .contract-details { grid-template-columns: 1fr; } .contract-title { padding-left: 0; padding-top: 36px; } }
+  </style>
+</head>
+<body class="dashboard-page">
+<div class="toast-stack" id="toastStack"></div>
+<div class="dashboard-wrapper">
+  <aside class="sidebar" id="sidebarNode"></aside>
+  <main class="dashboard-main">
+    <div class="dashboard-topbar" id="topbarNode"></div>
+    <div class="dashboard-content">
+      <div class="page-head" style="margin-bottom:var(--space-8);">
+        <h2 class="section-title">عقودي الرقمية</h2>
+        <p style="color:var(--text-muted);font-size:var(--font-size-sm);">معاينة وتوقيع العقود الإلكترونية للمشاريع المُرساة لصالحك.</p>
+      </div>
+      <div id="contractsContainer" class="contract-list"><div style="text-align:center;padding:40px;color:var(--text-muted);">جاري التحميل...</div></div>
+    </div>
+  </main>
+</div>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/contract-shared.js"></script>
+<script>
+function showToast(msg, type = 'success') {
+  const t = document.createElement('div');
+  t.className = `pro-toast ${type}`;
+  t.textContent = msg;
+  document.getElementById('toastStack').appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+
+function injectLayout() {
+  const user = JSON.parse(localStorage.getItem('elm_user') || '{}');
+  const initial = (user.name || 'م').charAt(0);
+  document.getElementById('sidebarNode').innerHTML = `
+    <div class="sidebar-header"><div class="sidebar-logo-mark"><img src="../../assets/images/logo.png" alt=""></div><div class="sidebar-logo-text">المقاول</div></div>
+    <div class="sidebar-user"><div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--color-gold),var(--color-gold-dark));display:flex;align-items:center;justify-content:center;font-weight:900;">${initial}</div>
+    <div class="sidebar-user-info"><div class="name">${user.name||''}</div><div class="role">مقاول</div></div></div>
+    <nav class="sidebar-nav">
+      <a href="index.html" class="sidebar-item">لوحة التحكم</a>
+      <a href="my-agreements.html" class="sidebar-item">اتفاقياتي</a>
+      <a href="contract.html" class="sidebar-item active">عقودي الرقمية</a>
+    </nav>
+    <div class="sidebar-cta"><button class="btn btn-ghost-light btn-full" onclick="localStorage.clear();location.href='../../index.html'">تسجيل الخروج</button></div>`;
+  document.getElementById('topbarNode').innerHTML = `<div class="topbar-page-title">عقودي الرقمية</div>`;
+}
+
+async function loadContracts() {
+  const container = document.getElementById('contractsContainer');
+  const user = JSON.parse(localStorage.getItem('elm_user') || '{}');
+  try {
+    const data = await window.api.fetch('/projects?status=awarded&limit=50');
+    const awarded = (data.projects || []).filter(p => p.awardedTo && p.awardedTo.toString() === user._id);
+    if (!awarded.length) {
+      container.innerHTML = `<div style="text-align:center;padding:60px;border:1px dashed var(--border-default);border-radius:var(--radius-md);">
+        <div style="font-size:48px;margin-bottom:16px;">📄</div>
+        <h3 style="color:var(--color-navy);">لا توجد عقود بعد</h3>
+        <p style="color:var(--text-muted);">حين تُرسى مشاريع لصالحك ستظهر هنا.</p>
+        <a href="browse-projects.html" class="btn btn-primary" style="margin-top:16px;">تصفح المشاريع</a></div>`;
+      return;
+    }
+
+    let html = '';
+    for (const p of awarded) {
+      try {
+        const cData = await window.api.fetch(`/contracts/project/${p._id}`);
+        const contract = cData.contract;
+        const state = ContractShared.getSigningState(contract, 'contractor');
+        const custSigned = contract.customerSignature?.signed;
+        const contrSigned = contract.contractorSignature?.signed;
+
+        html += `
+          <div class="contract-card">
+            <span class="contract-status" style="${state.badgeStyle}">${state.badge}</span>
+            <h3 class="contract-title">${contract.projectTitle || p.title}</h3>
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:var(--space-4);">#${contract._id.slice(-6).toUpperCase()}</div>
+            <div class="contract-parties">
+              <div class="party-box"><span class="party-label">العميل</span><strong>${contract.customer?.name||'—'}</strong>
+                <div style="font-size:12px;margin-top:4px;color:${custSigned?'var(--color-success)':'#d97706'}">${custSigned?'وقع ✅':'لم يوقع'}</div></div>
+              <div class="party-box"><span class="party-label">أنت (المقاول)</span><strong>${contract.contractor?.name||user.name}</strong>
+                <div style="font-size:12px;margin-top:4px;color:${contrSigned?'var(--color-success)':'#d97706'}">${contrSigned?'وقعت ✅':'لم توقّع'}</div></div>
+            </div>
+            <div class="contract-details">
+              <div><div class="det-lbl">قيمة التعاقد</div><div class="det-val">${ContractShared.fmtMoney(contract.bidAmount)}</div></div>
+              <div><div class="det-lbl">المدة</div><div class="det-val">${contract.proposedDuration||'—'} يوم</div></div>
+              <div><div class="det-lbl">الضمان</div><div class="det-val">${ContractShared.fmtMoney(contract.warrantyCapEGP)}</div></div>
+            </div>
+            <div class="contract-actions">
+              <a href="contract-preview.html?projectId=${p._id}" class="btn btn-primary btn-sm">📋 معاينة العقد</a>
+              <button class="btn btn-outline btn-sm" onclick="ContractShared.downloadContractPdf('${contract._id}').catch(e=>showToast(e.message,'error'))">تحميل PDF</button>
+              ${state.canSign ? `<button class="btn btn-outline btn-sm" style="border-color:var(--color-gold);color:var(--color-gold-dark);" onclick="ContractShared.openSignModal('${contract._id}', ()=>loadContracts())">✍️ توقيع</button>` : ''}
+            </div>
+          </div>`;
+      } catch (_) {
+        html += `<div class="contract-card">
+          <span class="contract-status" style="background:#fef3c7;color:#d97706;">بانتظار العقد ⏳</span>
+          <h3 class="contract-title">${p.title}</h3>
+          <p style="color:var(--text-muted);font-size:13px;">في انتظار أن ينشئ العميل العقد الإلكتروني.</p>
+        </div>`;
+      }
+    }
+    container.innerHTML = html;
+  } catch (err) {
+    container.innerHTML = `<div class="state-msg">خطأ: ${err.message}</div>`;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => { injectLayout(); loadContracts(); });
+</script>
+</body>
+</html>

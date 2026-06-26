@@ -266,7 +266,7 @@ document.getElementById('portfolioForm').addEventListener('submit', async (e) =>
     alertBox.textContent = 'تمت إضافة العمل بنجاح! 🎉';
     alertBox.className = 'alert-box success';
     showToast('تمت إضافة العمل للمحفظة', 'success');
-    setTimeout(() => { window.location.href = 'profile.html'; }, 1500);
+    setTimeout(() => { window.location.href = 'profile.html#portfolioSection'; }, 1500);
   } catch (err) {
     alertBox.textContent = err.message || 'حدث خطأ أثناء الرفع';
     alertBox.className = 'alert-box error';

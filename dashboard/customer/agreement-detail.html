@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة الاتفاقية | المقاول</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/variables.css">
+  <link rel="stylesheet" href="../../assets/css/base.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/layout.css">
+  <style>
+    .agreement-hero { background: linear-gradient(135deg, var(--color-navy-dark), var(--color-navy)); border-radius: var(--radius-lg); padding: var(--space-8); color: #fff; margin-bottom: var(--space-6); }
+    .agreement-hero h1 { font-size: 24px; font-weight: 900; margin-bottom: 8px; }
+    .agreement-grid { display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-6); }
+    @media (max-width: 900px) { .agreement-grid { grid-template-columns: 1fr; } }
+    .panel { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: var(--space-6); margin-bottom: var(--space-5); }
+    .panel h3 { font-size: 15px; font-weight: 800; color: var(--color-navy); margin-bottom: var(--space-4); }
+    .timeline { padding-right: 24px; position: relative; }
+    .timeline::before { content: ''; position: absolute; right: 8px; top: 4px; bottom: 4px; width: 2px; background: var(--border-default); }
+    .tl-item { position: relative; padding-bottom: var(--space-5); padding-right: var(--space-6); }
+    .tl-item::before { content: ''; position: absolute; right: 2px; top: 4px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border-default); background: var(--bg-surface-2); }
+    .tl-item.done::before { background: var(--color-success); border-color: var(--color-success); }
+    .fin-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--border-default); font-size: 13px; }
+    .quick-actions { display: flex; flex-direction: column; gap: var(--space-3); }
+    .contract-stepper { display: flex; gap: 4px; flex-wrap: wrap; }
+    .c-step { flex: 1; min-width: 60px; text-align: center; }
+    .c-step-dot { width: 24px; height: 24px; border-radius: 50%; margin: 0 auto 4px; font-size: 10px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--border-default); }
+    .c-step.done .c-step-dot { background: var(--color-success-bg); border-color: var(--color-success); color: var(--color-success); }
+    .c-step-lbl { font-size: 8px; color: var(--text-muted); }
+  </style>
+</head>
+<body class="dashboard-page">
+<div class="dashboard-wrapper">
+  <aside class="sidebar" id="sidebarNode"></aside>
+  <main class="dashboard-main">
+    <div class="dashboard-topbar" id="topbarNode"></div>
+    <div class="dashboard-content">
+      <a href="contract.html" style="font-size:13px;font-weight:700;color:var(--text-muted);text-decoration:none;margin-bottom:var(--space-4);display:inline-block;">← اتفاقياتي</a>
+      <div id="agreementRoot">جاري التحميل...</div>
+    </div>
+  </main>
+</div>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/contract-shared.js"></script>
+<script>
+const projectId = new URLSearchParams(location.search).get('projectId');
+
+function injectLayout() {
+  const user = JSON.parse(localStorage.getItem('elm_user') || '{}');
+  document.getElementById('sidebarNode').innerHTML = `<div class="sidebar-header"><div class="sidebar-logo-text">المقاول</div></div>
+    <nav class="sidebar-nav"><a href="contract.html" class="sidebar-item active">اتفاقياتي</a></nav>`;
+  document.getElementById('topbarNode').innerHTML = `<div class="topbar-page-title">لوحة الاتفاقية</div>`;
+}
+
+async function load() {
+  const root = document.getElementById('agreementRoot');
+  const pData = await window.api.fetch(`/projects/${projectId}`);
+  const project = pData.project;
+  let contract = null;
+  try { contract = (await window.api.fetch(`/contracts/project/${projectId}`)).contract; } catch (_) {}
+
+  const custSigned = contract?.customerSignature?.signed;
+  const contrSigned = contract?.contractorSignature?.signed;
+  const isActive = contract?.status === 'active';
+  const contractorName = contract?.contractor?.name || 'المقاول';
+
+  root.innerHTML = `
+    <div class="agreement-hero"><h1>${project.title}</h1><p>${ContractShared.PROJECT_TYPE_LABELS[project.projectType]||''} · ${project.propertyDetails?.governorate||''}</p></div>
+    <div class="agreement-grid">
+      <div>
+        <div class="panel"><h3>📅 مسار الاتفاقية</h3><div class="timeline">
+          <div class="tl-item done"><strong>ترسية المشروع</strong></div>
+          <div class="tl-item ${contract?'done':''}"><strong>توليد العقد</strong></div>
+          <div class="tl-item ${custSigned?'done':''}"><strong>توقيعك</strong></div>
+          <div class="tl-item ${contrSigned?'done':''}"><strong>توقيع المقاول</strong></div>
+          <div class="tl-item ${isActive?'done':''}"><strong>اتفاق مفعل</strong></div>
+        </div></div>
+        <div class="panel"><h3>👤 المقاول</h3><p><strong>${contractorName}</strong></p></div>
+      </div>
+      <div class="panel"><h3>⚡ إجراءات</h3><div class="quick-actions">
+        ${contract ? `<a href="contract-preview.html?projectId=${projectId}" class="btn btn-primary btn-full">معاينة العقد</a>` : `<button class="btn btn-primary btn-full" onclick="genContract()">توليد العقد</button>`}
+        <a href="view-bid.html?projectId=${projectId}" class="btn btn-outline btn-full">تفاصيل العروض</a>
+        ${isActive ? `<a href="escrow.html?projectId=${projectId}" class="btn btn-primary btn-full">نظام الضمان</a>` : ''}
+      </div>${contract ? ContractShared.renderSignStepper(contract) : ''}</div>
+    </div>`;
+}
+
+async function genContract() {
+  await window.api.fetch('/contracts/generate', { method: 'POST', body: JSON.stringify({ projectId }) });
+  load();
+}
+
+document.addEventListener('DOMContentLoaded', () => { injectLayout(); load(); });
+</script>
+</body>
+</html>

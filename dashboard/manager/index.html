@@ -498,7 +498,7 @@
 
         <!-- Pending Contractors -->
         <h2 class="section-title" id="pendingSection">طلبات المقاولين المعلقة</h2>
-        <div class="pending-list" style="display:none;">
+        <div class="pending-list" id="pendingListPanel" style="display:none;">
           <div class="pending-list-header">
             <span class="pending-list-title">بانتظار الموافقة</span>
             <span class="pending-list-count" id="pendingListCount">0 طلب</span>
@@ -559,6 +559,35 @@
       setTimeout(() => {
         toast.remove();
       }, 3200);
+    }
+
+    function renderAllProjects(projects) {
+      const body = document.getElementById('allProjectsBody');
+      const countEl = document.getElementById('allProjectsCount');
+      if (!body) return;
+      const total = projects.length;
+      if (countEl) countEl.textContent = `${total} مشروع`;
+
+      if (!total) {
+        body.innerHTML = `<div class="empty-state"><div class="empty-state-text">لا توجد مشاريع مسجّلة</div></div>`;
+        return;
+      }
+
+      const STATUS_LABELS = { open: 'مفتوح', awarded: 'مُرسى', closed: 'مكتمل', draft: 'مسودة', cancelled: 'ملغي' };
+      const TYPE_LABELS = {
+        new_construction: 'بناء جديد', finishing: 'تشطيبات', renovation: 'تجديد',
+        repair: 'إصلاح', electrical: 'كهرباء', plumbing: 'سباكة', other: 'أخرى',
+      };
+
+      body.innerHTML = projects.slice(0, 15).map(p => `
+        <div class="pending-item">
+          <div>
+            <div class="pending-item-name">${p.title || '—'}</div>
+            <div class="pending-item-meta">${TYPE_LABELS[p.projectType] || p.projectType} · ${p.propertyDetails?.governorate || '—'} · ${STATUS_LABELS[p.status] || p.status}</div>
+          </div>
+          <a href="all-projects.html" class="btn btn-sm btn-outline">عرض</a>
+        </div>
+      `).join('') + (total > 15 ? `<div style="padding:var(--space-4);text-align:center;"><a href="all-projects.html" class="btn btn-primary btn-sm">عرض كل المشاريع (${total})</a></div>` : '');
     }
 
     function setPendingCounts(count) {
@@ -697,7 +726,7 @@
       if (!hasPerm('review_contractors')) {
         const pendingSection = document.getElementById('pendingSection');
         if (pendingSection) pendingSection.style.display = 'none';
-        const pendingList = document.querySelector('.pending-list');
+        const pendingList = document.getElementById('pendingListPanel');
         if (pendingList) pendingList.style.display = 'none';
       }
 
@@ -723,21 +752,40 @@
 
         // awarded count — load all and filter
         const allProjects = await window.api.fetch('/projects?limit=200');
-        const awarded = (allProjects.projects || []).filter(p => p.status === 'awarded').length;
+        const awarded = (allProjects.projects || []).filter(p => p.status === 'awarded' || p.status === 'closed').length;
         document.getElementById('statAwardedProjects').textContent = awarded;
       } catch (e) { console.error(e); }
 
-      // Load pending contractors — فقط لمن يملك صلاحية مراجعتهم
+      // Load pending contractors
       if (hasPerm('review_contractors')) {
         try {
           const contractorsData = await window.api.fetch('/admin/contractors/pending');
           pendingContractors = contractorsData.items || contractorsData.contractors || contractorsData.users || [];
           renderPendingList();
+          const pendingPanel = document.getElementById('pendingListPanel');
+          if (pendingPanel) pendingPanel.style.display = 'block';
         } catch (e) {
           document.getElementById('pendingListBody').innerHTML = `<div class="empty-state"><div class="empty-state-text">تعذر تحميل الطلبات — ${e.message}</div></div>`;
           setPendingCounts(0);
           showToast(`تعذر تحميل الطلبات: ${e.message}`, 'error');
         }
+      }
+
+      // Load all projects panel
+      try {
+        let projects = [];
+        if (hasPerm('view_projects')) {
+          const adminData = await window.api.fetch('/admin/projects?limit=15');
+          projects = adminData.projects || adminData.items || [];
+        } else {
+          const pub = await window.api.fetch('/projects?limit=15');
+          projects = pub.projects || [];
+        }
+        renderAllProjects(projects);
+        const allPanel = document.getElementById('allProjectsPanel');
+        if (allPanel) allPanel.style.display = 'block';
+      } catch (e) {
+        console.error(e);
       }
 
       document.getElementById('pendingListBody').addEventListener('click', async (event) => {

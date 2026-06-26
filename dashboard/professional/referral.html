@@ -243,6 +243,26 @@
         <div class="hero-icon">🎁</div>
       </div>
 
+      <!-- Stats -->
+      <div id="referralStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-4);margin-bottom:var(--space-6);">
+        <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-5);text-align:center;">
+          <div style="font-size:28px;font-weight:900;color:var(--color-navy);" id="statReferred">—</div>
+          <div style="font-size:11px;color:var(--text-muted);font-weight:700;">محالون</div>
+        </div>
+        <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-5);text-align:center;">
+          <div style="font-size:28px;font-weight:900;color:var(--color-gold-dark);" id="statEarned">—</div>
+          <div style="font-size:11px;color:var(--text-muted);font-weight:700;">نقاط مكتسبة</div>
+        </div>
+        <div style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-5);text-align:center;">
+          <div style="font-size:28px;font-weight:900;color:var(--color-success);" id="statBalance">—</div>
+          <div style="font-size:11px;color:var(--text-muted);font-weight:700;">رصيدك الحالي</div>
+        </div>
+      </div>
+      <div id="referralHistory" style="background:var(--bg-surface);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--space-6);margin-bottom:var(--space-6);display:none;">
+        <h4 style="font-size:14px;font-weight:800;color:var(--color-navy);margin-bottom:var(--space-4);">آخر الإحالات</h4>
+        <div id="referralHistoryBody"></div>
+      </div>
+
       <!-- My Code -->
       <div class="code-card">
         <div class="code-card-title">كود الإحالة الخاص بك</div>
@@ -532,6 +552,28 @@ async function applyCode() {
 
 /* ---- Init ---- */
 loadCode();
+loadReferralStats();
+
+async function loadReferralStats() {
+  try {
+    const s = await window.api.fetch('/referral/stats');
+    document.getElementById('statReferred').textContent = s.totalReferred ?? 0;
+    document.getElementById('statEarned').textContent = '+' + (s.totalEarned ?? 0);
+    document.getElementById('statBalance').textContent = s.creditBalance ?? 0;
+    const hist = document.getElementById('referralHistory');
+    const body = document.getElementById('referralHistoryBody');
+    if (s.recentReferrals && s.recentReferrals.length && hist && body) {
+      hist.style.display = 'block';
+      const statusMap = { approved: 'معتمد', pending: 'قيد المراجعة', rejected: 'مرفوض' };
+      body.innerHTML = '<table style="width:100%;font-size:13px;border-collapse:collapse;">' +
+        s.recentReferrals.map(r => `<tr style="border-bottom:1px solid var(--border-default);">
+          <td style="padding:8px 0;font-weight:700;">${r.name}</td>
+          <td style="color:var(--text-muted);">${r.specialty || '—'}</td>
+          <td style="text-align:left;">${statusMap[r.status] || r.status}</td>
+        </tr>`).join('') + '</table>';
+    }
+  } catch (_) {}
+}
 </script>
 </body>
 </html>

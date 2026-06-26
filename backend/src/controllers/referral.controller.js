@@ -54,8 +54,9 @@ const applyCode = asyncHandler(async (req, res) => {
     throw new AppError('لا يمكن استخدام كود الإحالة الخاص بك', 400, 'SELF_REFERRAL');
   }
 
-  // كافئ صاحب الدعوة
+  // كافئ صاحب الدعوة والمحال
   const bonusCredits = await PlatformSettings.getSetting('referralBonusCredits') || 2;
+  const welcomeCredits = await PlatformSettings.getSetting('referralWelcomeCredits') || 1;
 
   // لو صاحب الدعوة مقاول، نزوّد رصيده
   if (inviter.role === 'contractor') {
@@ -74,10 +75,56 @@ const applyCode = asyncHandler(async (req, res) => {
   }
 
   contractor.referredBy = inviter._id;
+  contractor.creditBalance = (contractor.creditBalance || 0) + welcomeCredits;
   await contractor.save();
+  await CreditLedger.create({
+    user: contractor._id,
+    delta: welcomeCredits,
+    reason: 'referral',
+    balanceAfter: contractor.creditBalance,
+    meta: `مكافأة ترحيب — إحالة من ${inviter.name}`,
+  });
 
   logger.info({ inviterId: inviter._id.toString(), inviteeId: contractor._id.toString() }, 'Referral applied');
   res.json({ ok: true, message: `تم تطبيق كود الإحالة بنجاح. ${inviter.name} حصل على ${bonusCredits} نقاط.` });
 });
 
-module.exports = { getMyCode, applyCode };
+// GET /api/referral/stats — إحصائيات الإحالة للمقاول
+const getReferralStats = asyncHandler(async (req, res) => {
+  if (req.user.role !== 'contractor') {
+    throw new AppError('الإحالة متاحة للمقاولين فقط', 400, 'CONTRACTOR_ONLY');
+  }
+
+  const user = await User.findById(req.user._id).select('referralCode name').lean();
+  const contractor = await ContractorProfile.findById(req.user._id).select('creditBalance name').lean();
+  if (!contractor) throw new AppError('المقاول غير موجود', 404, 'NOT_FOUND');
+
+  const referred = await ContractorProfile.find({ referredBy: req.user._id })
+    .select('name specialty approvalStatus createdAt')
+    .sort({ createdAt: -1 })
+    .limit(20)
+    .lean();
+
+  const totalReferred = await ContractorProfile.countDocuments({ referredBy: req.user._id });
+  const totalEarned = await CreditLedger.aggregate([
+    { $match: { user: req.user._id, reason: 'referral' } },
+    { $group: { _id: null, total: { $sum: '$delta' } } },
+  ]);
+  const welcomeBonus = await PlatformSettings.getSetting('referralWelcomeCredits') || 1;
+
+  res.json({
+    referralCode: user?.referralCode || null,
+    totalReferred,
+    totalEarned: totalEarned[0]?.total || 0,
+    creditBalance: contractor.creditBalance || 0,
+    welcomeBonusForInvitee: welcomeBonus,
+    recentReferrals: referred.map((r) => ({
+      name: r.name,
+      specialty: r.specialty,
+      status: r.approvalStatus,
+      joinedAt: r.createdAt,
+    })),
+  });
+});
+
+module.exports = { getMyCode, applyCode, getReferralStats };

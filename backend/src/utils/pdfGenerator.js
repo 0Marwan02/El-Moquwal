@@ -58,8 +58,17 @@ function safe(val, fallback = 'غير محدد') {
 // ── Build signature HTML block ───────────────────────────────
 function buildSigBlock(sigData) {
   if (sigData && sigData.signed) {
+    const imgPath = sigData.signatureImage
+      ? path.join(env.UPLOADS_DIR, 'signatures', sigData.signatureImage)
+      : null;
+    let imgTag = '';
+    if (imgPath && fs.existsSync(imgPath)) {
+      const b64 = fs.readFileSync(imgPath).toString('base64');
+      imgTag = `<img src="data:image/png;base64,${b64}" alt="توقيع" style="max-height:64px;max-width:180px;display:block;margin:8px auto 4px;">`;
+    }
     return `
       <div class="sig-signed">
+        ${imgTag}
         <div class="check">✓ تم التوقيع الرقمي بنجاح</div>
         <div class="hash">البصمة: ${(sigData.signatureHash || '').slice(0, 24)}…</div>
       </div>`;
@@ -74,7 +83,7 @@ function buildLogoTag() {
       const b64 = fs.readFileSync(LOGO_PATH).toString('base64');
       const ext = path.extname(LOGO_PATH).slice(1).toLowerCase();
       const mime = ext === 'svg' ? 'image/svg+xml' : `image/${ext}`;
-      return `<img src="data:${mime};base64,${b64}" alt="المقاول" style="width:48px;height:48px;object-fit:contain;">`;
+      return `<img src="data:${mime};base64,${b64}" alt="المقاول" style="width:56px;height:56px;object-fit:contain;transform:scale(1.32);transform-origin:center;">`;
     }
   } catch (_) { /* logo missing — skip */ }
   // Fallback: text logo

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة الاتفاقية | المقاول</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/variables.css">
+  <link rel="stylesheet" href="../../assets/css/base.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/layout.css">
+  <link rel="stylesheet" href="../../assets/css/pro-dashboard.css">
+  <style>
+    .agreement-hero {
+      background: linear-gradient(135deg, var(--color-navy-dark), var(--color-navy));
+      border-radius: var(--radius-lg); padding: var(--space-8); color: #fff; margin-bottom: var(--space-6);
+    }
+    .agreement-hero h1 { font-size: 24px; font-weight: 900; margin-bottom: 8px; }
+    .agreement-hero p { font-size: 13px; opacity: 0.75; }
+    .agreement-grid { display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-6); }
+    @media (max-width: 900px) { .agreement-grid { grid-template-columns: 1fr; } }
+    .panel { background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: var(--space-6); margin-bottom: var(--space-5); }
+    .panel h3 { font-size: 15px; font-weight: 800; color: var(--color-navy); margin-bottom: var(--space-4); display: flex; align-items: center; gap: 8px; }
+    .timeline { position: relative; padding-right: 24px; }
+    .timeline::before { content: ''; position: absolute; right: 8px; top: 4px; bottom: 4px; width: 2px; background: var(--border-default); }
+    .tl-item { position: relative; padding-bottom: var(--space-5); padding-right: var(--space-6); }
+    .tl-item::before { content: ''; position: absolute; right: 2px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--bg-surface-2); border: 2px solid var(--border-default); }
+    .tl-item.done::before { background: var(--color-success); border-color: var(--color-success); }
+    .tl-item.current::before { background: var(--color-gold); border-color: var(--color-gold); }
+    .tl-title { font-weight: 800; font-size: 13px; color: var(--color-navy); }
+    .tl-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .fin-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--border-default); font-size: 13px; }
+    .fin-row strong { color: var(--color-navy); }
+    .party-card { display: flex; align-items: center; gap: var(--space-4); }
+    .party-av { width: 48px; height: 48px; border-radius: 12px; background: var(--color-gold-subtle); display: flex; align-items: center; justify-content: center; font-weight: 900; color: var(--color-navy); }
+    .quick-actions { display: flex; flex-direction: column; gap: var(--space-3); }
+  </style>
+</head>
+<body class="dashboard-page">
+<div class="dashboard-wrapper">
+  <aside class="sidebar" id="sidebarNode"></aside>
+  <main class="dashboard-main">
+    <div class="dashboard-topbar" id="topbarNode"></div>
+    <div class="dashboard-content">
+      <a href="my-agreements.html" style="font-size:13px;font-weight:700;color:var(--text-muted);text-decoration:none;display:inline-block;margin-bottom:var(--space-4);">← اتفاقياتي</a>
+      <div id="agreementRoot"><div style="text-align:center;padding:60px;color:var(--text-muted);">جاري التحميل...</div></div>
+    </div>
+  </main>
+</div>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/contract-shared.js"></script>
+<script>
+const projectId = new URLSearchParams(location.search).get('projectId');
+const TYPE_LABELS = ContractShared.PROJECT_TYPE_LABELS;
+const BUDGET_LABELS = { under_50k:'أقل من 50k', '50k_200k':'50k—200k', '200k_500k':'200k—500k', '500k_1m':'500k—1m', above_1m:'+1m', flexible:'مرن' };
+
+function injectLayout() {
+  const user = JSON.parse(localStorage.getItem('elm_user') || '{}');
+  document.getElementById('sidebarNode').innerHTML = `<div class="sidebar-header"><div class="sidebar-logo-text">المقاول</div></div>
+    <nav class="sidebar-nav"><a href="my-agreements.html" class="sidebar-item active">اتفاقياتي</a></nav>`;
+  document.getElementById('topbarNode').innerHTML = `<div class="topbar-page-title">لوحة الاتفاقية</div>`;
+}
+
+async function load() {
+  const root = document.getElementById('agreementRoot');
+  if (!projectId) { root.innerHTML = '<p>معرف المشروع مفقود</p>'; return; }
+
+  try {
+    const pData = await window.api.fetch(`/projects/${projectId}`);
+    const project = pData.project;
+    let contract = null;
+    let bidAmount = '—', bidDuration = '—';
+    try {
+      const cData = await window.api.fetch(`/contracts/project/${projectId}`);
+      contract = cData.contract;
+    } catch (_) {}
+    try {
+      const bRes = await window.api.fetch(`/projects/${projectId}/bids`);
+      if (bRes.myBid) {
+        bidAmount = ContractShared.fmtMoney(bRes.myBid.amount);
+        bidDuration = bRes.myBid.proposedDurationDays ? bRes.myBid.proposedDurationDays + ' يوم' : '—';
+      }
+    } catch (_) {}
+
+    const custSigned = contract?.customerSignature?.signed;
+    const contrSigned = contract?.contractorSignature?.signed;
+    const isActive = contract?.status === 'active';
+    const customerName = project.postedBy?.name || 'العميل';
+
+    const timeline = [
+      { title: 'ترسية المشروع', sub: project.awardedAt ? ContractShared.fmtDate(project.awardedAt) : 'تمت الترسية', done: true },
+      { title: 'توليد العقد', sub: contract ? 'تم إنشاء العقد' : 'بانتظار العميل', done: !!contract, current: !contract },
+      { title: 'توقيع العميل', sub: custSigned ? 'موقّع' : 'معلق', done: custSigned, current: contract && !custSigned },
+      { title: 'توقيعك', sub: contrSigned ? 'موقّعت' : 'معلق', done: contrSigned, current: contract && custSigned && !contrSigned },
+      { title: 'اتفاق مفعل', sub: isActive ? 'ساري' : 'قيد الإجراء', done: isActive, current: contract && custSigned && contrSigned && !isActive },
+    ];
+
+    root.innerHTML = `
+      <div class="agreement-hero">
+        <h1>${project.title}</h1>
+        <p>${TYPE_LABELS[project.projectType]||'—'} · ${project.propertyDetails?.governorate||'—'} · ${project.propertyDetails?.area||'—'} م²</p>
+      </div>
+      <div class="agreement-grid">
+        <div>
+          <div class="panel">
+            <h3>📅 مسار الاتفاقية</h3>
+            <div class="timeline">${timeline.map(t => `
+              <div class="tl-item ${t.done?'done':''} ${t.current?'current':''}">
+                <div class="tl-title">${t.title}</div>
+                <div class="tl-sub">${t.sub}</div>
+              </div>`).join('')}</div>
+          </div>
+          <div class="panel">
+            <h3>💰 التفاصيل المالية</h3>
+            <div class="fin-row"><span>قيمة عرضك المقبول</span><strong>${bidAmount}</strong></div>
+            <div class="fin-row"><span>مدة التنفيذ</span><strong>${bidDuration}</strong></div>
+            <div class="fin-row"><span>الميزانية المتوقعة</span><strong>${BUDGET_LABELS[project.budgetRange]||'—'}</strong></div>
+            ${contract ? `<div class="fin-row"><span>سقف الضمان</span><strong>${ContractShared.fmtMoney(contract.warrantyCapEGP)}</strong></div>` : ''}
+          </div>
+          <div class="panel">
+            <h3>👤 الطرف الآخر (العميل)</h3>
+            <div class="party-card">
+              <div class="party-av">${customerName.charAt(0)}</div>
+              <div><strong>${customerName}</strong><div style="font-size:12px;color:var(--text-muted);">صاحب المشروع</div></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="panel">
+            <h3>⚡ إجراءات سريعة</h3>
+            <div class="quick-actions">
+              ${contract ? `<a href="contract-preview.html?projectId=${projectId}" class="btn btn-primary btn-full">📋 معاينة العقد</a>` : `<span style="font-size:13px;color:var(--text-muted);">بانتظار توليد العقد من العميل</span>`}
+              <a href="view-bid.html?projectId=${projectId}" class="btn btn-outline btn-full">تفاصيل العرض الأصلي</a>
+              ${contract ? `<button class="btn btn-outline btn-full" onclick="ContractShared.downloadContractPdf('${contract._id}')">تحميل PDF</button>` : ''}
+            </div>
+          </div>
+          ${contract ? `<div class="panel">${ContractShared.renderSignStepper(contract)}</div>` : ''}
+        </div>
+      </div>`;
+  } catch (e) {
+    root.innerHTML = `<div class="panel">خطأ: ${e.message}</div>`;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => { injectLayout(); load(); });
+</script>
+</body>
+</html>

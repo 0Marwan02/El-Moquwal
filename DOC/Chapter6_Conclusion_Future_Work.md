@@ -6,7 +6,7 @@ This chapter concludes the El-Moquwal graduation project by summarising the work
 
 ## 6.2 Project Summary
 
-El-Moquwal (المقاول) was conceived, designed, and implemented as Egypt's first end-to-end digital marketplace for construction and finishing services. The project addressed a well-documented market failure — the lack of transparency, trust, and payment protection in Egypt's overwhelmingly informal contracting sector — by building a unified platform that covers the entire contracting journey: project discovery, AI-assisted cost estimation, competitive blind bidding, electronic contract generation, escrow-based milestone payment, execution tracking, and post-project rating.
+El-Moquwal was conceived, designed, and implemented as Egypt's first end-to-end digital marketplace for construction and finishing services. The project addressed a well-documented market failure — the lack of transparency, trust, and payment protection in Egypt's overwhelmingly informal contracting sector — by building a unified platform that covers the entire contracting journey: project discovery, AI-assisted cost estimation, competitive blind bidding, electronic contract generation, escrow-based milestone payment, execution tracking, and post-project rating.
 
 The platform was developed as a full-stack web application using Node.js and Express.js on the backend, MongoDB with Mongoose on the data layer, and a Vanilla JavaScript Single Page Application (SPA) on the frontend. The system supports four distinct user roles — Customer, Contractor, Admin, and Super Admin — managed through a MongoDB discriminator pattern that enables polymorphic user handling within a single collection.
 
@@ -22,18 +22,23 @@ Over the course of this project, the following deliverables were produced:
 
 ## 6.3 Objectives Achievement
 
-The following table evaluates each stated objective against the delivered outcome:
+The following evaluates each stated objective against the delivered outcome:
 
-| # | Objective | Status | Evidence |
-|---|-----------|--------|----------|
-| 1 | Design and implement a secure, web-based marketplace for the entire contracting journey | ✅ Achieved | Full-stack application with 14 API route modules, 18 database collections, and a responsive Arabic-first SPA. |
-| 2 | Develop an AI-powered price estimation system | ✅ Achieved | Dual-provider integration (Pollinations.ai + Anthropic Claude) with structured JSON output, 1-hour caching, and a RAG-based policy chatbot. |
-| 3 | Implement a Blind Bidding mechanism | ✅ Achieved | Enforced at the API level via `toBlindJSON()` method; bid amounts invisible to competing contractors. Verified through integration and security testing. |
-| 4 | Build an Escrow-based milestone payment system | ✅ Achieved | Full escrow lifecycle: deposit → milestone release → dispute → admin resolution. Default 30%/40%/30% milestone split with 2% commission deduction. |
-| 5 | Automate electronic contract generation with dual digital signatures | ✅ Achieved | Puppeteer renders Arabic RTL HTML template to A4 PDF. Signatures recorded with SHA256 hash, IP address, User-Agent, and timestamp. |
-| 6 | Establish identity verification via National ID parsing | ✅ Achieved | 14-digit Egyptian NID parsed for century, date of birth, governorate (27 codes), and gender. NID stored as Argon2 hash with only last 4 digits exposed. |
-| 7 | Create a Role-Based Access Control system with four user tiers | ✅ Achieved | Middleware chain: `requireAuth` → `requireRole` → `requirePermission` → `requireApproved`. Seven granular admin permissions with super_admin bypass. |
-| 8 | Develop supplementary features (marketplace, portfolio, credits, subscriptions, admin panel) | ✅ Achieved | Material marketplace (12 categories), portfolio with before/after photos, credit ledger system, premium subscriptions, and full admin dashboard with audit logging. |
+1. ✅ **Design and implement a secure, web-based marketplace** for the entire contracting journey — Achieved. Full-stack application with 14 API route modules, 18 database collections, and a responsive Arabic-first SPA.
+
+2. ✅ **Develop an AI-powered price estimation system** — Achieved. Dual-provider integration (Pollinations.ai + Anthropic Claude) with structured JSON output, 1-hour caching, and a RAG-based policy chatbot.
+
+3. ✅ **Implement a Blind Bidding mechanism** — Achieved. Enforced at the API level via the toBlindJSON() method; bid amounts invisible to competing contractors. Verified through integration and security testing.
+
+4. ✅ **Build an Escrow-based milestone payment system** — Achieved. Full escrow lifecycle: deposit, milestone release, dispute, and admin resolution. Default 30%/40%/30% milestone split with 2% commission deduction.
+
+5. ✅ **Automate electronic contract generation with dual digital signatures** — Achieved. Puppeteer renders Arabic RTL HTML template to A4 PDF. Signatures recorded with SHA256 hash, IP address, User-Agent, and timestamp.
+
+6. ✅ **Establish identity verification via National ID parsing** — Achieved. 14-digit Egyptian NID parsed for century, date of birth, governorate (27 codes), and gender. NID stored as Argon2 hash with only last 4 digits exposed.
+
+7. ✅ **Create a Role-Based Access Control system with four user tiers** — Achieved. Middleware chain: requireAuth, requireRole, requirePermission, requireApproved. Seven granular admin permissions with super_admin bypass.
+
+8. ✅ **Develop supplementary features** (marketplace, portfolio, credits, subscriptions, admin panel) — Achieved. Material marketplace (12 categories), portfolio with before/after photos, credit ledger system, premium subscriptions, and full admin dashboard with audit logging.
 
 **All eight stated objectives have been fully achieved.** The delivered system is a working, testable application — not merely a design document — which materially strengthens the project's academic and practical credibility.
 

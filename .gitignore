@@ -96,3 +96,14 @@ platform_features.md
 # ==========================================
 skills/
 /ref
+
+# ==========================================
+# Python cache and MS Office temp files
+# ==========================================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+~$*
+~WR*
+

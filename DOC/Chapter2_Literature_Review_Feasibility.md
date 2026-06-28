@@ -5,20 +5,7 @@
 
 ---
 
-## Table of Contents
 
-- [2.1 Introduction](#21-introduction)
-- [2.2 Executive Summary](#22-executive-summary)
-- [2.3 Organisation Summary](#23-organisation-summary)
-- [2.4 Literature Review](#24-literature-review)
-- [2.5 SWOT Analysis](#25-swot-analysis)
-- [2.6 Feasibility Studies](#26-feasibility-studies)
-- [2.7 Technical Feasibility](#27-technical-feasibility)
-- [2.8 Financial Plan](#28-financial-plan)
-- [2.9 Summary](#29-summary)
-- [References](#references)
-
----
 
 ## 2.1 Introduction
 
@@ -28,11 +15,11 @@ This chapter establishes the strategic and commercial foundation of the El-Moquw
 
 ## 2.2 Executive Summary
 
-**Project name:** El-Moquwal (المقاول).
+**Project name:** El-Moquwal.
 
 **Vision.** To become the trusted digital layer for home finishing, renovation, and small-to-medium contracting in Egypt — the default place where property owners find vetted professionals and where engineers and contractors win work, sign contracts, and get paid safely. El-Moquwal does not perform construction itself; it acts as a neutral, transparent intermediary that reduces the friction, risk, and information asymmetry of the traditional contracting experience.
 
-**What the platform does.** A customer describes a project and receives an instant, AI-assisted cost estimate before committing. Verified professionals submit competitive bids; the customer compares offers, awards the work, and both parties sign a digitally generated contract. Payment is protected through an escrow (الضمان) mechanism that holds funds and releases them against agreed milestones, with a defined warranty cap that shields the customer if work is not delivered. The platform also offers a building-materials marketplace, professional portfolios, ratings, and an administrative layer for vetting and dispute resolution.
+**What the platform does.** A customer describes a project and receives an instant, AI-assisted cost estimate before committing. Verified professionals submit competitive bids; the customer compares offers, awards the work, and both parties sign a digitally generated contract. Payment is protected through an escrow mechanism that holds funds and releases them against agreed milestones, with a defined warranty cap that shields the customer if work is not delivered. The platform also offers a building-materials marketplace, professional portfolios, ratings, and an administrative layer for vetting and dispute resolution.
 
 **Why now.** Construction is the largest contributor to Egypt's GDP, internet and mobile penetration are near-universal in the urban centres the platform targets, and the digital-payment rails required to operate escrow at scale are mature. Yet the customer experience remains overwhelmingly offline, informal, and trust-deficient — exactly the conditions in which a focused digital intermediary can capture early share.
 
@@ -64,7 +51,7 @@ To make hiring a contractor in Egypt as transparent, safe, and measurable as buy
 - AI-assisted smart cost estimation that produces an indicative price range before a project is posted.
 - A competitive bidding system in which professionals spend platform credits to submit offers, keeping lead quality high and the channel sustainable.
 - Automatic generation of a structured, signable PDF contract for every awarded project, including a defined warranty cap.
-- Escrow (الضمان) with milestone-based release, dispute handling, and administrator-mediated resolution.
+- Escrow with milestone-based release, dispute handling, and administrator-mediated resolution.
 - A building-materials marketplace with order tracking, plus professional portfolios that showcase completed work.
 - A monetisation stack combining transaction commission, premium subscriptions, pay-per-bid credits, featured listings, and a materials take-rate.
 
@@ -103,25 +90,36 @@ El-Moquwal closes these gaps by unifying the entire contracting lifecycle in one
 
 This analysis separates factors internal to El-Moquwal (strengths and weaknesses), which the venture can control, from external market factors (opportunities and threats), which it must navigate.
 
-| **Strengths (Internal)** | **Weaknesses (Internal)** |
-|--------------------------|---------------------------|
-| End-to-end model: discovery, AI estimate, bidding, digital contract, escrow, and materials in one system. | New, unproven brand competing against entrenched word-of-mouth trust. |
-| Escrow + warranty cap directly neutralises the market's primary objection (trust over money). | Classic two-sided cold-start: customers and professionals must be grown in balance. |
-| Verified professionals and persistent ratings build accountability competitors lack. | Dependence on professionals adopting digital workflows and online payment. |
-| Diversified revenue (commission, subscription, credits, materials, featured) reduces single-stream risk. | Reliance on third-party payment and escrow rails and their fees. |
-| Arabic-first, mobile-responsive interface tailored to local users. | Dispute resolution is operationally heavy and must be staffed carefully to protect the brand. |
-| Working software already built in-house, lowering time-to-market and cash risk. | |
+**Strengths (Internal)**
+- End-to-end model: discovery, AI estimate, bidding, digital contract, escrow, and materials in one system.
+- Escrow with warranty cap directly neutralises the market's primary objection — trust over money.
+- Verified professionals and persistent ratings build accountability competitors lack.
+- Diversified revenue (commission, subscription, credits, materials, featured) reduces single-stream risk.
+- Arabic-first, mobile-responsive interface tailored to local users.
+- Working software already built in-house, lowering time-to-market and cash risk.
 
-| **Opportunities (External)** | **Threats (External)** |
-|-------------------------------|------------------------|
-| Construction is Egypt's largest GDP sector with sustained multi-year growth. | Established offline networks and informal referrals remain the default behaviour. |
-| Large annual pipeline of new and unfinished housing units requiring finishing and fit-out. | A well-funded competitor or large incumbent could enter and outspend on acquisition. |
-| Near-universal mobile and internet penetration and maturing digital-payment rails. | Currency volatility and inflation affect project values, costs, and consumer confidence. |
-| No dominant, escrow-backed, end-to-end incumbent in the contracting niche. | Resistance to online payment for large sums, especially among older users. |
-| Government digitisation and financial-inclusion tailwinds. | Regulatory shifts in brokerage, data protection, or digital payments. |
-| Natural expansion paths: more cities, developer/B2B contracts, maintenance, and embedded financing. | Reputational damage from a single high-profile dispute or fraud case. |
+**Weaknesses (Internal)**
+- New, unproven brand competing against entrenched word-of-mouth trust.
+- Classic two-sided cold-start: customers and professionals must be grown in balance.
+- Dependence on professionals adopting digital workflows and online payment.
+- Reliance on third-party payment and escrow rails and their fees.
+- Dispute resolution is operationally heavy and must be staffed carefully to protect the brand.
 
-*Table 2.1: Competitive SWOT Analysis — El-Moquwal*
+**Opportunities (External)**
+- Construction is Egypt's largest GDP sector with sustained multi-year growth.
+- Large annual pipeline of new and unfinished housing units requiring finishing and fit-out.
+- Near-universal mobile and internet penetration and maturing digital-payment rails.
+- No dominant, escrow-backed, end-to-end incumbent in the contracting niche.
+- Government digitisation and financial-inclusion tailwinds.
+- Natural expansion paths: more cities, developer/B2B contracts, maintenance, and embedded financing.
+
+**Threats (External)**
+- Established offline networks and informal referrals remain the default behaviour.
+- A well-funded competitor or large incumbent could enter and outspend on acquisition.
+- Currency volatility and inflation affect project values, costs, and consumer confidence.
+- Resistance to online payment for large sums, especially among older users.
+- Regulatory shifts in brokerage, data protection, or digital payments.
+- Reputational damage from a single high-profile dispute or fraud case.
 
 ---
 
@@ -199,15 +197,15 @@ The key strategic finding is that demand is not the binding constraint: even by 
 
 Competition is best understood through the five structural forces that shape the niche:
 
-| Competitive Force | Assessment for El-Moquwal |
-|-------------------|---------------------------|
-| **Rivalry among existing players** | Low-to-moderate. A handful of local directory and matching services exist, but none combine identity verification, AI estimation, binding digital contracts, and escrow into one transactional system. The escrow-backed niche is effectively open. |
-| **Threat of new entrants** | Moderate-to-high. Software barriers are modest, so a funded entrant or large incumbent could appear; however, building two-sided liquidity, verified supply, and trust is slow and capital-intensive, creating a real first-mover moat. |
-| **Threat of substitutes** | High today. The dominant substitute is the offline default: personal referrals, social-media groups, and direct dealing with informal contractors. Displacing this habit is the core go-to-market challenge. |
-| **Bargaining power of customers** | Moderate. Switching costs are low and price sensitivity is real, but escrow, verification, and transparent comparison deliver value informal channels cannot match. |
-| **Bargaining power of suppliers (professionals)** | Moderate. Professionals are numerous and fragmented, limiting individual power; the platform must nonetheless keep lead quality and economics attractive to retain the best supply. |
+**Rivalry among existing players** is low-to-moderate. A handful of local directory and matching services exist, but none combine identity verification, AI estimation, binding digital contracts, and escrow into one transactional system. The escrow-backed niche is effectively open.
 
-*Table 2.3: Structural competitive analysis (Porter's Five Forces)*
+**Threat of new entrants** is moderate-to-high. Software barriers are modest, so a funded entrant or large incumbent could appear; however, building two-sided liquidity, verified supply, and trust is slow and capital-intensive, creating a real first-mover moat.
+
+**Threat of substitutes** is high today. The dominant substitute is the offline default: personal referrals, social-media groups, and direct dealing with informal contractors. Displacing this habit is the core go-to-market challenge.
+
+**Bargaining power of customers** is moderate. Switching costs are low and price sensitivity is real, but escrow, verification, and transparent comparison deliver value informal channels cannot match.
+
+**Bargaining power of suppliers (professionals)** is moderate. Professionals are numerous and fragmented, limiting individual power; the platform must nonetheless keep lead quality and economics attractive to retain the best supply.
 
 #### Differentiation and Positioning
 
@@ -273,15 +271,33 @@ The market is segmented across four standard dimensions and then prioritised:
 
 #### Marketing Strategy and Mix (7Ps)
 
-| Element | Strategy |
-|---------|----------|
-| **Product** | A safe, transparent, end-to-end contracting experience — verified professionals, AI estimate, binding contract, escrow, materials, and ratings. |
-| **Price** | Value-based: modest commission (2%) on protected transactions, premium subscription (EGP 199/month), pay-per-bid credits, featured listings, and materials take-rate. Free in Year 1 to build the user base. |
-| **Place** | Online, mobile-responsive platform available continuously, removing constraints of physical offices and working hours. |
-| **Promotion** | Digital acquisition through social platforms and search, partnerships with material suppliers and developers, referral incentives, and educational content. |
-| **People** | A vetting and support team whose responsiveness and fairness in disputes are central to the brand. |
-| **Process** | A guided, low-friction journey from estimate to release, with clear status at every step. |
-| **Physical Evidence** | Verification badges, ratings, signed contracts, and visible escrow status that make the platform's safety tangible. |
+**Product.** A safe, transparent, end-to-end contracting experience — verified professionals, AI estimate, binding contract, escrow, materials, and ratings.
+
+**Price.** Value-based: modest commission (2%) on protected transactions, premium subscription (EGP 199/month), pay-per-bid credits, featured listings, and materials take-rate. Free in Year 1 to build the user base.
+
+**Place.** Online, mobile-responsive platform available continuously, removing constraints of physical offices and working hours.
+
+**Promotion.** Digital acquisition through social platforms and search, partnerships with material suppliers and developers, referral incentives, and educational content marketing.
+
+**People.** A vetting and support team whose responsiveness and fairness in disputes are central to the brand.
+
+**Process.** A guided, low-friction journey from estimate to release, with clear status at every step.
+
+**Physical Evidence.** Verification badges, ratings, signed contracts, and visible escrow status that make the platform's safety tangible.
+
+### 2.6.4 Go-to-Market Strategy
+
+The go-to-market approach is phased to match the natural lifecycle of a two-sided marketplace:
+
+**Phase 1 — Supply Seeding (Months 1–6).** The priority is onboarding and verifying a critical mass of quality professionals in the launch governorates (Cairo, Giza, Alexandria). Outreach targets professional syndicates, construction material showrooms, and social media groups where contractors seek work. The platform is free during this phase to eliminate adoption friction.
+
+**Phase 2 — Demand Activation (Months 4–12).** Overlapping with supply seeding, demand-side acquisition begins through targeted social media campaigns (Facebook and Instagram, where Egyptian property owners are most active), search engine optimisation for finishing and renovation keywords in Arabic, and partnerships with real estate developers and material suppliers who can refer customers at the point of need.
+
+**Phase 3 — Monetisation (Month 13+).** Commission on protected transactions and premium subscriptions are introduced gradually, with early adopters grandfathered on favorable terms to reward loyalty and generate case studies.
+
+**Customer Acquisition Cost (CAC) Estimates.** Based on comparable Egyptian digital platforms, the estimated CAC is EGP 150–250 per property owner (via social media advertising) and EGP 80–120 per professional (via direct outreach and referral). With an average project value of EGP 120,000 and a 2% commission, the platform earns approximately EGP 2,400 per completed transaction — yielding a healthy CAC-to-LTV ratio even under conservative assumptions.
+
+**Referral Programme.** A built-in referral system incentivises both professionals and customers to invite peers, reducing acquisition costs as the network grows. Referrers earn bonus credits that can be used toward bidding or premium features.
 
 ---
 
@@ -324,12 +340,10 @@ El-Moquwal is already implemented as a working system, which materially de-risks
 
 The platform is built and maintained by the founding student team, whose roles map directly to the system's components. No external development is purchased.
 
-| Role | Responsibility |
-|------|----------------|
-| Back-end / API developer | Node.js services, data models, escrow and payment logic, contract generation. |
-| Front-end developer | Responsive Arabic-first interface across the four role dashboards. |
-| UI/UX designer | Low-friction, trust-signalling user journeys. |
-| QA / testing | Functional, security, and load testing across critical flows. |
+- **Back-end / API developer:** Node.js services, data models, escrow and payment logic, contract generation.
+- **Front-end developer:** Responsive Arabic-first interface across the four role dashboards.
+- **UI/UX designer:** Low-friction, trust-signalling user journeys.
+- **QA / testing:** Functional, security, and load testing across critical flows.
 
 *Table 2.4: Core technical team (founding team, in-kind)*
 
@@ -402,22 +416,7 @@ Figures in EGP. The cash capital is a one-time outlay in 2027; all other lines a
 
 The projection shows a planned first-year (2027) loss of about EGP 162,000, incurred deliberately while the platform builds its user base with no monetisation. Once commission and subscription fees begin in 2028, the business returns to cumulative profit in that same year and grows strongly into 2029, when the net margin reaches roughly 55%.
 
-### 2.8.4 Investment Costs (التكاليف الاستثمارية)
-
-Because the platform was built entirely in-house by the founding team, software development is an in-kind contribution rather than a cash expenditure. The following table summarises the one-time capital investment required to launch the venture:
-
-| # | Item | Amount (EGP) |
-|---|------|-------------|
-| 1 | Company registration & legal setup | 15,000 |
-| 2 | Domain name & first-year hosting | 6,000 |
-| 3 | Launch marketing & branding | 25,000 |
-| 4 | Working-capital reserve | 24,000 |
-| | **Total Cash Investment** | **70,000** |
-| | Platform development (founding team — in-kind) | *Not a cash cost* |
-
-*Table 2.8: Investment costs summary (التكاليف الاستثمارية)*
-
-### 2.8.5 Ten-Year Cash Flow Projection (التدفقات المالية لعشر سنوات)
+### 2.8.4 Ten-Year Cash Flow Projection
 
 To assess the long-term financial viability of the venture, the three-year projection (Table 2.7) is extended to a full ten-year horizon. Years 1–3 use the actual figures already established. Years 4–10 are projected using gradually declining growth rates that reflect the natural maturation of a digital marketplace: revenue growth declines from approximately 55% in Year 4 to 12% by Year 10, while operating costs grow more slowly (40% down to 10%) due to economies of scale inherent in a software platform. All figures are in Egyptian Pounds (EGP).
 
@@ -433,23 +432,23 @@ To assess the long-term financial viability of the venture, the three-year proje
 
 **Operational cost growth assumptions:** Year 1–3 = actual projections; Year 4 ≈ 40%; Year 5 ≈ 30%; Year 6 ≈ 22%; Year 7 ≈ 18%; Year 8 ≈ 15%; Year 9 ≈ 12%; Year 10 ≈ 10%.
 
-### 2.8.6 Performance and Financial Indicators
+### 2.8.5 Performance and Financial Indicators
 
 Based on the ten-year cash flow projection, the following key performance metrics are derived:
 
-**1. Average Annual Net Profit (متوسط الربح السنوي)**
+**1. Average Annual Net Profit**
 
 Total net profit over 10 years = (92,000) + 233,548 + 634,303 + 1,060,686 + 1,557,310 + 2,099,746 + 2,607,588 + 3,117,573 + 3,631,922 + 4,102,632 = **18,953,308 EGP**
 
 > **Average Annual Net Profit = 18,953,308 ÷ 10 = 1,895,331 EGP**
 
-**2. Return on Investment — ROI (العائد على الاستثمار)**
+**2. Return on Investment — ROI**
 
 > **ROI = (Average Annual Net Profit ÷ Total Investment) × 100 = (1,895,331 ÷ 70,000) × 100 = 2,707.6%**
 
 This exceptionally high ROI is characteristic of founder-built digital platforms where the initial cash investment is minimal and the primary asset — the software — is contributed in-kind.
 
-**3. Break-Even Point (نقطة التعادل)**
+**3. Break-Even Point**
 
 | Period | Annual Net Cash Flow (EGP) | Cumulative Cash Flow (EGP) |
 |--------|---------------------------:|--------------------------:|

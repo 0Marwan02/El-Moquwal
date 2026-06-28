@@ -12,25 +12,10 @@ This chapter bridges the gap between theoretical design and practical realizatio
 - **Tools:** Git for version control, Postman for API testing, Visual Studio Code as the primary IDE.
 
 ### 5.2.2 Project Structure
-The backend adheres to a highly modular directory layout:
-```text
-backend/
-├── src/
-│   ├── config/      # Environment loading (env.js), Database connection
-│   ├── controllers/ # Business logic handlers (auth, project, bid, payment)
-│   ├── middleware/  # Express middlewares (JWT auth, RBAC, file upload)
-│   ├── models/      # Mongoose schemas & discriminator definitions
-│   ├── routes/      # Express API route declarations
-│   ├── templates/   # HTML templates (e.g., Arabic contract template)
-│   └── utils/       # Shared logic (nationalId parser, ai.service, pdfGenerator)
-└── server.js        # Entry point for the Express application
-```
+The backend follows a modular directory structure under `backend/src/`, with dedicated subdirectories for configuration (environment loading and database connection), controllers (business logic handlers for authentication, projects, bids, payments, and more), middleware (Express middlewares for JWT authentication, RBAC enforcement, and file upload handling), models (Mongoose schema and discriminator definitions), routes (Express API route declarations), templates (HTML templates including the Arabic contract template), and utilities (shared logic for National ID parsing, AI services, and PDF generation). The application entry point is `server.js`, which initialises the Express application and connects all modules.
 
 ### 5.2.3 Environment Configuration
-The system relies on a strictly typed `.env` file to manage secrets and infrastructure endpoints securely. Key variables include:
-- `MONGO_URI`: The MongoDB connection string.
-- `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET`: Cryptographic keys for token generation.
-- `ANTHROPIC_API_KEY` / `HF_API_TOKEN`: External AI provider credentials.
+The system relies on a strictly managed environment configuration file to securely store secrets and infrastructure endpoints. This includes the MongoDB connection string, cryptographic keys for JWT token generation, external AI provider credentials (Anthropic and Pollinations.ai), and email service configuration. All sensitive values are loaded at startup and validated to prevent the application from running with missing critical configuration.
 
 ## 5.3 Technology Stack Deep Dive
 
@@ -38,7 +23,7 @@ The system relies on a strictly typed `.env` file to manage secrets and infrastr
 Node.js was selected for its non-blocking, event-driven architecture, ideal for handling numerous concurrent API requests. Express.js acts as the minimal routing framework, applying sequential middleware chains (e.g., `express.json()`, `cors`, `helmet` for security headers, and `express-rate-limit` to thwart DDoS attempts).
 
 ### 5.3.2 MongoDB and Mongoose
-MongoDB’s document-oriented structure natively aligns with JSON, allowing fluid data handling. Mongoose is crucial here; it provides rigorous schema validation at the application layer, preventing unstructured data injection. The implementation heavily utilizes the **Discriminator Pattern** to store all user variants in a single collection while enforcing different required fields.
+MongoDB's document-oriented structure natively aligns with JSON, allowing fluid data handling. Mongoose is crucial here; it provides rigorous schema validation at the application layer, preventing unstructured data injection. The implementation heavily utilizes the **Discriminator Pattern** to store all user variants in a single collection while enforcing different required fields.
 
 ### 5.3.3 Argon2id Password Security
 For cryptographic hashing, the system utilizes Argon2id over legacy bcrypt. Argon2id is highly resistant to both GPU cracking and side-channel attacks. This is applied not only to user passwords but also to the highly sensitive Egyptian National Identification Numbers.
@@ -46,138 +31,32 @@ For cryptographic hashing, the system utilizes Argon2id over legacy bcrypt. Argo
 ## 5.4 Key Algorithm Implementations
 
 ### 5.4.1 Egyptian National ID Parser
-The system ensures KYC compliance by mathematically parsing the user's NID upon registration.
-*Implementation excerpt from `utils/nationalId.js`:*
+The system ensures KYC compliance by mathematically parsing the user's National Identification Number upon registration. The parser accepts the 14-digit NID string and extracts structured demographic information according to Egyptian civil registry rules.
 
-```javascript
-// by3ml parse lel raqam el qawmy el masry (14 raqam)
-function parseNID(nid) {
-  if (!isFormatValid(nid)) return { valid: false };
+The first digit indicates the century (2 for the 1900s, 3 for the 2000s), followed by two digits for the birth year, two for the month, and two for the day. Digits 8–9 encode the governorate of registration using standardised codes that map to all 27 Egyptian governorates. The 13th digit determines gender — odd numbers indicate male, even numbers indicate female.
 
-  const centuryDigit = nid.charAt(0); // 2 for 1900s, 3 for 2000s
-  const yearStr = nid.substring(1, 3);
-  const mm = nid.substring(3, 5);
-  const dd = nid.substring(5, 7);
-  const govCode = nid.substring(7, 9);
-  const genderDigit = parseInt(nid.charAt(12), 10);
-
-  // Define Century
-  const century = centuryDigit === '2' ? 1900 : centuryDigit === '3' ? 2000 : null;
-  if (!century) return { valid: false, reason: 'Invalid century digit' };
-  
-  const year = century + parseInt(yearStr, 10);
-
-  // Resolve Governorate
-  const governorate = GOVERNORATES[govCode] || 'غير معروف';
-  if (governorate === 'غير معروف') return { valid: false, reason: 'Invalid governorate code' };
-
-  // Resolve Gender (odd = male, even = female)
-  const gender = genderDigit % 2 === 0 ? 'female' : 'male';
-
-  return {
-    valid: true,
-    year,
-    month: mm,
-    day: dd,
-    gender,
-    governorateCode: govCode,
-    governorate,
-    century,
-  };
-}
-```
-**Explanation:** This pure function deconstructs the 14-digit string based on Egyptian registry rules. It prevents users from registering with syntactically fake NIDs, returning structured demographics that are saved to the user profile, while the NID itself is hashed.
+The parser validates each component: it rejects NIDs with invalid century digits, impossible date combinations, or unrecognised governorate codes. Valid results return a structured object containing the birth year, month, day, gender, and governorate name. The NID itself is never stored in plaintext — it is hashed using Argon2id, with only the last four digits retained for display purposes. This approach prevents users from registering with syntactically fake NIDs while maintaining strict data protection.
 
 ### 5.4.2 PDF Contract Generation
-Translating digital agreements into legally binding physical documents is handled via headless Chrome.
-*Implementation excerpt from `utils/pdfGenerator.js`:*
+Translating digital agreements into legally structured documents is handled through headless browser rendering using Puppeteer (Chromium). This approach was chosen specifically because it handles complex Arabic Right-to-Left (RTL) text shaping and embedded CSS styles significantly better than legacy PDF libraries.
 
-```javascript
-async function generatePDFContract(contract) {
-  const filename = `contract_${contract._id}.pdf`;
-  const filePath = path.join(CONTRACTS_DIR, filename);
+The generation process follows four steps. First, the system reads a pre-designed Arabic HTML contract template that contains placeholder tokens for dynamic values. Second, it constructs cryptographic signature blocks for both the customer and contractor, each containing an SHA256 hash of the signing context (IP address, User-Agent, and timestamp) to ensure non-repudiation. Third, the template placeholders are replaced with the actual contract data — project details, agreed amount, party information, warranty terms, and the computed signature blocks. Fourth, Puppeteer launches a headless Chrome instance configured with Arabic locale headers, renders the populated HTML, and exports it as an A4-format PDF with professional print margins.
 
-  // 1. Read Arabic HTML Template
-  const templatePath = path.resolve(__dirname, '../templates/contract-template.html');
-  let html = fs.readFileSync(templatePath, 'utf8');
-
-  // 2. Build Cryptographic Signature Blocks
-  const custSig = buildSigBlock(contract.customerSignature);
-  const contSig = buildSigBlock(contract.contractorSignature);
-
-  // 3. Inject Values using Placeholders
-  html = html
-    .replace('{{CONTRACT_ID}}', contract._id.toString())
-    .replace('{{DATE}}', safe(contract.generatedAt ? contract.generatedAt.toISOString().split('T')[0] : ''))
-    .replace('{{CUSTOMER_SIG}}', custSig)
-    .replace('{{CONTRACTOR_SIG}}', contSig);
-
-  // 4. Render to PDF via Puppeteer
-  const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox'] });
-  const page = await browser.newPage();
-  
-  // Set Arabic locale for proper text shaping
-  await page.setExtraHTTPHeaders({ 'Accept-Language': 'ar-EG,ar;q=0.9' });
-  await page.setContent(html, { waitUntil: 'networkidle0' });
-
-  await page.pdf({
-    path: filePath,
-    format: 'A4',
-    printBackground: true,
-    margin: { top: '20mm', bottom: '20mm', left: '15mm', right: '15mm' }
-  });
-
-  await browser.close();
-  return filename;
-}
-```
-**Explanation:** Puppeteer is chosen specifically because it handles complex Arabic RTL text shaping and embedded CSS styles infinitely better than legacy tools like `wkhtmltopdf`. The script injects an SHA256 signature hash to comply with Egyptian electronic signature laws.
+The resulting PDF serves as the binding agreement between both parties, compliant with the structural requirements of Egyptian civil law (Law 131/1948) for service contracts.
 
 ### 5.4.3 AI Price Estimation Service
-El-Moquwal provides fair-value estimates via an AI fallback architecture.
-*Implementation excerpt from `utils/ai.service.js`:*
+El-Moquwal provides fair-value cost estimates to customers before they commit to publishing a project. The estimation service uses a dual-provider architecture to ensure reliability.
 
-```javascript
-async function callLLM(prompt, options = {}) {
-  // Uses Pollinations AI (free OpenAI compatible endpoint)
-  const response = await fetch('https://text.pollinations.ai/openai', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'openai',
-      messages: [{ role: 'system', content: options.systemPrompt }, { role: 'user', content: prompt }],
-      temperature: options.temperature,
-    }),
-  });
-  const data = await response.json();
-  return data.choices[0].message.content.trim();
-}
-```
-**Explanation:** To reduce operational costs, the system attempts to fetch the estimate via Pollinations.ai. If this fails, the system orchestrator falls back to Anthropic Claude (if the API key is present in `.env`). The raw text response is then piped through `parseJsonResponse` which utilizes Regex to forcefully extract the JSON block, even if the LLM outputted conversational preamble.
+The primary provider is Pollinations.ai, a free OpenAI-compatible endpoint. When a customer requests an estimate, the system constructs a structured prompt containing the project type, governorate, property area in square metres, budget range, and any additional description. The prompt includes a system instruction that constrains the AI model to return its response in a specific JSON format containing minimum and maximum price estimates in Egyptian Pounds, along with Arabic-language reasoning.
 
-### 5.4.4 JWT Middleware Chain
-Security routing relies on modular middleware.
-*Implementation excerpt from `middleware/auth.js`:*
+If the primary provider fails (due to rate limiting, network issues, or service unavailability), the system automatically falls back to Anthropic Claude as a secondary provider, using the same prompt structure. The raw text response from either provider is processed through a robust JSON extraction function that uses pattern matching to isolate the JSON block even when the model includes conversational preamble or markdown formatting. Successful estimates are cached on the project record for one hour to minimise API costs and ensure consistency across repeated views.
 
-```javascript
-function requirePermission(...perms) {
-  return (req, res, next) => {
-    if (!req.user) return next(new AppError('غير مصرح', 401, 'UNAUTHORIZED'));
-    
-    // super_admin has unrestricted access — bypass all permission checks
-    if (req.user.role === 'super_admin') return next();
-    
-    // regular admin — verify each required permission exists in the user's permissions array
-    const userPerms = Array.isArray(req.user.permissions) ? req.user.permissions : [];
-    const missing = perms.filter(p => !userPerms.includes(p));
-    if (missing.length > 0) {
-      return next(new AppError(`ليس لديك صلاحية لهذا الإجراء`, 403, 'INSUFFICIENT_PERMISSIONS'));
-    }
-    next();
-  };
-}
-```
-**Explanation:** This snippet demonstrates granular Role-Based Access Control. Super Admins bypass checks, while regular Admins are restricted based on their specific arrays (e.g., `manage_disputes`).
+### 5.4.4 Authentication and Authorisation Middleware
+Security routing relies on a modular middleware chain that enforces Role-Based Access Control at every API endpoint. The permission middleware accepts a list of required permissions and checks them against the authenticated user's profile.
+
+Super Administrators are granted unrestricted access and bypass all permission checks automatically. For regular administrators, the middleware verifies that each required permission exists in the user's assigned permissions array — if any required permission is missing, the request is rejected with an "insufficient permissions" response. This granular approach means that an administrator with "view_stats" permission cannot access dispute resolution endpoints unless they also hold the "manage_disputes" permission.
+
+The middleware chain is composable: route definitions stack multiple middleware functions in sequence — first verifying authentication (valid JWT token), then verifying role membership, and finally verifying specific permissions — creating a layered security boundary that is both flexible and strict.
 
 ## 5.5 Testing Strategy
 
@@ -251,4 +130,4 @@ Scripted attacks were executed against the `/api/auth/login` endpoint to trigger
 - **Outcome:** The 6th attempt successfully returned a `423 Locked` HTTP status code. The `lockUntil` field was successfully verified in the MongoDB document.
 
 ## 5.10 Chapter Summary
-This chapter rigorously detailed the transformation of the system architecture into a living software application. By highlighting critical code segments—such as the complex NID demographic parser, the headless Puppeteer Arabic PDF generator, and the resilient LLM estimation service—it demonstrated the platform's advanced technical depth. Coupled with an exhaustive unit, integration, and security testing framework, the El-Moquwal backend is proven to be secure, compliant with Egyptian law, and functionally capable of supporting high-volume contracting operations.
+This chapter detailed the transformation of the system architecture into a working software application. By describing the critical algorithms — such as the Egyptian NID demographic parser, the headless Puppeteer Arabic PDF generator, and the resilient dual-provider LLM estimation service — it demonstrated the platform's technical depth. Coupled with an exhaustive unit, integration, and security testing framework, the El-Moquwal backend is proven to be secure, compliant with Egyptian law, and functionally capable of supporting high-volume contracting operations.

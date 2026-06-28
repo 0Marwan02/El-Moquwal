@@ -180,6 +180,165 @@ El-Moquwal operates as an independent, centralized marketplace that heavily inte
 - **Preconditions:** Valid project description and parameters.
 - **Postconditions:** Structured JSON parsed containing `minEstimate`, `maxEstimate`, and `reasoning`. Cached on the project document for exactly 1 hour.
 
+## 4.4 Use Case Specifications
+
+This section defines the behavior of the key transactional use cases of the El-Moquwal platform in a structured tabular format.
+
+### 4.4.1 UC-01: User Registration and KYC Verification
+*Table 4.2: Use Case UC-01: User Registration and KYC Verification*
+**Use Case ID:** UC-01
+
+**Use Case Name:** User Registration and KYC Verification
+
+**Primary Actor:** Customer / Contractor
+
+**Description:** Handles user registration, parses demographics from Egyptian National ID, and initiates manual KYC check for contractors.
+
+**Preconditions:** User is not logged in; has a valid unique email, phone number, and 14-digit Egyptian National ID.
+
+**Basic Flow:**
+  - 1. User selects registration type (Customer or Contractor).
+  - 2. User fills required registration inputs.
+  - 3. If Contractor, uploads a photo of their National ID card.
+  - 4. System validates input formats (e.g., email regex, phone operator regex).
+  - 5. System checks mathematical validity of National ID using birth year, month, day, and governorate checksum algorithms.
+  - 6. System hashes password using Argon2id and hashes NID using SHA-256 (to check duplicates).
+  - 7. System parses and saves gender, DOB, and governorate from NID digits.
+  - 8. System generates and sends an email OTP.
+  - 9. User submits OTP to verify their email.
+  - 10. Customer account status is set to `active`; Contractor status is set to `pending`.
+
+**Alternative Flow:**
+  - *Invalid National ID:* If NID checksum is invalid, system halts registration and displays error message.
+  - *Duplicate Credentials:* If email, phone, or NID hash exists, system rejects registration with HTTP 409.
+  - *KYC Rejection:* If Admin rejects contractor NID photo, status becomes `rejected` with an explanatory email.
+
+**Postconditions:** User profile created in MongoDB. Bidding is disabled for contractors until status changes to `approved`.
+### 4.4.2 UC-02: Project Publication and AI Price Estimation
+*Table 4.3: Use Case UC-02: Project Publication and AI Price Estimation*
+**Use Case ID:** UC-02
+
+**Use Case Name:** Project Publication and AI Price Estimation
+
+**Primary Actor:** Customer
+
+**Description:** Allows property owners to draft a project, run an AI cost estimation based on finishing parameters, and publish it to the marketplace.
+
+**Preconditions:** Customer is authenticated and profile is active.
+
+**Basic Flow:**
+  - 1. Customer enters project details (Title, Type, Area, Location, Governorate, Description).
+  - 2. Customer uploads optional reference photos.
+  - 3. Customer clicks "Request AI Estimate".
+  - 4. System compiles parameters and prompts the LLM service (Pollinations / Anthropic).
+  - 5. LLM service computes min/max EGP price ranges and writes structural Arabic explanation.
+  - 6. System displays the estimate and saves it to the project document.
+  - 7. Customer clicks "Publish Project" to make it public.
+
+**Alternative Flow:**
+  - *AI API Down:* System catches timeout and falls back to a cached, static EGP rate-matrix indexed by governorate and finishing specialty to generate an estimated budget range.
+
+**Postconditions:** Project status transitions from `draft` to `open` and is indexed in search queries.
+### 4.4.3 UC-03: Blind Bidding Submission
+*Table 4.4: Use Case UC-03: Blind Bidding Submission*
+**Use Case ID:** UC-03
+
+**Use Case Name:** Blind Bidding Submission
+
+**Primary Actor:** Contractor
+
+**Description:** Allows approved contractors to bid on open projects using platform credits. Bids remain blind to competitors.
+
+**Preconditions:** Contractor is authenticated, approved (KYC status `approved`), and has a positive credit balance.
+
+**Basic Flow:**
+  - 1. Contractor browses open projects (filtered by specialty).
+  - 2. Contractor selects project details and enters bid amount (EGP), duration (days), and proposal message.
+  - 3. Contractor clicks "Submit Bid".
+  - 4. System determines credit cost (1 for budget under 50k, 2 for 50k-200k, 3 for above 200k).
+  - 5. System checks and decrements Contractor's credit balance.
+  - 6. System saves Bid document in `pending` state and increments project's `bidsCount`.
+
+**Alternative Flow:**
+  - *Low Credits:* If credit balance < required credits, system blocks submission and redirects to buy-credits page.
+  - *Double Bids:* Compound index `{ project, contractor }` prevents double bidding; rejects with HTTP 409.
+
+**Postconditions:** Bid registered. Bidding amount is masked for all other contractors fetching the bids list.
+### 4.4.4 UC-04: Digital Contract Signing
+*Table 4.5: Use Case UC-04: Digital Contract Signing*
+**Use Case ID:** UC-04
+
+**Use Case Name:** Digital Contract Signing
+
+**Primary Actor:** Customer & Contractor
+
+**Description:** Generates an Arabic civil contract upon bid acceptance, which must be signed digitally by both parties to activate the project.
+
+**Preconditions:** Customer has accepted a Contractor's bid; project status is `awarded`.
+
+**Basic Flow:**
+  - 1. System automatically creates a Contract document in `pending_signatures` state.
+  - 2. Customer reviews terms, draws signature on canvas, and submits signature.
+  - 3. System records Customer signature (IP address, timestamp, browser headers, and SHA-256 hash).
+  - 4. Contractor is notified via email/SMS.
+  - 5. Contractor reviews terms, submits signature.
+  - 6. System records Contractor signature details.
+  - 7. Once both sign, contract transitions to `active`.
+  - 8. System invokes Puppeteer in background to compile the HTML Arabic template, signatures, and stamps into a static A4 PDF contract file.
+
+**Alternative Flow:**
+  - *Draft Rejection:* Either party can reject the contract draft, reverting the project status to `open` or initiating admin dispute review.
+
+**Postconditions:** A legally structured, tamper-proof Arabic contract PDF is stored, and the escrow deposit phase is unlocked.
+### 4.4.5 UC-05: Escrow Milestone Funding and Payment Release
+*Table 4.6: Use Case UC-05: Escrow Milestone Funding and Payment Release*
+**Use Case ID:** UC-05
+
+**Use Case Name:** Escrow Milestone Funding and Payment Release
+
+**Primary Actor:** Customer & Contractor
+
+**Description:** Holds project funds in a secure escrow ledger and releases them to the contractor across three major milestones (30% / 40% / 30%) upon approval.
+
+**Preconditions:** Contract status is `active`.
+
+**Basic Flow:**
+  - 1. Customer pays total project value via integrated gateway (Paymob / Fawry).
+  - 2. Escrow status changes to `held`. Contractor is notified to start work.
+  - 3. Contractor completes Phase 1 and requests release.
+  - 4. Customer inspects site and clicks "Release Milestone 1".
+  - 5. System deducts 2% platform commission and transfers 98% of the milestone value (30% of total) to Contractor's balance.
+  - 6. Steps repeat for Phase 2 (40%) and Phase 3 (30%).
+  - 7. Once final milestone is released, Contract is updated to `completed`.
+
+**Alternative Flow:**
+  - *Milestone Dispute:* If Customer refuses release due to bad execution, Contractor or Customer raises dispute, freezing the remaining escrow amount.
+
+**Postconditions:** Funds are securely distributed to Contractor; platform commissions are logged in the platform ledger.
+### 4.4.6 UC-06: Dispute Arbitration
+*Table 4.7: Use Case UC-06: Dispute Arbitration*
+**Use Case ID:** UC-06
+
+**Use Case Name:** Dispute Arbitration
+
+**Primary Actor:** Admin
+
+**Description:** Provides manual review and settlement of frozen escrow funds by an administrative officer.
+
+**Preconditions:** Escrow status is `disputed`.
+
+**Basic Flow:**
+  - 1. Admin logs into manager panel and accesses the disputes queue.
+  - 2. Admin inspects the Contract, logs, photo attachments, and chat logs between parties.
+  - 3. Admin communicates with both parties or conducts an in-person assessment.
+  - 4. Admin makes a split decision (Release to Contractor, Refund to Customer, or Split ratio).
+  - 5. Admin inputs decision ratio and mandatory text justification.
+  - 6. System transfers EGP values based on decision and changes Escrow status to `resolved`.
+
+**Alternative Flow:**
+  - *Warranty Claim:* If project is finished but defects appear within the warranty period, Customer can claim warranty. Admin adjudicates and can deduct compensation from Contractor's held warranty cap.
+
+**Postconditions:** Frozen funds are distributed; audit log records the Admin's action and reasoning.
 ## 4.5 Non-Functional Requirements
 
 ### 4.5.1 Performance Requirements
@@ -196,14 +355,11 @@ El-Moquwal operates as an independent, centralized marketplace that heavily inte
 
 ## 4.6 Requirements Traceability Matrix
 
-| Req ID | Requirement Name | Module | API Endpoint | Test Type | Priority |
-|--------|------------------|--------|--------------|-----------|----------|
-| FR-001 | Customer Reg | Auth | `POST /api/auth/register/customer`| Integration | High |
-| FR-003 | NID Parsing | Auth | `internal utils/nationalId.js`| Unit | Critical |
-| FR-046 | Submit Bid | Bidding | `POST /api/projects/:id/bids` | System | High |
-| FR-047 | Blind Bidding | Bidding | `GET /api/projects/:id/bids` | Integration | Critical |
-| FR-078 | Escrow Release | Payment| `POST /api/payments/:id/release-milestone` | System | High |
-| FR-103 | PDF Generation | Contract| `POST /api/contracts/generate` | Integration | Medium |
-
+- **FR-001** (Customer Reg): Module: Auth | API: `POST /api/auth/register/customer` | Test: Integration | Priority: High
+- **FR-003** (NID Parsing): Module: Auth | API: `internal utils/nationalId.js` | Test: Unit | Priority: Critical
+- **FR-046** (Submit Bid): Module: Bidding | API: `POST /api/projects/:id/bids` | Test: System | Priority: High
+- **FR-047** (Blind Bidding): Module: Bidding | API: `GET /api/projects/:id/bids` | Test: Integration | Priority: Critical
+- **FR-078** (Escrow Release): Module: Payment | API: `POST /api/payments/:id/release-milestone` | Test: System | Priority: High
+- **FR-103** (PDF Generation): Module: Contract | API: `POST /api/contracts/generate` | Test: Integration | Priority: Medium
 ## 4.7 Chapter Summary
 Chapter 4 establishes the fundamental contractual requirements for the El-Moquwal platform. By explicitly outlining Functional Requirements—including complex localized elements like the Egyptian NID extraction and Arabic PDF contract generation—alongside stringent Security and Performance Non-Functional Requirements, this document ensures the development team maintains a rigid focus on delivering a compliant, highly secure, and functionally robust ecosystem for the Egyptian construction sector.

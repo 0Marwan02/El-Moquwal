@@ -263,11 +263,20 @@ const downloadPDF = asyncHandler(async (req, res) => {
   const isAdmin = req.user.role === 'admin' || req.user.role === 'super_admin';
   if (!isParty && !isAdmin) throw new AppError('غير مصرح', 403, 'FORBIDDEN');
 
-  if (!contract.pdfFilename) throw new AppError('ملف الـ PDF غير متاح بعد', 404, 'NOT_FOUND');
+  // لو الملف غير متولد أو مفقود من القرص — نولّده عند الطلب
+  let filePath = contract.pdfFilename
+    ? path.join(env.UPLOADS_DIR, 'contracts', contract.pdfFilename)
+    : null;
 
-  const filePath = path.join(env.UPLOADS_DIR, 'contracts', contract.pdfFilename);
-  if (!fs.existsSync(filePath)) {
-    throw new AppError('الملف مفقود من الخادم', 404, 'FILE_MISSING');
+  if (!filePath || !fs.existsSync(filePath)) {
+    const populated = await Contract.findById(contract._id)
+      .populate('customer', 'name email phone nationalId')
+      .populate('contractor', 'name email phone specialty nationalId');
+    const pdfFilename = await generatePDFContract(populated);
+    populated.pdfFilename = pdfFilename;
+    await populated.save();
+    contract.pdfFilename = pdfFilename;
+    filePath = path.join(env.UPLOADS_DIR, 'contracts', pdfFilename);
   }
 
   res.download(filePath, contract.pdfFilename);

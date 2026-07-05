@@ -15,6 +15,10 @@ router.get('/contractors/active', requireAuth, requireRole('customer'), ctrl.lis
 // customer only - get all my projects
 router.get('/my-projects', requireAuth, requireRole('customer'), ctrl.getMyProjects);
 
+// contractor only — عروضي عبر كل المشاريع
+const bidCtrl = require('../controllers/bid.controller');
+router.get('/my-bids', requireAuth, requireRole('contractor'), bidCtrl.myBids);
+
 router.get('/:id', optionalAuth, ctrl.getProject);
 
 // customer only — create (query ?draft=1 → مسودة)

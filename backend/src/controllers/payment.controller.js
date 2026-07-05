@@ -117,10 +117,16 @@ const releaseMilestone = asyncHandler(async (req, res) => {
   if (!escrow) throw new AppError('لا يوجد ضمان لهذا المشروع', 404, 'NOT_FOUND');
   if (escrow.customer.toString() !== req.user._id.toString()) throw new AppError('غير مصرح', 403, 'FORBIDDEN');
 
+  // لا يمكن صرف أي مرحلة أثناء وجود نزاع مفتوح على الضمان
+  if (escrow.status === 'disputed') {
+    throw new AppError('لا يمكن صرف الدفعات أثناء وجود نزاع مفتوح — بانتظار قرار الإدارة', 400, 'DISPUTE_ACTIVE');
+  }
+
   const { milestoneId } = req.body;
   const milestone = escrow.milestones.id(milestoneId);
   if (!milestone) throw new AppError('المرحلة غير موجودة', 404, 'MILESTONE_NOT_FOUND');
   if (milestone.status === 'released') throw new AppError('تم صرف هذه المرحلة بالفعل', 409, 'ALREADY_RELEASED');
+  if (milestone.status === 'disputed') throw new AppError('هذه المرحلة متنازع عليها — لا يمكن صرفها', 400, 'MILESTONE_DISPUTED');
 
   milestone.status = 'released';
   milestone.releasedAt = new Date();
@@ -146,14 +152,23 @@ const releaseMilestone = asyncHandler(async (req, res) => {
   res.json({ escrow });
 });
 
-// GET /api/payments/escrow/:projectId — حالة الضمان
+// GET /api/payments/escrow/:projectId — حالة الضمان (مع بيانات العقد المرتبط)
 const getEscrow = asyncHandler(async (req, res) => {
   const escrow = await Escrow.findOne({ project: req.params.projectId })
-    .populate('customer', 'name')
-    .populate('contractor', 'name')
+    .populate('customer', 'name phone')
+    .populate('contractor', 'name phone')
     .lean();
   if (!escrow) throw new AppError('لا يوجد ضمان', 404, 'NOT_FOUND');
-  res.json({ escrow });
+
+  const Contract = require('../models/Contract');
+  const [contract, project] = await Promise.all([
+    Contract.findOne({ project: req.params.projectId })
+      .select('projectTitle projectType bidAmount commissionRate warrantyCapEGP status createdAt signedAt warrantyStatus')
+      .lean(),
+    Project.findById(req.params.projectId).select('title projectType status').lean(),
+  ]);
+
+  res.json({ escrow, contract: contract || null, project: project || null });
 });
 
 // POST /api/payments/webhook/paymob — Paymob transaction webhook with HMAC verification
@@ -264,9 +279,14 @@ const resolveDispute = asyncHandler(async (req, res) => {
     }
   });
 
-  escrow.status = decision === 'refund_to_customer' ? 'refunded' : 'released';
+  // احسب حالة الضمان بناءً على حالة كل المراحل (وليس قرار النزاع فقط)
+  const allReleased = escrow.milestones.every((m) => m.status === 'released');
+  const allRefunded = escrow.milestones.every((m) => m.status === 'refunded');
+  if (allReleased) escrow.status = 'released';
+  else if (allRefunded) escrow.status = 'refunded';
+  else escrow.status = 'partially_released';
   escrow.disputeResolution = { decision, warrantyDeduction: deductionAmount, adminNote: adminNote || '', resolvedAt: new Date(), resolvedBy: req.user._id };
-  if (decision !== 'refund_to_customer') escrow.fullyReleasedAt = new Date();
+  if (allReleased) escrow.fullyReleasedAt = new Date();
   await escrow.save();
 
   // Record warranty payout transaction if applicable

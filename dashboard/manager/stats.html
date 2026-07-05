@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة الإدارة | الإحصائيات</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/variables.css">
+  <link rel="stylesheet" href="../../assets/css/base.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/layout.css">
+  <link rel="stylesheet" href="../../assets/css/utilities.css">
+  <style>
+    .section-title {
+      font-size: var(--font-size-md); font-weight: 800; color: var(--color-navy);
+      margin: var(--space-8) 0 var(--space-5); display: flex; align-items: center; gap: var(--space-3);
+    }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border-default); }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: var(--space-5); }
+    .s-card {
+      background: var(--bg-surface); border: 1px solid var(--border-default);
+      border-radius: var(--radius-md); padding: var(--space-6); box-shadow: var(--shadow-sm);
+    }
+    .s-label { font-size: 12px; font-weight: 800; color: var(--text-muted); margin-bottom: 8px; }
+    .s-value { font-size: 30px; font-weight: 900; color: var(--color-navy); line-height: 1.1; }
+    .s-desc  { font-size: 11px; color: var(--text-light); margin-top: 6px; }
+    .toast-stack { position: fixed; top: 18px; left: 18px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+  </style>
+</head>
+
+<body class="dashboard-page">
+  <div class="dashboard-wrapper">
+    <aside class="sidebar" id="adminSidebar" data-active="stats"></aside>
+
+    <main class="dashboard-main">
+      <div class="dashboard-topbar">
+        <div class="topbar-page-title">إحصائيات المنصة</div>
+      </div>
+
+      <div class="dashboard-content" id="statsContent">
+        <div class="empty-state" style="padding:60px;">
+          <div style="font-size:24px; margin-bottom:10px;">⏳</div>
+          <div class="empty-state-text">جاري تحميل الإحصائيات...</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast-stack" id="toastStack"></div>
+
+  <script src="../../assets/js/api.js"></script>
+  <script src="../../assets/js/admin-dashboard.js"></script>
+  <script>
+    (async () => {
+      const user = await window.adminDash.bootAdminPage({ active: 'stats', requirePerm: 'view_stats' });
+      if (!user) return;
+
+      const content = document.getElementById('statsContent');
+      try {
+        const s = await window.api.fetch('/admin/stats');
+        const p = s.projects || {}, u = s.users || {}, m = s.materials || {};
+        const card = (label, value, desc = '') => `
+          <div class="s-card">
+            <div class="s-label">${label}</div>
+            <div class="s-value">${value}</div>
+            ${desc ? `<div class="s-desc">${desc}</div>` : ''}
+          </div>`;
+
+        content.innerHTML = `
+          <h2 class="section-title" style="margin-top:0;">📊 المشاريع</h2>
+          <div class="stat-grid">
+            ${card('إجمالي المشاريع', p.total ?? 0, 'منذ إطلاق المنصة')}
+            ${card('مفتوحة', p.open ?? 0, 'تستقبل عروضاً حالياً')}
+            ${card('مُرسّاة (جارٍ التنفيذ)', p.awarded ?? 0)}
+            ${card('مكتملة', p.closed ?? 0)}
+            ${card('مسودات', p.draft ?? 0, 'لم تُنشر بعد')}
+            ${card('ملغاة', p.cancelled ?? 0)}
+            ${card('⭐ مميزة', p.featured ?? 0)}
+            ${card('🔥 عاجلة', p.urgent ?? 0)}
+            ${card('🔒 خاصة', p.private ?? 0, 'بدعوات مباشرة للمقاولين')}
+            ${card('إجمالي العروض المقدمة', s.bids?.total ?? 0)}
+          </div>
+
+          <h2 class="section-title">👥 المستخدمون</h2>
+          <div class="stat-grid">
+            ${card('المقاولون', u.contractors ?? 0)}
+            ${card('بانتظار الموافقة', u.pendingContractors ?? 0, 'طلبات تسجيل مقاولين')}
+            ${card('العملاء', u.customers ?? 0)}
+          </div>
+
+          <h2 class="section-title">💰 المالية</h2>
+          <div class="stat-grid">
+            ${card('حجم أموال الضمان', (s.escrow?.totalVolume ?? 0).toLocaleString('ar-EG') + ' ج.م', 'إجمالي المبالغ المحجوزة في Escrow')}
+            ${card('نزاعات مفتوحة', s.escrow?.openDisputes ?? 0, 'تحتاج قرار الإدارة')}
+            ${card('عمولات المنصة', (s.revenue?.totalCommission ?? 0).toLocaleString('ar-EG') + ' ج.م', 'إيرادات محققة')}
+          </div>
+
+          <h2 class="section-title">🧱 سوق المواد</h2>
+          <div class="stat-grid">
+            ${card('المنتجات المعروضة', m.products ?? 0)}
+            ${card('طلبات الشراء', m.orders ?? 0)}
+          </div>
+        `;
+      } catch (e) {
+        content.innerHTML = `<div class="empty-state" style="padding:60px;"><div class="empty-state-text">تعذر تحميل الإحصائيات — ${e.message}</div></div>`;
+      }
+    })();
+  </script>
+</body>
+
+</html>

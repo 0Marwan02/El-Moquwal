@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة الإدارة | المشاريع المميزة</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/variables.css">
+  <link rel="stylesheet" href="../../assets/css/base.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/layout.css">
+  <link rel="stylesheet" href="../../assets/css/utilities.css">
+  <style>
+    .section-title {
+      font-size: var(--font-size-md); font-weight: 800; color: var(--color-navy);
+      margin: var(--space-8) 0 var(--space-5); display: flex; align-items: center; gap: var(--space-3);
+    }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border-default); }
+    .proj-list {
+      background: var(--bg-surface); border: 1px solid var(--border-default);
+      border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-sm); margin-bottom: var(--space-8);
+    }
+    .proj-row {
+      padding: var(--space-5) var(--space-6); border-bottom: 1px solid var(--border-default);
+      display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); flex-wrap: wrap;
+    }
+    .proj-row:last-child { border-bottom: none; }
+    .proj-row:hover { background: var(--bg-surface-2); }
+    .proj-title { font-weight: 800; color: var(--color-navy); }
+    .proj-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .info-banner {
+      background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.2);
+      border-radius: var(--radius-md); padding: var(--space-4) var(--space-5);
+      font-size: 12px; color: var(--text-secondary); line-height: 1.8; margin-bottom: var(--space-6);
+    }
+    .toast-stack { position: fixed; top: 18px; left: 18px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+  </style>
+</head>
+
+<body class="dashboard-page">
+  <div class="dashboard-wrapper">
+    <aside class="sidebar" id="adminSidebar" data-active="featured"></aside>
+
+    <main class="dashboard-main">
+      <div class="dashboard-topbar">
+        <div class="topbar-page-title">إدارة المشاريع المميزة والعاجلة</div>
+      </div>
+
+      <div class="dashboard-content">
+        <div class="info-banner">
+          <strong>💡 أساس التحديد:</strong>
+          <strong>⭐ مميز</strong> — يُبرز المشروع في أعلى قوائم التصفح لمدة 30 يوماً (عادةً مقابل رسوم دفعها العميل أو كترويج من الإدارة).
+          <strong>🔥 عاجل</strong> — يشير للمقاولين أن صاحب المشروع يريد بدء التنفيذ في أسرع وقت، ويرفع ترتيبه بعد المميز.
+          التحديد متاح للمشاريع <strong>المفتوحة</strong> فقط لأنها التي تستقبل عروضاً.
+        </div>
+
+        <h2 class="section-title" style="margin-top:0;">⭐ المشاريع المميزة / العاجلة حالياً</h2>
+        <div class="proj-list" id="featuredList">
+          <div class="empty-state"><div class="empty-state-text">جاري التحميل...</div></div>
+        </div>
+
+        <h2 class="section-title">المشاريع المفتوحة — التحكم في التمييز</h2>
+        <div class="proj-list" id="openList">
+          <div class="empty-state"><div class="empty-state-text">جاري التحميل...</div></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast-stack" id="toastStack"></div>
+
+  <script src="../../assets/js/api.js"></script>
+  <script src="../../assets/js/admin-dashboard.js"></script>
+  <script>
+    function showToast(message, type = 'success') {
+      const stack = document.getElementById('toastStack');
+      if (!stack) return;
+      const icons = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
+      const t = ['success','error','info','warning'].includes(type) ? type : 'success';
+      const toast = document.createElement('div');
+      toast.className = `toast-item toast-${t}`;
+      toast.innerHTML = `<span class="toast-icon">${icons[t]}</span><div class="toast-body"><div class="toast-msg">${message}</div></div><button class="toast-close" onclick="this.closest('.toast-item').remove()">×</button>`;
+      stack.appendChild(toast);
+      setTimeout(() => toast.remove(), 3500);
+    }
+
+    function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+
+    const TYPE_LABELS = {
+      new_construction: 'بناء جديد', renovation: 'تجديد', finishing: 'تشطيبات',
+      repair: 'إصلاح', extension: 'توسعة', electrical: 'كهرباء',
+      plumbing: 'سباكة', demolition: 'هدم', other: 'أخرى'
+    };
+
+    function projRow(p) {
+      const gov = p.propertyDetails?.governorate || '—';
+      return `
+        <div class="proj-row">
+          <div style="min-width:0; flex:1;">
+            <div class="proj-title">
+              ${escapeHtml(p.title || '—')}
+              ${p.isFeatured ? '<span style="background:var(--color-gold);color:var(--color-navy-dark);font-size:10px;padding:2px 8px;border-radius:10px;font-weight:800;margin-right:6px;">⭐ مميز</span>' : ''}
+              ${p.isUrgent ? '<span style="background:#ef4444;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:800;margin-right:6px;">🔥 عاجل</span>' : ''}
+            </div>
+            <div class="proj-meta">
+              ${escapeHtml(TYPE_LABELS[p.projectType] || '—')} · ${escapeHtml(gov)} · العروض: ${p.bidsCount || 0}
+              · صاحب المشروع: ${escapeHtml(p.postedBy?.name || '—')}
+              ${p.isFeatured && p.featuredUntil ? ' · ينتهي التمييز: ' + new Date(p.featuredUntil).toLocaleDateString('ar-EG') : ''}
+            </div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-sm ${p.isFeatured ? 'btn-primary' : 'btn-outline'}" onclick="setFlags('${p._id}', { isFeatured: ${!p.isFeatured} })" style="font-size:11px; padding:6px 12px; margin:0;">
+              ${p.isFeatured ? '❌ إلغاء التمييز' : '⭐ تمييز'}
+            </button>
+            <button class="btn btn-sm ${p.isUrgent ? 'btn-primary' : 'btn-outline'}" onclick="setFlags('${p._id}', { isUrgent: ${!p.isUrgent} })" style="font-size:11px; padding:6px 12px; margin:0; ${p.isUrgent ? 'background:#ef4444;color:#fff;border-color:#ef4444;' : 'border-color:#ef4444;color:#ef4444;'}">
+              ${p.isUrgent ? '❌ إلغاء العاجل' : '🔥 عاجل'}
+            </button>
+          </div>
+        </div>`;
+    }
+
+    async function load() {
+      try {
+        const res = await window.api.fetch('/admin/projects?status=open&limit=100');
+        const projects = res.projects || [];
+        const flagged = projects.filter(p => p.isFeatured || p.isUrgent);
+        const rest    = projects.filter(p => !p.isFeatured && !p.isUrgent);
+
+        document.getElementById('featuredList').innerHTML = flagged.length
+          ? flagged.map(projRow).join('')
+          : '<div class="empty-state"><div class="empty-state-text">لا توجد مشاريع مميزة أو عاجلة حالياً</div></div>';
+
+        document.getElementById('openList').innerHTML = rest.length
+          ? rest.map(projRow).join('')
+          : '<div class="empty-state"><div class="empty-state-text">لا توجد مشاريع مفتوحة أخرى</div></div>';
+      } catch (e) {
+        document.getElementById('featuredList').innerHTML = `<div class="empty-state"><div class="empty-state-text">تعذر التحميل — ${escapeHtml(e.message)}</div></div>`;
+        document.getElementById('openList').innerHTML = '';
+      }
+    }
+
+    window.setFlags = async function (projectId, flags) {
+      try {
+        await window.api.fetch(`/projects/${projectId}/feature`, {
+          method: 'PUT',
+          body: JSON.stringify(flags),
+        });
+        showToast('تم تحديث حالة المشروع بنجاح', 'success');
+        load();
+      } catch (e) {
+        showToast(e.message || 'فشل التحديث', 'error');
+      }
+    };
+
+    (async () => {
+      const user = await window.adminDash.bootAdminPage({ active: 'featured', requirePerm: 'manage_featured' });
+      if (!user) return;
+      load();
+    })();
+  </script>
+</body>
+
+</html>

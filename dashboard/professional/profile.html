@@ -292,56 +292,69 @@
         window.location.href = '../../auth/login.html';
         return;
       }
-      const user = JSON.parse(userJSON);
-      
-      // Populate IDs
-      const firstName = (user.name || '').split(' ')[0];
-      const initial = firstName.charAt(0) || 'م';
-      
-      // Sidebar/Topbar
-      const uiElements = {
-        'sidebarUserName': user.name,
-        'topbarUserName': user.name,
-        'sidebarAvatar': initial,
-        'topbarAvatar': initial,
-        'profileAvatarBig': initial,
-        'profileName': user.name,
-        'profileSpec': user.specialty || 'مقاول عام',
-        'profileID': user.nationalId ? (user.nationalId.slice(0,3) + '*******' + user.nationalId.slice(-4)) : '—',
-        'profilePhone': user.phone || '—',
-        'profileAddress': user.address || '—',
-        'profileExp': user.yearsOfExperience || '0',
-        'profileLicense': user.licenseNumber || '—',
-        'profileCompanyType': user.specialty || '—'
+      let user = JSON.parse(userJSON);
+
+      const SPECIALTY_LABELS = {
+        civil_engineer: 'مهندس مدني', architect: 'مهندس معماري', electrical: 'كهربائي',
+        plumber: 'سباك', carpenter: 'نجار', painter: 'نقاش',
+        general_contractor: 'مقاول عام', finishing: 'تشطيبات', other: 'أخرى'
       };
 
-      for (const [id, val] of Object.entries(uiElements)) {
-        const el = document.getElementById(id);
-        if (el) el.textContent = val;
+      function populateProfile() {
+        const firstName = (user.name || '').split(' ')[0];
+        const initial = firstName.charAt(0) || 'م';
+        const specLabel = SPECIALTY_LABELS[user.specialty] || user.specialty || 'مقاول عام';
+
+        const uiElements = {
+          'sidebarUserName': user.name,
+          'topbarUserName': user.name,
+          'sidebarAvatar': initial,
+          'topbarAvatar': initial,
+          'profileAvatarBig': initial,
+          'profileName': user.name,
+          'profileSpec': specLabel,
+          'profileID': user.nationalIdLast4 ? ('***********' + user.nationalIdLast4) : '—',
+          'profilePhone': user.phone || '—',
+          'profileAddress': user.address || '—',
+          'profileExp': user.yearsOfExperience ?? '0',
+          'profileLicense': user.licenseNumber || '—',
+          'profileCompanyType': specLabel
+        };
+
+        for (const [id, val] of Object.entries(uiElements)) {
+          const el = document.getElementById(id);
+          if (el) el.textContent = val;
+        }
+
+        const bioEl = document.getElementById('profileBio');
+        if (bioEl && user.bio) bioEl.textContent = user.bio;
+
+        // Status Badge — من user.status الحقيقي (active/pending/suspended)
+        const statusBox = document.getElementById('profileStatus');
+        const statusLbl = document.getElementById('statusLabel');
+        const statusKey = { active: 'approved', pending: 'pending', suspended: 'rejected' }[user.status] || 'approved';
+        if (statusBox) statusBox.className = 'status-badge ' + statusKey;
+        const statusMap = {
+          'approved': 'معتمد ✅',
+          'pending': 'قيد المراجعة ⏳',
+          'rejected': 'مرفوض ❌'
+        };
+        if (statusLbl) statusLbl.textContent = statusMap[statusKey];
       }
 
-      if (user.bio) {
-        document.getElementById('profileBio').textContent = user.bio;
-      }
-
-      // Status Badge
-      const statusBox = document.getElementById('profileStatus');
-      const statusLbl = document.getElementById('statusLabel');
-      const status = user.approvalStatus || 'pending';
-      
-      statusBox.className = 'status-badge ' + status;
-      const statusMap = {
-        'approved': 'معتمد ✅',
-        'pending': 'قيد المراجعة ⏳',
-        'rejected': 'مرفوض ❌'
-      };
-      statusLbl.textContent = statusMap[status] || status;
+      populateProfile();
 
       (async function loadWalletLedger() {
         const token = localStorage.getItem('elm_accessToken');
         if (!token) return;
         try {
           const data = await window.api.fetch('/auth/me');
+          // تحديث بيانات المستخدم من السيرفر (الحالة الحقيقية بدل الكاش القديم)
+          if (data.user && data.user._id) {
+            user = { ...user, ...data.user };
+            localStorage.setItem('elm_user', JSON.stringify(user));
+            populateProfile();
+          }
           if (!data.wallet) return;
           const sec = document.getElementById('creditsSection');
           if (sec) sec.style.display = 'block';
@@ -387,10 +400,80 @@
         });
       }
 
+      // ===== تعديل الملف الشخصي =====
+      if (!document.getElementById('editProfileModal')) {
+        document.body.insertAdjacentHTML('beforeend', `
+          <div id="editProfileModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+            <div style="background:var(--bg-surface);border-radius:var(--radius-lg);padding:var(--space-8);max-width:480px;width:95%;box-shadow:var(--shadow-xl);position:relative;border:1px solid var(--border-default);max-height:90vh;overflow-y:auto;">
+              <button onclick="document.getElementById('editProfileModal').style.display='none'" style="position:absolute;top:12px;left:12px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted);">✕</button>
+              <h3 style="font-size:var(--font-size-lg);font-weight:900;color:var(--color-navy);margin-bottom:var(--space-5);">✏️ تعديل الملف الشخصي</h3>
+
+              <label style="display:block;font-size:13px;font-weight:800;color:var(--color-navy);margin-bottom:6px;">الاسم</label>
+              <input id="epName" type="text" style="width:100%;padding:10px 12px;border:1.5px solid var(--border-default);border-radius:var(--radius-sm);font-family:inherit;font-size:13px;margin-bottom:14px;">
+
+              <label style="display:block;font-size:13px;font-weight:800;color:var(--color-navy);margin-bottom:6px;">رقم الهاتف</label>
+              <input id="epPhone" type="tel" placeholder="01xxxxxxxxx" style="width:100%;padding:10px 12px;border:1.5px solid var(--border-default);border-radius:var(--radius-sm);font-family:inherit;font-size:13px;margin-bottom:14px;">
+
+              <label style="display:block;font-size:13px;font-weight:800;color:var(--color-navy);margin-bottom:6px;">التخصص</label>
+              <select id="epSpecialty" style="width:100%;padding:10px 12px;border:1.5px solid var(--border-default);border-radius:var(--radius-sm);font-family:inherit;font-size:13px;margin-bottom:14px;">
+                <option value="civil_engineer">مهندس مدني</option>
+                <option value="architect">مهندس معماري</option>
+                <option value="electrical">كهربائي</option>
+                <option value="plumber">سباك</option>
+                <option value="carpenter">نجار</option>
+                <option value="painter">نقاش</option>
+                <option value="general_contractor">مقاول عام</option>
+                <option value="finishing">تشطيبات</option>
+                <option value="other">أخرى</option>
+              </select>
+
+              <label style="display:block;font-size:13px;font-weight:800;color:var(--color-navy);margin-bottom:6px;">سنوات الخبرة</label>
+              <input id="epYears" type="number" min="0" max="60" style="width:100%;padding:10px 12px;border:1.5px solid var(--border-default);border-radius:var(--radius-sm);font-family:inherit;font-size:13px;margin-bottom:14px;">
+
+              <label style="display:block;font-size:13px;font-weight:800;color:var(--color-navy);margin-bottom:6px;">نبذة عنك</label>
+              <textarea id="epBio" maxlength="500" style="width:100%;height:90px;padding:10px 12px;border:1.5px solid var(--border-default);border-radius:var(--radius-sm);font-family:inherit;font-size:13px;margin-bottom:18px;"></textarea>
+
+              <button id="epSaveBtn" class="btn btn-primary btn-full" style="font-weight:800;">💾 حفظ التعديلات</button>
+            </div>
+          </div>
+        `);
+      }
+
       const editBtn = document.getElementById('editProfileBtn');
       if (editBtn) {
-        editBtn.addEventListener('click', () => showToast('خاصية التعديل ستتوفر قريباً', 'success'));
+        editBtn.addEventListener('click', () => {
+          document.getElementById('epName').value = user.name || '';
+          document.getElementById('epPhone').value = user.phone || '';
+          document.getElementById('epSpecialty').value = user.specialty || 'general_contractor';
+          document.getElementById('epYears').value = user.yearsOfExperience ?? 0;
+          document.getElementById('epBio').value = user.bio || '';
+          document.getElementById('editProfileModal').style.display = 'flex';
+        });
       }
+
+      document.getElementById('epSaveBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('epSaveBtn');
+        btn.disabled = true; btn.textContent = '⏳ جاري الحفظ...';
+        try {
+          const body = {
+            name: document.getElementById('epName').value.trim(),
+            phone: document.getElementById('epPhone').value.trim(),
+            specialty: document.getElementById('epSpecialty').value,
+            yearsOfExperience: +document.getElementById('epYears').value || 0,
+            bio: document.getElementById('epBio').value.trim(),
+          };
+          const result = await window.api.fetch('/auth/me', { method: 'PATCH', body: JSON.stringify(body) });
+          user = { ...user, ...(result.user || body) };
+          localStorage.setItem('elm_user', JSON.stringify(user));
+          populateProfile();
+          document.getElementById('editProfileModal').style.display = 'none';
+          showToast('تم حفظ التعديلات بنجاح ✅', 'success');
+        } catch (err) {
+          showToast(err.message || 'تعذر حفظ التعديلات', 'error');
+        } finally {
+          btn.disabled = false; btn.textContent = '💾 حفظ التعديلات';
+        }
+      });
 
       (async function loadPortfolio() {
         const grid = document.getElementById('portfolioGrid');

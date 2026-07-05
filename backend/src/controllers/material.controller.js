@@ -96,6 +96,11 @@ const placeOrder = asyncHandler(async (req, res) => {
     throw new AppError(`الكمية المطلوبة أكبر من المتوفر (${product.stock})`, 400, 'INSUFFICIENT_STOCK');
   }
 
+  // المشتري لا يمكنه طلب منتجه الخاص
+  if (product.seller.toString() === req.user._id.toString()) {
+    throw new AppError('لا يمكنك طلب منتجك الخاص', 400, 'SELF_ORDER');
+  }
+
   const order = await MaterialOrder.create({
     buyer: req.user._id,
     seller: product.seller,
@@ -106,12 +111,7 @@ const placeOrder = asyncHandler(async (req, res) => {
     buyerNotes: notes || '',
   });
 
-  // تحديث المخزون
-  if (product.stock > 0) {
-    product.stock = Math.max(0, product.stock - qty);
-    if (product.stock === 0) product.status = 'sold_out';
-    await product.save();
-  }
+  // ملاحظة: المخزون يُخصم عند تأكيد البائع للطلب (updateOrder) وليس هنا
 
   res.status(201).json({ order });
 });
@@ -151,6 +151,20 @@ const updateOrder = asyncHandler(async (req, res) => {
 
     if (!allowed?.includes(status)) {
       throw new AppError(`لا يمكن تغيير الحالة من "${order.status}" إلى "${status}"`, 400, 'INVALID_TRANSITION');
+    }
+
+    // عند تأكيد البائع — نتحقق من المخزون ونخصم الكمية
+    if (status === 'confirmed') {
+      const product = await Product.findById(order.product);
+      if (!product) throw new AppError('المنتج غير موجود', 404, 'NOT_FOUND');
+      if (product.stock > 0 && order.quantity > product.stock) {
+        throw new AppError(`الكمية المطلوبة (${order.quantity}) أكبر من المتوفر حالياً (${product.stock})`, 400, 'INSUFFICIENT_STOCK');
+      }
+      if (product.stock > 0) {
+        product.stock = Math.max(0, product.stock - order.quantity);
+        if (product.stock === 0) product.status = 'sold_out';
+        await product.save();
+      }
     }
 
     order.status = status;

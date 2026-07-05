@@ -14,19 +14,30 @@ function generateReferralCode() {
 
 // GET /api/referral/code — بيجيب الكود (أو بيولّده لأول مرة)
 const getMyCode = asyncHandler(async (req, res) => {
-  let user = await User.findById(req.user._id);
+  let user = await User.findById(req.user._id).select('referralCode').lean();
   if (!user) throw new AppError('المستخدم غير موجود', 404, 'NOT_FOUND');
 
   if (!user.referralCode) {
-    // بنولد كود جديد ونتأكد إنه فريد
-    let code;
-    let exists = true;
-    while (exists) {
-      code = generateReferralCode();
-      exists = await User.findOne({ referralCode: code }).lean();
+    // بنولد كود جديد ونتأكد إنه فريد — بحد أقصى 5 محاولات
+    // (updateOne بدل save عشان نتجنب فشل الـ validation الكامل على مستندات قديمة)
+    let saved = false;
+    for (let attempt = 0; attempt < 5 && !saved; attempt++) {
+      const code = generateReferralCode();
+      try {
+        const result = await User.updateOne(
+          { _id: req.user._id, referralCode: { $in: [null, undefined] } },
+          { $set: { referralCode: code } }
+        );
+        if (result.modifiedCount > 0 || result.matchedCount === 0) {
+          // اتحفظ، أو مستخدم تاني حفظ كود بالتوازي — نقرأه تاني
+          saved = true;
+        }
+      } catch (err) {
+        if (err.code !== 11000) throw err; // تصادم unique index → جرّب كود تاني
+      }
     }
-    user.referralCode = code;
-    await user.save();
+    if (!saved) throw new AppError('تعذر توليد كود إحالة — حاول مرة أخرى', 500, 'CODE_GENERATION_FAILED');
+    user = await User.findById(req.user._id).select('referralCode').lean();
   }
 
   res.json({ referralCode: user.referralCode });

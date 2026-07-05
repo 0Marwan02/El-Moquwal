@@ -122,12 +122,22 @@ const Transaction = require('../models/Transaction');
 const Contract = require('../models/Contract');
 const AuditLog = require('../models/AuditLog');
 
+const Bid = require('../models/Bid');
+const Product = require('../models/Product');
+const MaterialOrder = require('../models/MaterialOrder');
+
 const dashboardStats = asyncHandler(async (req, res) => {
   const [
     totalProjects,
     openProjects,
     awardedProjects,
     closedProjects,
+    draftProjects,
+    cancelledProjects,
+    featuredProjects,
+    urgentProjects,
+    privateProjects,
+    totalBids,
     totalContractors,
     pendingContractors,
     totalCustomers,
@@ -135,11 +145,19 @@ const dashboardStats = asyncHandler(async (req, res) => {
     openWarrantyClaims,
     totalEscrowResult,
     revenueResult,
+    totalProducts,
+    totalMaterialOrders,
   ] = await Promise.all([
     Project.countDocuments(),
     Project.countDocuments({ status: 'open' }),
     Project.countDocuments({ status: 'awarded' }),
     Project.countDocuments({ status: 'closed' }),
+    Project.countDocuments({ status: 'draft' }),
+    Project.countDocuments({ status: 'cancelled' }),
+    Project.countDocuments({ isFeatured: true }),
+    Project.countDocuments({ isUrgent: true }),
+    Project.countDocuments({ isPrivate: true }),
+    Bid.countDocuments(),
     User.countDocuments({ role: 'contractor' }),
     User.countDocuments({ role: 'contractor', status: 'pending' }),
     User.countDocuments({ role: 'customer' }),
@@ -150,10 +168,17 @@ const dashboardStats = asyncHandler(async (req, res) => {
       { $match: { type: 'commission', status: 'success' } },
       { $group: { _id: null, total: { $sum: '$amount' } } },
     ]),
+    Product.countDocuments(),
+    MaterialOrder.countDocuments(),
   ]);
 
   res.json({
-    projects: { total: totalProjects, open: openProjects, awarded: awardedProjects, closed: closedProjects },
+    projects: {
+      total: totalProjects, open: openProjects, awarded: awardedProjects, closed: closedProjects,
+      draft: draftProjects, cancelled: cancelledProjects,
+      featured: featuredProjects, urgent: urgentProjects, private: privateProjects,
+    },
+    bids: { total: totalBids },
     users: { contractors: totalContractors, pendingContractors, customers: totalCustomers },
     escrow: {
       totalVolume: totalEscrowResult[0]?.total || 0,
@@ -163,6 +188,7 @@ const dashboardStats = asyncHandler(async (req, res) => {
     revenue: {
       totalCommission: revenueResult[0]?.total || 0,
     },
+    materials: { products: totalProducts, orders: totalMaterialOrders },
   });
 });
 
@@ -411,6 +437,110 @@ const listAuditLog = asyncHandler(async (req, res) => {
   res.json({ items, pagination: { total, page, pages: Math.ceil(total / limit) } });
 });
 
+// =====================================================
+// إدارة سوق المواد (manage_materials)
+// =====================================================
+
+const CreditLedger = require('../models/CreditLedger');
+
+// GET /api/admin/materials — كل المنتجات (بما فيها المخفية) + إحصائيات
+const listAllMaterials = asyncHandler(async (req, res) => {
+  const { status, page = 1, limit = 30 } = req.query;
+  const filter = {};
+  if (status) filter.status = status;
+
+  const skip = (Number(page) - 1) * Number(limit);
+  const [products, total, orders] = await Promise.all([
+    Product.find(filter)
+      .populate('seller', 'name phone email')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .lean(),
+    Product.countDocuments(filter),
+    MaterialOrder.find()
+      .populate('product', 'name')
+      .populate('buyer', 'name')
+      .populate('seller', 'name')
+      .sort({ createdAt: -1 })
+      .limit(30)
+      .lean(),
+  ]);
+
+  res.json({ products, orders, pagination: { total, page: Number(page), pages: Math.ceil(total / Number(limit)) } });
+});
+
+// DELETE /api/admin/materials/:id — حذف منتج مخالف
+const adminDeleteProduct = asyncHandler(async (req, res) => {
+  assertValidId(req.params.id);
+  const product = await Product.findById(req.params.id);
+  if (!product) throw new AppError('المنتج غير موجود', 404, 'NOT_FOUND');
+  await product.deleteOne();
+  logAudit(req.user._id, 'admin_delete_product', 'Product', product._id, { name: product.name });
+  res.json({ ok: true, message: 'تم حذف المنتج' });
+});
+
+// =====================================================
+// تعديل رصيد النقاط (adjust_credits)
+// =====================================================
+
+// GET /api/admin/contractors/search?q= — بحث عن مقاول بالاسم/الإيميل/الهاتف
+const searchContractors = asyncHandler(async (req, res) => {
+  const q = String(req.query.q || '').trim();
+  const filter = { role: 'contractor' };
+  if (q) {
+    filter.$or = [
+      { name: { $regex: q, $options: 'i' } },
+      { email: { $regex: q, $options: 'i' } },
+      { phone: { $regex: q, $options: 'i' } },
+    ];
+  }
+  const contractors = await Contractor.find(filter)
+    .select('name email phone specialty status creditBalance')
+    .sort({ createdAt: -1 })
+    .limit(20)
+    .lean();
+  res.json({ contractors });
+});
+
+// POST /api/admin/contractors/:id/credits — تعديل رصيد النقاط (+/-)
+const adjustCredits = asyncHandler(async (req, res) => {
+  assertValidId(req.params.id);
+  const delta = Number(req.body.delta);
+  const note = String(req.body.note || '').trim();
+
+  if (!Number.isInteger(delta) || delta === 0 || Math.abs(delta) > 1000) {
+    throw new AppError('قيمة التعديل يجب أن تكون عدداً صحيحاً غير صفري (بحد أقصى ±1000)', 400, 'VALIDATION_ERROR');
+  }
+  if (note.length < 3) {
+    throw new AppError('يجب كتابة سبب التعديل (3 أحرف على الأقل)', 400, 'VALIDATION_ERROR');
+  }
+
+  const contractor = await Contractor.findOne({ _id: req.params.id, role: 'contractor' });
+  if (!contractor) throw new AppError('المقاول غير موجود', 404, 'NOT_FOUND');
+
+  const currentBalance = typeof contractor.creditBalance === 'number' ? contractor.creditBalance : 0;
+  const newBalance = currentBalance + delta;
+  if (newBalance < 0) {
+    throw new AppError(`لا يمكن خصم ${Math.abs(delta)} نقطة — الرصيد الحالي ${currentBalance} فقط`, 400, 'INSUFFICIENT_BALANCE');
+  }
+
+  contractor.creditBalance = newBalance;
+  await contractor.save();
+
+  await CreditLedger.create({
+    user: contractor._id,
+    delta,
+    reason: 'admin_adjust',
+    balanceAfter: newBalance,
+    meta: `تعديل إداري: ${note}`,
+  });
+
+  logAudit(req.user._id, 'adjust_credits', 'User', contractor._id, { delta, note, balanceAfter: newBalance });
+  logger.info({ contractorId: contractor._id.toString(), delta, newBalance }, 'Credits adjusted by admin');
+  res.json({ ok: true, creditBalance: newBalance });
+});
+
 module.exports = {
   listPending, pendingCount, approveContractor, rejectContractor,
   listAllProjects, dashboardStats, listDisputes,
@@ -419,4 +549,6 @@ module.exports = {
   getSettings, updateSettings,
   getTerms, updateTerms,
   listAuditLog,
+  listAllMaterials, adminDeleteProduct,
+  searchContractors, adjustCredits,
 };

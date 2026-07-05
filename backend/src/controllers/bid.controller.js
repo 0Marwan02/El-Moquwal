@@ -253,4 +253,21 @@ const respondToBid = asyncHandler(async (req, res) => {
   res.json({ bid });
 });
 
-module.exports = { submitBid, getBids, respondToBid };
+// GET /api/projects/my-bids — عروض المقاول الحالي عبر كل المشاريع
+const myBids = asyncHandler(async (req, res) => {
+  const bids = await Bid.find({ contractor: req.user._id })
+    .populate('project', 'title projectType status propertyDetails.governorate budgetRange awardedTo createdAt')
+    .sort({ createdAt: -1 })
+    .lean();
+
+  const counts = {
+    total: bids.length,
+    pending: bids.filter((b) => b.status === 'pending').length,
+    accepted: bids.filter((b) => b.status === 'accepted').length,
+    rejected: bids.filter((b) => b.status === 'rejected').length,
+  };
+
+  res.json({ bids, counts });
+});
+
+module.exports = { submitBid, getBids, respondToBid, myBids };

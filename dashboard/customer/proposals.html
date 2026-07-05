@@ -364,13 +364,6 @@
           </svg>
           لوحة التحكم
         </a>
-        <a href="browse-projects.html" class="sidebar-item">
-          <svg viewBox="0 0 24 24">
-            <path
-              d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
-          </svg>
-          تصفح المشاريع
-        </a>
         <div class="sidebar-section-label">مشاريعي</div>
         <a href="post-project.html" class="sidebar-item">
           <svg viewBox="0 0 24 24">
@@ -724,23 +717,43 @@
           if (bidsDiv) {
             const existing = bidsDiv.querySelector('.ai-anomaly-result');
             if (existing) existing.remove();
+            // نظف علامات الشذوذ السابقة من كروت العروض
+            bidsDiv.querySelectorAll('.anomaly-badge, .anomaly-note').forEach(el => el.remove());
+            bidsDiv.querySelectorAll('.bid-card').forEach(b => { b.style.borderColor = ''; b.style.background = ''; });
+
+            const allBids = data.bids || [];
+            const anomalous = allBids.filter(b => b.anomalyFlag);
+            const hasAnomalies = data.hasAnomalies || anomalous.length > 0;
+
             const div = document.createElement('div');
             div.className = 'ai-anomaly-result';
-            const hasAnomalies = data.hasAnomalies || (data.anomalies?.length > 0);
             div.style.cssText = `margin:12px 24px; padding:14px; background:${hasAnomalies ? 'rgba(239,68,68,0.08)' : 'rgba(16,185,129,0.08)'}; border:1px solid ${hasAnomalies ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)'}; border-radius:var(--radius-sm); font-size:13px;`;
+
             if (hasAnomalies) {
-              let msg = '<strong style="color:var(--color-error);">🚨 تم اكتشاف أسعار شاذة:</strong><ul style="margin-top:8px;padding-right:16px;">';
-              (data.anomalies || []).forEach(a => {
-                msg += `<li>${a.amount ? a.amount.toLocaleString('ar-EG') + ' ج.م — ' : ''}${a.type === 'too_low' ? 'منخفض جداً' : 'مرتفع جداً'}: ${a.explanation || ''}</li>`;
+              const stats = data.stats || {};
+              div.innerHTML = `<strong style="color:var(--color-error);">🚨 تم اكتشاف ${anomalous.length} عرض شاذ من أصل ${stats.totalBids || allBids.length}</strong>
+                <span style="color:var(--text-muted);"> — متوسط العروض: ${(stats.mean || 0).toLocaleString('ar-EG')} ج.م. العروض الشاذة معلّمة بالأسفل ⬇️</span>`;
+
+              // علّم كل عرض شاذ على كارته مباشرة
+              anomalous.forEach(a => {
+                const card = document.getElementById(`bid-${a.bidId}`);
+                if (!card) return;
+                card.style.borderColor = 'var(--color-error)';
+                card.style.background = 'rgba(239,68,68,0.03)';
+                const footer = card.querySelector('.bid-footer');
+                if (footer) {
+                  footer.insertAdjacentHTML('beforeend',
+                    `<span class="anomaly-badge" style="background:rgba(239,68,68,0.12); color:#b91c1c; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:800;">🚨 سعر ${a.anomalyType === 'low' ? 'منخفض' : 'مرتفع'} بشكل شاذ (${a.deviationPercent > 0 ? '+' : ''}${a.deviationPercent}%)</span>`);
+                }
+                card.querySelector('div').insertAdjacentHTML('beforeend',
+                  `<div class="anomaly-note" style="margin-top:10px; padding:10px 12px; background:rgba(239,68,68,0.06); border-right:3px solid var(--color-error); border-radius:6px; font-size:12px; color:#7f1d1d; line-height:1.6;">🤖 ${a.llmComment || 'عرض خارج النطاق الطبيعي للأسعار'}</div>`);
               });
-              msg += '</ul>';
-              div.innerHTML = msg;
             } else {
               div.innerHTML = '<span style="color:var(--color-success);">✅ جميع العروض في النطاق الطبيعي ولا يوجد شذوذ.</span>';
             }
             bidsDiv.prepend(div);
           }
-          showToast(data.hasAnomalies ? 'تم اكتشاف أسعار شاذة!' : 'لا توجد أسعار شاذة', data.hasAnomalies ? 'warning' : 'success');
+          showToast(data.hasAnomalies ? 'تم اكتشاف أسعار شاذة — راجع العروض المعلّمة' : 'لا توجد أسعار شاذة', data.hasAnomalies ? 'warning' : 'success');
         } catch(e) { showToast(e.message || 'فشل الفحص', 'error'); }
       };
 

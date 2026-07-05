@@ -309,6 +309,7 @@
         timeline: p.timeline, budget: p.budgetRange,
         bidsCount: p.bidsCount || 0,
         isFeatured: !!p.isFeatured, isUrgent: !!p.isUrgent,
+        isPrivate: !!p.isPrivate,
         matchesSpecialty: p.matchesSpecialty !== false,
       }));
       await hydrateMyBids();
@@ -354,6 +355,7 @@
           <span class="ppc-tag">${TYPE_LABELS[p.type] || '—'}</span>
           ${p.isFeatured ? `<span class="ppc-tag featured">⭐ مميز</span>` : ''}
           ${p.isUrgent   ? `<span class="ppc-tag urgent">🔥 عاجل</span>` : ''}
+          ${p.isPrivate  ? `<span class="ppc-tag" style="background:rgba(59,130,246,0.12);color:#2563eb;">🔒 دعوة خاصة لك</span>` : ''}
           ${p.matchesSpecialty && matchSpecialty ? `<span class="ppc-tag" style="background:rgba(244,166,35,0.15);color:var(--color-gold-dark);">✨ يناسب تخصصك</span>` : ''}
         </div>
 

@@ -45,6 +45,7 @@ const createProjectSchema = z.object({
   invitedContractors: z.array(z.string()).optional().default([]),
   isUrgent: z.boolean().optional().default(false),
   isFeatured: z.boolean().optional().default(false),
+  status: z.enum(['open', 'draft']).optional().default('open'),
 });
 
 // =====================================================
@@ -152,8 +153,8 @@ const createProject = asyncHandler(async (req, res) => {
     throw new AppError('بيانات غير صحيحة', 400, 'VALIDATION_ERROR');
   }
 
-  const isDraft = req.query.draft === '1' || req.query.draft === 'true';
-  const { isPrivate, invitedContractors, isUrgent, isFeatured, ...projectData } = parsed.data;
+  const isDraft = req.query.draft === '1' || req.query.draft === 'true' || parsed.data.status === 'draft';
+  const { isPrivate, invitedContractors, isUrgent, isFeatured, status: _status, ...projectData } = parsed.data;
 
   const project = await Project.create({
     ...projectData,
@@ -194,8 +195,16 @@ const listProjects = asyncHandler(async (req, res) => {
   }
 
   // hide private projects from public listing
+  // استثناء: المقاول المدعو لمشروع خاص يشوفه في القائمة
   if (!req.user || (req.user.role !== 'admin' && req.user.role !== 'super_admin')) {
-    filter.isPrivate = { $ne: true };
+    if (req.user && req.user.role === 'contractor') {
+      filter.$or = [
+        { isPrivate: { $ne: true } },
+        { invitedContractors: req.user._id },
+      ];
+    } else {
+      filter.isPrivate = { $ne: true };
+    }
   }
 
   const skip = (Number(page) - 1) * Number(limit);

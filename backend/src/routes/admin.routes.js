@@ -17,6 +17,14 @@ router.get('/disputes',            requireAuth, requireRole('admin'), requirePer
 router.post('/contractors/:id/approve', requireAuth, requireRole('admin'), requirePermission('review_contractors'), ctrl.approveContractor);
 router.post('/contractors/:id/reject',  requireAuth, requireRole('admin'), requirePermission('review_contractors'), ctrl.rejectContractor);
 
+// ===== إدارة سوق المواد (manage_materials) =====
+router.get('/materials',            requireAuth, requireRole('admin'), requirePermission('manage_materials'), ctrl.listAllMaterials);
+router.delete('/materials/:id',     requireAuth, requireRole('admin'), requirePermission('manage_materials'), ctrl.adminDeleteProduct);
+
+// ===== تعديل رصيد النقاط (adjust_credits) =====
+router.get('/contractors/search',        requireAuth, requireRole('admin'), requirePermission('adjust_credits'), ctrl.searchContractors);
+router.post('/contractors/:id/credits',  requireAuth, requireRole('admin'), requirePermission('adjust_credits'), ctrl.adjustCredits);
+
 // ===== Platform settings (super_admin only — تكشف اقتصاديات المنصة) =====
 router.get('/settings', requireAuth, requireSuperAdmin, ctrl.getSettings);
 router.patch('/settings', requireAuth, requireSuperAdmin, ctrl.updateSettings);

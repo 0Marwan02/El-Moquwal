@@ -294,10 +294,6 @@
           <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
           لوحة التحكم
         </a>
-        <a href="browse-projects.html" class="sidebar-item">
-          <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-          تصفح المشاريع
-        </a>
         <div class="sidebar-section-label">مشاريعي</div>
         <a href="post-project.html" class="sidebar-item active">
           <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
@@ -1115,14 +1111,30 @@ function showToastGlobal(message, type) {
         submitBtn.textContent = 'جاري نشر المشروع...';
       }
 
+      const isDraft = bodyParams.status === 'draft';
+
+      if (editProjectId) {
+        // وضع التعديل — PATCH ثم نشر لو المطلوب
+        const { status, isFeatured, isPrivate, ...patchBody } = bodyParams;
+        await window.api.fetch(`/projects/${editProjectId}`, {
+          method: 'PATCH',
+          body: JSON.stringify(patchBody)
+        });
+        if (!isDraft) {
+          await window.api.fetch(`/projects/${editProjectId}/publish`, { method: 'POST' });
+        }
+        showToast(isDraft ? 'تم حفظ التعديلات على المسودة' : 'تم نشر المشروع بنجاح', 'success');
+        window.location.href = 'my-projects.html';
+        return;
+      }
+
       // Step 2 — create the project
       await window.api.fetch('/projects', {
         method: 'POST',
         body: JSON.stringify(bodyParams)
       });
-      const isDraft = bodyParams.status === 'draft';
       showToast(isDraft ? 'تم حفظ مشروعك كمسودة بنجاح' : 'تم نشر مشروعك بنجاح، جاري التحويل لصفحة العروض', 'success');
-      window.location.href = 'proposals.html';
+      window.location.href = isDraft ? 'my-projects.html' : 'proposals.html';
     } catch (err) {
       showToast(err.message || 'تعذر نشر المشروع', 'error');
       submitBtn.disabled = false;
@@ -1130,8 +1142,64 @@ function showToastGlobal(message, type) {
     }
   });
 
+  // ===== Edit mode (تعديل مسودة) =====
+  let editProjectId = null;
+
+  async function initEditMode() {
+    const id = new URLSearchParams(window.location.search).get('edit');
+    if (!id) return;
+    try {
+      const data = await window.api.fetch(`/projects/${id}`);
+      const p = data.project;
+      if (!p) return;
+      editProjectId = id;
+
+      // نوع المشروع
+      const typeRadio = document.querySelector(`input[name="projectType"][value="${p.projectType}"]`);
+      if (typeRadio) typeRadio.checked = true;
+
+      // تفاصيل العقار
+      const pd = p.propertyDetails || {};
+      if (pd.governorate) document.getElementById('governorate').value = pd.governorate;
+      if (pd.district) document.getElementById('addressDesc').value = pd.district;
+      if (pd.area) document.getElementById('area').value = pd.area;
+      if (pd.floors) document.getElementById('floors').value = pd.floors;
+      if (pd.rooms) document.getElementById('rooms').value = pd.rooms;
+      if (pd.bathrooms) document.getElementById('bathrooms').value = pd.bathrooms;
+      if (pd.gpsCoords) window.__gpsCoords = pd.gpsCoords;
+
+      if (p.description) document.getElementById('extraNotes').value = p.description;
+      if (typeof p.requiredEngineers === 'number') document.getElementById('requiredEngineers').value = p.requiredEngineers;
+
+      const budgetRadio = p.budgetRange && document.querySelector(`input[name="budget"][value="${p.budgetRange}"]`);
+      if (budgetRadio) budgetRadio.checked = true;
+      const timelineRadio = p.timeline && document.querySelector(`input[name="timeline"][value="${p.timeline}"]`);
+      if (timelineRadio) timelineRadio.checked = true;
+
+      // المتطلبات المحفوظة
+      const savedReqs = (p.requirements && p.requirements['عناصر']) ? String(p.requirements['عناصر']).split(',').map(s => s.trim()) : [];
+      savedReqs.forEach(v => {
+        const cb = document.querySelector(`input[name="req"][value="${v}"]`);
+        if (cb) cb.checked = true;
+      });
+
+      // وضع النشر حسب الحالة الحالية
+      const mode = p.status === 'draft' ? 'draft' : 'open';
+      const modeRadio = document.querySelector(`input[name="publishMode"][value="${mode}"]`);
+      if (modeRadio) modeRadio.checked = true;
+      updateSubmitLabel();
+
+      const pageTitle = document.querySelector('.page-title, h1');
+      if (pageTitle) pageTitle.textContent = '✏️ تعديل المشروع';
+      showToast('تم تحميل بيانات المشروع للتعديل', 'success');
+    } catch (err) {
+      showToast(err.message || 'تعذر تحميل بيانات المشروع', 'error');
+    }
+  }
+
   // Init
   showStep(1);
+  initEditMode();
 })();
 </script>
 </body>

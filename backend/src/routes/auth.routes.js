@@ -41,6 +41,9 @@ router.post('/logout', ctrl.logout);
 // me — current user
 router.get('/me', requireAuth, ctrl.me);
 
+// تعديل الملف الشخصي — الحقول الآمنة فقط
+router.patch('/me', requireAuth, ctrl.updateMe);
+
 // سجل نقاط المقاول
 router.get('/credit-ledger', requireAuth, requireRole('contractor'), ctrl.listCreditLedger);
 

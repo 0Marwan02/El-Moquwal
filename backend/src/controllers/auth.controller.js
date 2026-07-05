@@ -404,6 +404,46 @@ const me = asyncHandler(async (req, res) => {
   res.json({ user: req.user });
 });
 
+// PATCH /api/auth/me — تحديث بيانات الملف الشخصي (الحقول الآمنة فقط)
+const updateMe = asyncHandler(async (req, res) => {
+  const { name, phone, bio, specialty, yearsOfExperience } = req.body;
+
+  const user = await User.findById(req.user._id);
+  if (!user) throw new AppError('المستخدم غير موجود', 404, 'NOT_FOUND');
+
+  if (name !== undefined) {
+    const trimmed = String(name).trim();
+    if (trimmed.length < 3 || trimmed.length > 80) {
+      throw new AppError('الاسم يجب أن يكون بين 3 و 80 حرفاً', 400, 'VALIDATION_ERROR');
+    }
+    user.name = trimmed;
+  }
+  if (phone !== undefined) {
+    if (!/^01[0125]\d{8}$/.test(String(phone).trim())) {
+      throw new AppError('رقم الهاتف غير صحيح — يجب أن يكون رقماً مصرياً (01xxxxxxxxx)', 400, 'VALIDATION_ERROR');
+    }
+    user.phone = String(phone).trim();
+  }
+
+  // حقول المقاول فقط
+  if (user.role === 'contractor') {
+    if (bio !== undefined) user.bio = String(bio).slice(0, 500);
+    if (specialty !== undefined) {
+      const valid = ['civil_engineer','architect','electrical','plumber','carpenter','painter','general_contractor','finishing','other'];
+      if (!valid.includes(specialty)) throw new AppError('التخصص غير صحيح', 400, 'VALIDATION_ERROR');
+      user.specialty = specialty;
+    }
+    if (yearsOfExperience !== undefined) {
+      const yrs = Number(yearsOfExperience);
+      if (!Number.isFinite(yrs) || yrs < 0 || yrs > 60) throw new AppError('سنوات الخبرة غير صحيحة (0-60)', 400, 'VALIDATION_ERROR');
+      user.yearsOfExperience = yrs;
+    }
+  }
+
+  await user.save();
+  res.json({ user });
+});
+
 const listCreditLedger = asyncHandler(async (req, res) => {
   const page = Math.max(1, Number(req.query.page) || 1);
   const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
@@ -544,6 +584,7 @@ module.exports = {
   refresh,
   logout,
   me,
+  updateMe,
   listCreditLedger,
   sendOTPHandler,
   verifyOTPHandler,

@@ -181,7 +181,7 @@ async function loadEscrow() {
   try {
     const data = await window.api.fetch(`/billing/escrow/${projectId}`);
     const e = data.escrow;
-    renderEscrow(e);
+    renderEscrow(e, data.contract, data.project);
     loadContractPDFBtn();
   } catch (err) {
     if (err.message?.includes('404') || err.status === 404) {
@@ -217,24 +217,29 @@ async function loadContractPDFBtn() {
   } catch (_) {}
 }
 
-function renderEscrow(e) {
+function renderEscrow(e, contract, project) {
   const container = document.getElementById('mainContent');
   const milestones = e.milestones || [];
   const netAmount = e.totalAmount - (e.commissionAmount || 0);
+  const isDisputed = e.status === 'disputed';
 
   const rows = milestones.map((m, i) => `
     <div class="milestone-row ${m.status === 'released' ? 'released' : ''}">
       <div class="milestone-info">
         <div class="milestone-name">${m.title || 'مرحلة ' + (i + 1)}</div>
-        <div class="milestone-pct">${m.percentage || '—'}% من صافي المستحق للمقاول</div>
+        <div class="milestone-pct">${m.percentage || '—'}% من صافي المستحق للمقاول${m.releasedAt ? ' · صُرفت في ' + new Date(m.releasedAt).toLocaleDateString('ar-EG') : ''}</div>
       </div>
       <div class="milestone-amount">${(m.amount || 0).toLocaleString('ar-EG')} <small style="font-size:12px;font-weight:600;color:var(--text-muted);">ج.م</small></div>
       <div>
         ${m.status === 'released'
           ? '<span class="milestone-status ms-released">✓ تم الصرف</span>'
+          : m.status === 'refunded'
+            ? '<span class="milestone-status" style="background:rgba(59,130,246,0.12); color:#3b82f6;">↩️ مُستردة</span>'
           : m.status === 'disputed'
             ? '<span class="milestone-status" style="background:rgba(239,68,68,0.12); color:#ef4444; border:1px solid rgba(239,68,68,0.25);">⚠️ نزاع مفتوح</span>'
-            : `
+            : isDisputed
+              ? '<span class="milestone-status ms-pending" title="لا يمكن الصرف أثناء وجود نزاع مفتوح">🔒 معلّقة بسبب النزاع</span>'
+              : `
               <div style="display:flex; gap:8px;">
                 <button onclick="release('${m._id}')" class="btn btn-primary btn-sm">صرف للمقاول</button>
                 <button onclick="openDisputeModal('${m._id}')" class="btn btn-outline btn-sm" style="border-color:#ef4444;color:#ef4444;background:transparent;">⚠️ نزاع</button>
@@ -243,6 +248,25 @@ function renderEscrow(e) {
         }
       </div>
     </div>`).join('');
+
+  // ===== ملخص العقد =====
+  let contractCard = '';
+  if (contract) {
+    const commissionPct = ((contract.commissionRate || 0) * 100).toFixed(1).replace(/\.0$/, '');
+    contractCard = `
+      <div class="milestones-card" style="margin-bottom:var(--space-6);">
+        <div class="milestones-header">📄 ملخص العقد</div>
+        <div style="padding:var(--space-5) var(--space-6); display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:var(--space-4);">
+          <div><div style="font-size:11px;color:var(--text-muted);font-weight:700;">المشروع</div><div style="font-weight:800;color:var(--color-navy);">${contract.projectTitle || project?.title || '—'}</div></div>
+          <div><div style="font-size:11px;color:var(--text-muted);font-weight:700;">العميل (الطرف الأول)</div><div style="font-weight:800;color:var(--color-navy);">${e.customer?.name || '—'}</div></div>
+          <div><div style="font-size:11px;color:var(--text-muted);font-weight:700;">المقاول (الطرف الثاني)</div><div style="font-weight:800;color:var(--color-navy);">${e.contractor?.name || '—'}</div></div>
+          <div><div style="font-size:11px;color:var(--text-muted);font-weight:700;">قيمة العقد</div><div style="font-weight:800;color:var(--color-navy);">${(contract.bidAmount || 0).toLocaleString('ar-EG')} ج.م</div></div>
+          <div><div style="font-size:11px;color:var(--text-muted);font-weight:700;">عمولة المنصة (${commissionPct}%)</div><div style="font-weight:800;color:var(--color-navy);">${(e.commissionAmount || 0).toLocaleString('ar-EG')} ج.م</div></div>
+          ${contract.warrantyCapEGP ? `<div><div style="font-size:11px;color:var(--text-muted);font-weight:700;">سقف الضمان</div><div style="font-weight:800;color:var(--color-navy);">${contract.warrantyCapEGP.toLocaleString('ar-EG')} ج.م</div></div>` : ''}
+          <div><div style="font-size:11px;color:var(--text-muted);font-weight:700;">تاريخ التعاقد</div><div style="font-weight:800;color:var(--color-navy);">${contract.createdAt ? new Date(contract.createdAt).toLocaleDateString('ar-EG') : '—'}</div></div>
+        </div>
+      </div>`;
+  }
 
   let disputeNotice = '';
   if (e.status === 'disputed') {
@@ -260,6 +284,7 @@ function renderEscrow(e) {
 
   container.innerHTML = `
     ${disputeNotice}
+    ${contractCard}
     <div class="escrow-hero" style="margin-top:0;">
       <div class="escrow-hero-inner">
         <div class="escrow-label">المبلغ المحجوز الإجمالي</div>

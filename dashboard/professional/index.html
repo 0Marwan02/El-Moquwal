@@ -254,6 +254,20 @@
 
       </div>
 
+      <!-- ── My Bids ───────────────────────────────────────── -->
+      <div class="dash-section-head">
+        <h2 class="dash-section-title">
+          <span class="title-bar"></span>
+          عروضي الأخيرة
+        </h2>
+        <span class="dash-section-divider"></span>
+      </div>
+      <div class="pro-card" style="margin-bottom:var(--space-8);">
+        <div class="pro-card-body" id="myBidsSection">
+          <div style="text-align:center; padding:24px; color:var(--text-muted); font-size:13px;">⏳ جاري تحميل عروضك...</div>
+        </div>
+      </div>
+
       <!-- ── How It Works strip ────────────────────────────── -->
       <div class="pro-card" style="margin-bottom:var(--space-8);">
         <div class="pro-card-head">
@@ -360,14 +374,24 @@
       if (el) el.textContent = initial;
     });
 
-    // approval status
-    if (user.status === 'pending' || user.status === 'suspended') {
+    // approval status — نحدّث بيانات المستخدم من السيرفر أولاً (عشان الحالة القديمة في localStorage)
+    let freshStatus = user.status;
+    try {
+      const me = await window.api.fetch('/auth/me');
+      const freshUser = me.user || me;
+      if (freshUser && freshUser._id) {
+        freshStatus = freshUser.status;
+        localStorage.setItem('elm_user', JSON.stringify({ ...user, ...freshUser }));
+      }
+    } catch (_) {}
+
+    if (freshStatus === 'pending' || freshStatus === 'suspended') {
       const notice = document.getElementById('pendingNotice');
       const pill   = document.getElementById('approvalStatus');
       const txt    = document.getElementById('approvalText');
       if (notice) notice.hidden = false;
       if (pill)   pill.style.display = 'inline-flex';
-      if (user.status === 'suspended') {
+      if (freshStatus === 'suspended') {
         if (txt) txt.textContent = 'تم رفض الطلب أو إيقاف الحساب';
         if (pill) {
           pill.classList.remove('pending');
@@ -392,9 +416,41 @@
       if (el2) el2.textContent = openCount;
     } catch (_) {}
 
-    document.getElementById('statMyBids').textContent    = '—';
-    document.getElementById('statAccepted').textContent  = '—';
-    document.getElementById('heroBidsCount').textContent = '—';
+    // load my bids stats + recent bids list
+    try {
+      const bidsData = await window.api.fetch('/projects/my-bids');
+      const counts = bidsData.counts || {};
+      document.getElementById('statMyBids').textContent    = counts.total ?? 0;
+      document.getElementById('statAccepted').textContent  = counts.accepted ?? 0;
+      document.getElementById('heroBidsCount').textContent = counts.total ?? 0;
+
+      const STATUS_BADGE = {
+        pending:  '<span style="padding:3px 10px;border-radius:99px;font-size:11px;font-weight:800;background:rgba(245,158,11,0.12);color:#b45309;">⏳ بانتظار الرد</span>',
+        accepted: '<span style="padding:3px 10px;border-radius:99px;font-size:11px;font-weight:800;background:rgba(16,185,129,0.12);color:#047857;">✓ مقبول — جارٍ العمل</span>',
+        rejected: '<span style="padding:3px 10px;border-radius:99px;font-size:11px;font-weight:800;background:rgba(239,68,68,0.10);color:#b91c1c;">✕ مرفوض</span>',
+      };
+      const section = document.getElementById('myBidsSection');
+      const bids = (bidsData.bids || []).slice(0, 6);
+      if (!bids.length) {
+        section.innerHTML = '<div style="text-align:center; padding:24px; color:var(--text-muted); font-size:13px;">لم تقدم أي عروض بعد — <a href="browse-projects.html" style="color:var(--color-gold-dark);font-weight:800;">تصفح المشاريع المتاحة</a></div>';
+      } else {
+        section.innerHTML = bids.map(b => `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 4px;border-bottom:1px solid var(--border-default);flex-wrap:wrap;">
+            <div style="flex:1;min-width:180px;">
+              <div style="font-weight:800;color:var(--color-navy);font-size:13px;">${b.project?.title || 'مشروع'}</div>
+              <div style="font-size:11px;color:var(--text-muted);">${b.project?.propertyDetails?.governorate || ''} · قدمته في ${new Date(b.createdAt).toLocaleDateString('ar-EG')}</div>
+            </div>
+            <div style="font-weight:900;color:var(--color-navy);font-size:14px;">${(b.amount || 0).toLocaleString('ar-EG')} ج.م</div>
+            ${STATUS_BADGE[b.status] || ''}
+          </div>`).join('');
+      }
+    } catch (_) {
+      document.getElementById('statMyBids').textContent    = '0';
+      document.getElementById('statAccepted').textContent  = '0';
+      document.getElementById('heroBidsCount').textContent = '0';
+      const section = document.getElementById('myBidsSection');
+      if (section) section.innerHTML = '<div style="text-align:center; padding:24px; color:var(--text-muted); font-size:13px;">تعذر تحميل العروض</div>';
+    }
 
     document.getElementById('logoutBtn').addEventListener('click', () => {
       localStorage.clear();

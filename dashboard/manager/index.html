@@ -496,6 +496,100 @@
           </div>
         </div>
 
+        <!-- Stat Cards — صف إضافي بتفاصيل أدق -->
+        <div class="stat-grid">
+          <div class="stat-card accent-blue">
+            <div class="stat-card-header">
+              <div class="stat-card-label">مسودات</div>
+              <div class="stat-card-icon blue-bg">
+                <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+              </div>
+            </div>
+            <div class="stat-card-value" id="statDraftProjects">—</div>
+            <div class="stat-card-desc">مشاريع لم تُنشر بعد</div>
+          </div>
+
+          <div class="stat-card accent-gold">
+            <div class="stat-card-header">
+              <div class="stat-card-label">مميزة / عاجلة</div>
+              <div class="stat-card-icon gold-bg">
+                <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+              </div>
+            </div>
+            <div class="stat-card-value" id="statFeaturedProjects">—</div>
+            <div class="stat-card-desc" id="statFeaturedDesc">⭐ مميزة · 🔥 عاجلة</div>
+          </div>
+
+          <div class="stat-card accent-warning">
+            <div class="stat-card-header">
+              <div class="stat-card-label">نزاعات مفتوحة</div>
+              <div class="stat-card-icon warning-bg">
+                <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+              </div>
+            </div>
+            <div class="stat-card-value" id="statOpenDisputes">—</div>
+            <div class="stat-card-desc">تحتاج قرار الإدارة</div>
+          </div>
+
+          <div class="stat-card accent-success">
+            <div class="stat-card-header">
+              <div class="stat-card-label">إجمالي العروض</div>
+              <div class="stat-card-icon success-bg">
+                <svg viewBox="0 0 24 24"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2z"/></svg>
+              </div>
+            </div>
+            <div class="stat-card-value" id="statTotalBids">—</div>
+            <div class="stat-card-desc" id="statUsersDesc">مقدمة من المقاولين</div>
+          </div>
+        </div>
+
+        <!-- صف ثالث: مستخدمون + أموال + سوق -->
+        <div class="stat-grid">
+          <div class="stat-card accent-blue">
+            <div class="stat-card-header">
+              <div class="stat-card-label">المستخدمون</div>
+              <div class="stat-card-icon blue-bg">
+                <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+              </div>
+            </div>
+            <div class="stat-card-value" id="statUsersTotal">—</div>
+            <div class="stat-card-desc" id="statUsersBreakdown">مقاولون · عملاء</div>
+          </div>
+
+          <div class="stat-card accent-success">
+            <div class="stat-card-header">
+              <div class="stat-card-label">حجم أموال الضمان</div>
+              <div class="stat-card-icon success-bg">
+                <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+              </div>
+            </div>
+            <div class="stat-card-value" id="statEscrowVolume">—</div>
+            <div class="stat-card-desc">إجمالي المبالغ المحجوزة (ج.م)</div>
+          </div>
+
+          <div class="stat-card accent-gold">
+            <div class="stat-card-header">
+              <div class="stat-card-label">عمولات المنصة</div>
+              <div class="stat-card-icon gold-bg">
+                <svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+              </div>
+            </div>
+            <div class="stat-card-value" id="statCommission">—</div>
+            <div class="stat-card-desc">إيرادات محققة (ج.م)</div>
+          </div>
+
+          <div class="stat-card accent-warning">
+            <div class="stat-card-header">
+              <div class="stat-card-label">سوق المواد</div>
+              <div class="stat-card-icon warning-bg">
+                <svg viewBox="0 0 24 24"><path d="M19 7h-3V6a4 4 0 0 0-8 0v1H5a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zM10 6a2 2 0 0 1 4 0v1h-4V6z"/></svg>
+              </div>
+            </div>
+            <div class="stat-card-value" id="statMaterials">—</div>
+            <div class="stat-card-desc" id="statMaterialsDesc">منتجات · طلبات</div>
+          </div>
+        </div>
+
         <!-- Pending Contractors -->
         <h2 class="section-title" id="pendingSection">طلبات المقاولين المعلقة</h2>
         <div class="pending-list" id="pendingListPanel" style="display:none;">
@@ -737,24 +831,37 @@
       const tbAvatar = document.getElementById('topbarAvatar');
       if (tbAvatar) tbAvatar.textContent = initial;
 
-      // Load projects stats
+      // Load dashboard stats — من endpoint الإحصائيات المجمعة (أرقام دقيقة من الداتابيز)
       try {
-        showToast('جاري تحميل إحصائيات لوحة الإدارة...', 'success');
-        const [openData, allData] = await Promise.all([
-          window.api.fetch('/projects?status=open&limit=1'),
-          window.api.fetch('/projects?limit=1'),
-        ]);
-        const openCount  = openData.pagination?.total ?? (openData.projects || []).length;
-        const totalCount = allData.pagination?.total ?? (allData.projects || []).length;
-        document.getElementById('statOpenProjects').textContent    = openCount;
-        document.getElementById('statTotalProjects').textContent   = totalCount;
-        document.getElementById('heroTotalProjects').textContent   = totalCount;
+        const stats = await window.api.fetch('/admin/stats');
+        const p = stats.projects || {};
+        const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
 
-        // awarded count — load all and filter
-        const allProjects = await window.api.fetch('/projects?limit=200');
-        const awarded = (allProjects.projects || []).filter(p => p.status === 'awarded' || p.status === 'closed').length;
-        document.getElementById('statAwardedProjects').textContent = awarded;
-      } catch (e) { console.error(e); }
+        setTxt('statOpenProjects',    p.open ?? 0);
+        setTxt('statAwardedProjects', (p.awarded ?? 0) + (p.closed ?? 0));
+        setTxt('statTotalProjects',   p.total ?? 0);
+        setTxt('heroTotalProjects',   p.total ?? 0);
+        setTxt('statDraftProjects',   p.draft ?? 0);
+        setTxt('statFeaturedProjects', `${p.featured ?? 0} / ${p.urgent ?? 0}`);
+        setTxt('statOpenDisputes',    stats.escrow?.openDisputes ?? 0);
+        setTxt('statTotalBids',       stats.bids?.total ?? 0);
+
+        const u = stats.users || {};
+        setTxt('statUsersTotal', (u.contractors ?? 0) + (u.customers ?? 0));
+        setTxt('statUsersBreakdown', `${u.contractors ?? 0} مقاول · ${u.customers ?? 0} عميل · ${u.pendingContractors ?? 0} بانتظار الموافقة`);
+        setTxt('statEscrowVolume', (stats.escrow?.totalVolume ?? 0).toLocaleString('ar-EG'));
+        setTxt('statCommission',   (stats.revenue?.totalCommission ?? 0).toLocaleString('ar-EG'));
+        const m = stats.materials || {};
+        setTxt('statMaterials', `${m.products ?? 0} / ${m.orders ?? 0}`);
+        setTxt('statMaterialsDesc', `${m.products ?? 0} منتج · ${m.orders ?? 0} طلب`);
+      } catch (e) {
+        console.error(e);
+        // fallback — لو المستخدم reviewer بدون صلاحية view_stats
+        try {
+          const openData = await window.api.fetch('/projects?status=open&limit=1');
+          document.getElementById('statOpenProjects').textContent = openData.pagination?.total ?? 0;
+        } catch (_) {}
+      }
 
       // Load pending contractors
       if (hasPerm('review_contractors')) {

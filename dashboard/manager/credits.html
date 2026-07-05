@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة الإدارة | رصيد النقاط</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/variables.css">
+  <link rel="stylesheet" href="../../assets/css/base.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <link rel="stylesheet" href="../../assets/css/layout.css">
+  <link rel="stylesheet" href="../../assets/css/utilities.css">
+  <style>
+    .section-title {
+      font-size: var(--font-size-md); font-weight: 800; color: var(--color-navy);
+      margin: var(--space-8) 0 var(--space-5); display: flex; align-items: center; gap: var(--space-3);
+    }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border-default); }
+    .search-panel {
+      background: var(--bg-surface); border: 1px solid var(--border-default);
+      border-radius: var(--radius-md); padding: var(--space-6); box-shadow: var(--shadow-sm); margin-bottom: var(--space-6);
+      display: flex; gap: var(--space-3);
+    }
+    .search-panel input {
+      flex: 1; padding: 12px 14px; border: 1.5px solid var(--border-default); border-radius: var(--radius-sm);
+      font-family: inherit; font-size: 14px;
+    }
+    .list-panel {
+      background: var(--bg-surface); border: 1px solid var(--border-default);
+      border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-sm); margin-bottom: var(--space-8);
+    }
+    .row-item {
+      padding: var(--space-5) var(--space-6); border-bottom: 1px solid var(--border-default);
+      display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); flex-wrap: wrap;
+    }
+    .row-item:last-child { border-bottom: none; }
+    .row-item:hover { background: var(--bg-surface-2); }
+    .row-title { font-weight: 800; color: var(--color-navy); }
+    .row-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .balance-chip {
+      background: rgba(245,158,11,0.12); color: #92400e; font-weight: 900;
+      padding: 6px 14px; border-radius: 99px; font-size: 13px;
+    }
+    .toast-stack { position: fixed; top: 18px; left: 18px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+
+    /* modal */
+    .cr-modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(6px);
+      align-items: center; justify-content: center;
+    }
+    .cr-modal {
+      background: var(--bg-surface); border-radius: var(--radius-lg); padding: var(--space-8);
+      max-width: 440px; width: 95%; box-shadow: var(--shadow-xl); position: relative;
+      border: 1px solid var(--border-default);
+    }
+    .cr-modal label { display: block; font-size: 13px; font-weight: 800; color: var(--color-navy); margin: 14px 0 6px; }
+    .cr-modal input, .cr-modal textarea {
+      width: 100%; padding: 10px 12px; border: 1.5px solid var(--border-default);
+      border-radius: var(--radius-sm); font-family: inherit; font-size: 13px;
+    }
+  </style>
+</head>
+
+<body class="dashboard-page">
+  <div class="dashboard-wrapper">
+    <aside class="sidebar" id="adminSidebar" data-active="credits"></aside>
+
+    <main class="dashboard-main">
+      <div class="dashboard-topbar">
+        <div class="topbar-page-title">تعديل رصيد نقاط المقاولين</div>
+      </div>
+
+      <div class="dashboard-content">
+        <h2 class="section-title" style="margin-top:0;">🔍 ابحث عن مقاول</h2>
+        <div class="search-panel">
+          <input type="text" id="searchInput" placeholder="ابحث بالاسم أو البريد أو رقم الهاتف...">
+          <button class="btn btn-primary" id="searchBtn">بحث</button>
+        </div>
+
+        <div class="list-panel" id="resultsList">
+          <div class="empty-state"><div class="empty-state-text">اكتب اسم مقاول أو اضغط بحث لعرض أحدث المقاولين</div></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Adjust Modal -->
+  <div class="cr-modal-overlay" id="adjustModal">
+    <div class="cr-modal">
+      <button onclick="closeAdjustModal()" style="position:absolute;top:12px;left:12px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted);">✕</button>
+      <h3 style="font-size:var(--font-size-lg); font-weight:900; color:var(--color-navy);" id="adjustModalTitle">تعديل الرصيد</h3>
+      <p style="font-size:12px; color:var(--text-muted); margin-top:4px;" id="adjustModalSub">الرصيد الحالي: —</p>
+
+      <label>قيمة التعديل (موجب للإضافة، سالب للخصم)</label>
+      <input type="number" id="deltaInput" placeholder="مثال: 5 أو -3" step="1">
+
+      <label>سبب التعديل *</label>
+      <textarea id="noteInput" rows="3" placeholder="مثال: تعويض عن مشكلة تقنية / مكافأة تميز / تصحيح رصيد..."></textarea>
+
+      <button class="btn btn-primary btn-full" id="adjustSaveBtn" style="margin-top:18px; font-weight:800;">💾 تنفيذ التعديل</button>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack"></div>
+
+  <script src="../../assets/js/api.js"></script>
+  <script src="../../assets/js/admin-dashboard.js"></script>
+  <script>
+    function showToast(message, type = 'success') {
+      const stack = document.getElementById('toastStack');
+      if (!stack) return;
+      const icons = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
+      const t = ['success','error','info','warning'].includes(type) ? type : 'success';
+      const toast = document.createElement('div');
+      toast.className = `toast-item toast-${t}`;
+      toast.innerHTML = `<span class="toast-icon">${icons[t]}</span><div class="toast-body"><div class="toast-msg">${message}</div></div><button class="toast-close" onclick="this.closest('.toast-item').remove()">×</button>`;
+      stack.appendChild(toast);
+      setTimeout(() => toast.remove(), 3500);
+    }
+
+    function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s ?? ''; return d.innerHTML; }
+
+    const SPECIALTY_LABELS = {
+      civil_engineer: 'مهندس مدني', architect: 'مهندس معماري', electrical: 'كهربائي',
+      plumber: 'سباك', carpenter: 'نجار', painter: 'نقاش',
+      general_contractor: 'مقاول عام', finishing: 'تشطيبات', other: 'أخرى'
+    };
+
+    let contractors = [];
+
+    async function search() {
+      const q = document.getElementById('searchInput').value.trim();
+      const list = document.getElementById('resultsList');
+      list.innerHTML = '<div class="empty-state"><div class="empty-state-text">جاري البحث...</div></div>';
+      try {
+        const res = await window.api.fetch(`/admin/contractors/search?q=${encodeURIComponent(q)}`);
+        contractors = res.contractors || [];
+        if (!contractors.length) {
+          list.innerHTML = '<div class="empty-state"><div class="empty-state-text">لا توجد نتائج مطابقة</div></div>';
+          return;
+        }
+        list.innerHTML = contractors.map(c => `
+          <div class="row-item">
+            <div style="min-width:0; flex:1;">
+              <div class="row-title">${escapeHtml(c.name)}</div>
+              <div class="row-meta">
+                ${escapeHtml(SPECIALTY_LABELS[c.specialty] || c.specialty || '—')}
+                · ${escapeHtml(c.email || '—')} · ${escapeHtml(c.phone || '—')}
+                · الحالة: ${c.status === 'active' ? 'نشط ✅' : c.status === 'pending' ? 'قيد المراجعة ⏳' : 'موقوف ❌'}
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span class="balance-chip">💰 ${typeof c.creditBalance === 'number' ? c.creditBalance : 0} نقطة</span>
+              <button class="btn btn-outline btn-sm" onclick="openAdjustModal('${c._id}')" style="font-size:11px; padding:6px 14px; margin:0;">✏️ تعديل الرصيد</button>
+            </div>
+          </div>`).join('');
+      } catch (e) {
+        list.innerHTML = `<div class="empty-state"><div class="empty-state-text">تعذر البحث — ${escapeHtml(e.message)}</div></div>`;
+      }
+    }
+
+    let currentContractor = null;
+
+    window.openAdjustModal = function (id) {
+      currentContractor = contractors.find(c => c._id === id);
+      if (!currentContractor) return;
+      document.getElementById('adjustModalTitle').textContent = `تعديل رصيد: ${currentContractor.name}`;
+      document.getElementById('adjustModalSub').textContent = `الرصيد الحالي: ${typeof currentContractor.creditBalance === 'number' ? currentContractor.creditBalance : 0} نقطة`;
+      document.getElementById('deltaInput').value = '';
+      document.getElementById('noteInput').value = '';
+      document.getElementById('adjustModal').style.display = 'flex';
+    };
+
+    window.closeAdjustModal = function () {
+      document.getElementById('adjustModal').style.display = 'none';
+      currentContractor = null;
+    };
+
+    document.getElementById('adjustSaveBtn').addEventListener('click', async () => {
+      if (!currentContractor) return;
+      const delta = parseInt(document.getElementById('deltaInput').value, 10);
+      const note = document.getElementById('noteInput').value.trim();
+      if (!Number.isInteger(delta) || delta === 0) { showToast('اكتب قيمة تعديل صحيحة غير صفرية', 'error'); return; }
+      if (note.length < 3) { showToast('اكتب سبب التعديل (3 أحرف على الأقل)', 'error'); return; }
+
+      const btn = document.getElementById('adjustSaveBtn');
+      btn.disabled = true; btn.textContent = '⏳ جاري التنفيذ...';
+      try {
+        const res = await window.api.fetch(`/admin/contractors/${currentContractor._id}/credits`, {
+          method: 'POST',
+          body: JSON.stringify({ delta, note }),
+        });
+        showToast(`تم التعديل — الرصيد الجديد: ${res.creditBalance} نقطة`, 'success');
+        closeAdjustModal();
+        search();
+      } catch (e) {
+        showToast(e.message || 'فشل التعديل', 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = '💾 تنفيذ التعديل';
+      }
+    });
+
+    document.getElementById('searchBtn').addEventListener('click', search);
+    document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') search(); });
+    document.getElementById('adjustModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('adjustModal')) closeAdjustModal();
+    });
+
+    (async () => {
+      const user = await window.adminDash.bootAdminPage({ active: 'credits', requirePerm: 'adjust_credits' });
+      if (!user) return;
+      search(); // عرض أحدث المقاولين مباشرة
+    })();
+  </script>
+</body>
+
+</html>

@@ -518,20 +518,31 @@ async function loadBrowse() {
 function productCard(p) {
   const icon = CAT_ICONS[p.category] || '📦';
   const isAvail = p.status === 'active' && p.stock > 0;
+  const currentUser = JSON.parse(localStorage.getItem('elm_user') || '{}');
+  const isOwner = (p.seller?._id || p.seller) === currentUser._id;
+
+  // صاحب المنتج لا يطلب من نفسه — يشوف تعديل/حذف بدلاً من "طلب"
+  const actionBtns = isOwner
+    ? `<div style="display:flex; gap:6px;">
+         <button onclick="toggleProductStatus('${p._id}','${p.status}')" class="btn btn-outline btn-sm">${p.status === 'active' ? 'إخفاء' : 'تفعيل'}</button>
+         <button onclick="deleteProduct('${p._id}')" class="btn btn-sm" style="background:var(--color-error-bg); color:var(--color-error); border:1px solid rgba(239,68,68,0.3);">حذف</button>
+       </div>`
+    : `<button onclick="openOrderModal('${p._id}','${esc(p.name)}', ${p.stock || 0})"
+        ${!isAvail ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}
+        class="btn btn-primary btn-sm">طلب</button>`;
+
   return `
     <div class="product-card">
       <div class="product-img">${icon}</div>
       <div class="product-body">
-        <div class="product-name" title="${esc(p.name)}">${esc(p.name)}</div>
+        <div class="product-name" title="${esc(p.name)}">${esc(p.name)}${isOwner ? ' <span style="font-size:10px;background:rgba(245,158,11,0.12);color:#b45309;padding:2px 8px;border-radius:99px;font-weight:800;">منتجك</span>' : ''}</div>
         <div class="product-desc">${esc(p.description || 'لا يوجد وصف')}</div>
         <div class="product-footer">
           <div>
             <div class="product-price">${(+p.price).toLocaleString('ar-EG')} <span>ج.م${p.unit ? '/' + esc(p.unit) : ''}</span></div>
             <div class="product-stock ${p.stock > 0 ? 'stock-ok' : 'stock-out'}">${p.stock > 0 ? `${p.stock} متوفر` : 'نفد المخزون'}</div>
           </div>
-          <button onclick="openOrderModal('${p._id}','${esc(p.name)}')"
-            ${!isAvail ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}
-            class="btn btn-primary btn-sm">طلب</button>
+          ${actionBtns}
         </div>
         <div class="product-seller">البائع: ${esc(p.seller?.name || '—')}${p.governorate ? ' · ' + esc(p.governorate) : ''}</div>
       </div>
@@ -654,20 +665,66 @@ function orderRow(o) {
   const dateStr = o.createdAt
     ? new Date(o.createdAt).toLocaleDateString('ar-EG', { year:'numeric', month:'short', day:'numeric' })
     : '—';
+
+  const user = JSON.parse(localStorage.getItem('elm_user') || '{}');
+  const isSeller = (o.seller?._id || o.seller) === user._id;
+  const isBuyer  = (o.buyer?._id  || o.buyer)  === user._id;
+  const counterpart = isSeller
+    ? `المشتري: ${esc(o.buyer?.name || '—')}${o.buyer?.phone ? ' · ' + esc(o.buyer.phone) : ''}`
+    : `البائع: ${esc(o.seller?.name || '—')}`;
+
+  // أزرار حسب الدور والحالة (تطابق التحولات المسموحة في الـ backend)
+  let actions = '';
+  if (isSeller) {
+    if (o.status === 'pending') {
+      actions = `
+        <button onclick="updateOrderStatus('${o._id}','confirmed')" class="btn btn-primary btn-sm">✓ قبول الطلب</button>
+        <button onclick="updateOrderStatus('${o._id}','cancelled')" class="btn btn-sm" style="background:var(--color-error-bg); color:var(--color-error); border:1px solid rgba(239,68,68,0.3);">رفض</button>`;
+    } else if (o.status === 'confirmed') {
+      actions = `<button onclick="updateOrderStatus('${o._id}','shipped')" class="btn btn-outline btn-sm">🚚 تم الشحن</button>`;
+    } else if (o.status === 'shipped') {
+      actions = `<button onclick="updateOrderStatus('${o._id}','delivered')" class="btn btn-outline btn-sm">📦 تم التسليم</button>`;
+    }
+  } else if (isBuyer && o.status === 'pending') {
+    actions = `<button onclick="updateOrderStatus('${o._id}','cancelled')" class="btn btn-sm" style="background:var(--color-error-bg); color:var(--color-error); border:1px solid rgba(239,68,68,0.3);">إلغاء الطلب</button>`;
+  }
+
   return `
     <div class="order-row">
       <div class="my-product-icon">${CAT_ICONS[o.product?.category] || '📦'}</div>
       <div class="order-info">
-        <div class="order-name">${esc(o.product?.name || 'منتج محذوف')}</div>
+        <div class="order-name">${esc(o.product?.name || 'منتج محذوف')} ${isSeller ? '<span style="font-size:10px;background:rgba(59,130,246,0.1);color:#2563eb;padding:2px 8px;border-radius:99px;font-weight:800;">طلب وارد</span>' : ''}</div>
         <div class="order-meta">
           الكمية: ${o.quantity} · الإجمالي: ${((o.totalPrice || 0)).toLocaleString('ar-EG')} ج.م · ${dateStr}
         </div>
-        ${o.notes ? `<div class="order-meta">ملاحظات: ${esc(o.notes)}</div>` : ''}
+        <div class="order-meta">${counterpart}</div>
+        ${o.buyerNotes ? `<div class="order-meta">ملاحظات المشتري: ${esc(o.buyerNotes)}</div>` : ''}
       </div>
-      <div class="order-status">
+      <div class="order-status" style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
         <span class="order-status-badge ${statusCls}">${statusLbl}</span>
+        ${actions ? `<div style="display:flex; gap:6px; flex-wrap:wrap;">${actions}</div>` : ''}
       </div>
     </div>`;
+}
+
+async function updateOrderStatus(orderId, status) {
+  const confirmMsgs = {
+    confirmed: 'قبول هذا الطلب؟ سيتم خصم الكمية من المخزون.',
+    cancelled: 'إلغاء/رفض هذا الطلب؟',
+    shipped:   'تأكيد شحن الطلب؟',
+    delivered: 'تأكيد تسليم الطلب؟',
+  };
+  if (!confirm(confirmMsgs[status] || 'تأكيد العملية؟')) return;
+  try {
+    await window.api.fetch(`/materials/orders/${orderId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+    showToast('تم تحديث حالة الطلب بنجاح', 'success');
+    loadOrders();
+  } catch (e) {
+    showToast(e.message || 'تعذر تحديث الطلب', 'error');
+  }
 }
 
 // ===== Add Product Modal =====
@@ -715,12 +772,25 @@ document.getElementById('addProductForm').addEventListener('submit', async (e) =
 
 // ===== Order Modal =====
 let currentProductId = null;
-function openOrderModal(id, name) {
+let currentProductStock = 0;
+function openOrderModal(id, name, stock) {
   currentProductId = id;
+  currentProductStock = Number(stock) || 0;
   document.getElementById('orderModalTitle').textContent = `طلب: ${name}`;
   document.getElementById('orderModal').classList.add('open');
   document.getElementById('orderAlert').className = 'modal-alert';
-  document.getElementById('orderQty').value = 1;
+  const qtyInput = document.getElementById('orderQty');
+  qtyInput.value = 1;
+  if (currentProductStock > 0) qtyInput.max = currentProductStock;
+  // عرض الكمية المتاحة داخل المودال
+  let stockHint = document.getElementById('orderStockHint');
+  if (!stockHint) {
+    stockHint = document.createElement('div');
+    stockHint.id = 'orderStockHint';
+    stockHint.style.cssText = 'font-size:12px;color:var(--text-muted);font-weight:700;margin-top:4px;';
+    qtyInput.parentElement.appendChild(stockHint);
+  }
+  stockHint.textContent = currentProductStock > 0 ? `الكمية المتاحة: ${currentProductStock}` : '';
   document.getElementById('orderNotes').value = '';
 }
 function closeOrderModal() { document.getElementById('orderModal').classList.remove('open'); }
@@ -732,12 +802,16 @@ document.getElementById('orderSubmitBtn').addEventListener('click', async () => 
   alert.className = 'modal-alert';
 
   try {
-    await window.api.fetch('/materials/orders', {
+    const qty = +document.getElementById('orderQty').value || 1;
+    if (qty < 1) throw new Error('الكمية يجب أن تكون 1 على الأقل');
+    if (currentProductStock > 0 && qty > currentProductStock) {
+      throw new Error(`الكمية المطلوبة أكبر من المتوفر (${currentProductStock})`);
+    }
+    await window.api.fetch(`/materials/${currentProductId}/order`, {
       method: 'POST',
       body: JSON.stringify({
-        productId: currentProductId,
-        quantity:  +document.getElementById('orderQty').value,
-        notes:     document.getElementById('orderNotes').value.trim(),
+        quantity: qty,
+        notes:    document.getElementById('orderNotes').value.trim(),
       }),
     });
     alert.textContent = 'تم إرسال طلبك بنجاح! سيتواصل معك البائع قريباً.';
